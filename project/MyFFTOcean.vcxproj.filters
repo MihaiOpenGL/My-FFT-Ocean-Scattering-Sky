@@ -1,0 +1,455 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{5cc8bafb-d36c-40ce-8e24-7fe8d0cede93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources">
+      <UniqueIdentifier>{56a19782-0eb2-42c2-afaa-4c41e28f091b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources\shaders">
+      <UniqueIdentifier>{0c8ba22c-0a41-4889-9ee3-164df37a52f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources\textures">
+      <UniqueIdentifier>{8f4a2b5e-2b12-4685-aca6-f2ca054636d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources\models">
+      <UniqueIdentifier>{c3785e41-94e5-492b-a247-8793bc74493b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources\models\motor_boat">
+      <UniqueIdentifier>{3fdbf14e-0a0f-4804-96e6-0370575229c6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\Main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Camera.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\FileUtils.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ShaderManager.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Sky.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\TextureManager.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\HelperFunctions.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\FrameBufferManager.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\MeshBufferManager.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Projector.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Mesh.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Model.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\MotorBoat.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Material.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\FFTOceanPatchBase.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\FFTOceanPatchGPUFrag.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\FFTOceanPatchCPUFFTW.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Base2DIFFT.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\BaseSkyModel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\CubeMapSkyModel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ScatteringSkyModel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\PrecomputedScatteringSkyModel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\FFTOceanPatchGPUComp.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\FFTNormalGradientFoldingBase.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\FFTNormalGradientFoldingGPUComp.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\FFTNormalGradientFoldingGPUFrag.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\GlobalConfig.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\XMLParser.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\PostProcessingManager.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\CPUFFTW2DIFFT.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\GPUFrag2DIFFT.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\GPUComp2DIFFT.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Ocean.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\source\Camera.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ErrorHandler.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\FileUtils.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ShaderManager.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Sky.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\TextureManager.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\HelperFunctions.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Common.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\FrameBufferManager.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\MeshBufferManager.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Projector.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Mesh.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Model.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\MotorBoat.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Material.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\GlobalConfig.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\FFTOceanPatchBase.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\FFTOceanPatchGPUFrag.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\FFTOceanPatchCPUFFTW.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Base2DIFFT.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\BaseSkyModel.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\CubeMapSkyModel.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ScatteringSkyModel.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\PrecomputedScatteringSkyModel.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\FFTOceanPatchGPUComp.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\FFTNormalGradientFoldingBase.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\FFTNormalGradientFoldingGPUComp.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\FFTNormalGradientFoldingGPUFrag.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\XMLParser.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\CustomTypes.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\PhysicsConstants.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\PostProcessingManager.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\CPUFFTW2DIFFT.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\GPUFrag2DIFFT.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\GPUComp2DIFFT.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Ocean.h">
+      <Filter>source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resources\shaders\FFTHt.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\Quad.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTHorizontal.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTVertical.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\textures\inscatter.raw">
+      <Filter>resources\textures</Filter>
+    </None>
+    <None Include="..\resources\textures\irradiance.raw">
+      <Filter>resources\textures</Filter>
+    </None>
+    <None Include="..\resources\textures\noise.pgm">
+      <Filter>resources\textures</Filter>
+    </None>
+    <None Include="..\resources\textures\transmittance.raw">
+      <Filter>resources\textures</Filter>
+    </None>
+    <None Include="..\resources\shaders\MotorBoat.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\MotorBoat.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTHorizontal_NoFFTSlopes.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTHt_NoFFTSlopes.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTVertical_NoFFTSlopes.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\CubeMapSkyModel.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\CubeMapSkyModel.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\ScatteringSkyModel.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\ScatteringSkyModel.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\ScatteringSkyModelClouds.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\ScatteringSkyModelClouds.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PrecomputedScatteringSkyModel.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PrecomputedScatteringSkyModel.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PrecomputedScatteringSkyModelClouds.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PrecomputedScatteringSkyModelClouds.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTHt.comp.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTHt_NoFFTSlopes.comp.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTHorizontal.comp.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTHorizontal_NoFFTSlopes.comp.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTVertical.comp.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTVertical_NoFFTSlopes.comp.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTNormalGradientFolding.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\FFTNormalGradientFolding.comp.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\MotorBoatTrail.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\MotorBoatTrail.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PPE_Blur.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PPE_EdgeDetection.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PPE_Grey.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PPE_Invert.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PPE_Sepia.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PPE_BlackWhite.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PPE_Wavy.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanBottom.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanBottomWorldGrid.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanBottomScreenGrid.geom.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanCausticsScreenGrid.geom.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanCausticsWorldGrid.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanFrustum.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanFrustum.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanGodRays.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanOccluder.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanOccluder.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanScreenGrid.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanSurface.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanSurfacePrecomputedScattering.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanSurfaceScreenGrid.geom.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanSurfaceWorldGrid.vert.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\OceanCaustics.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\resources\textures\perlin_noise.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\foam_highres.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\sand_d.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\xneg.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\xpos.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\yneg.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\ypos.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\zneg.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\zpos.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\models\motor_boat\boat_d.dds">
+      <Filter>resources\models\motor_boat</Filter>
+    </Image>
+    <Image Include="..\resources\models\motor_boat\boat_n.dds">
+      <Filter>resources\models\motor_boat</Filter>
+    </Image>
+    <Image Include="..\resources\textures\wake_foam.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\wake_normal_height.dds">
+      <Filter>resources\textures</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="..\resources\models\motor_boat\boat.obj">
+      <Filter>resources\models\motor_boat</Filter>
+    </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\resources\GlobalConfig.xml">
+      <Filter>resources</Filter>
+    </Xml>
+  </ItemGroup>
+</Project>
