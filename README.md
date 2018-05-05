@@ -4,6 +4,8 @@ The scene consists of:
 * Ocean
 * Motor Boat
 
+Check the images in screenshots/ to see how the end result looks!
+
 ### Controls
 
 The main controls are: keyboard and mouse
