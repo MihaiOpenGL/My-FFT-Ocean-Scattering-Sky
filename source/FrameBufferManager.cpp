@@ -1,9 +1,7 @@
 ﻿/* Author: BAIRAC MIHAI */
 
 #include "FrameBufferManager.h"
-
 #include <assert.h>
-
 #include "GL/glew.h"
 #include "ErrorHandler.h"
 
@@ -12,14 +10,14 @@ int FrameBufferManager::m_MaxColorAttachments = 0;
 
 FrameBufferManager::FrameBufferManager ( void )
 	: m_FBOID(0), m_RBOID(0), m_DepthBufferType(DEPTH_BUFFER_TYPE::DBT_NO_DEPTH),
-	  m_CubeMapTexId(0)
+	  m_DepthTexID(0), m_CubeMapTexId(0)
 {
 	Init();
 }
 
 FrameBufferManager::FrameBufferManager ( const std::string& i_Name )
 	: m_Name(i_Name), m_FBOID(0), m_RBOID(0), m_DepthBufferType(DEPTH_BUFFER_TYPE::DBT_NO_DEPTH), 
-	  m_CubeMapTexId(0)
+	  m_DepthTexID(0), m_CubeMapTexId(0)
 {
 	Init();
 }
@@ -51,6 +49,11 @@ void FrameBufferManager::Destroy ( void )
 	{
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		glDeleteRenderbuffers(1, &m_RBOID);
+	}
+	else if (m_DepthBufferType == DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH ||
+			 m_DepthBufferType == DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH_STENCIL)
+	{
+		m_TM.Destroy();
 	}
 
 	if (m_FBOID)
@@ -272,6 +275,8 @@ void FrameBufferManager::SetupCubeMaped ( unsigned int i_FormatInternal, unsigne
 
 void FrameBufferManager::SetupDepthBuffer ( DEPTH_BUFFER_TYPE i_DepthBufferType, unsigned short i_Width, unsigned short i_Height )
 {
+	m_DepthBufferType = i_DepthBufferType;
+
 	switch (i_DepthBufferType)
 	{
 		case DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH:
@@ -297,15 +302,15 @@ void FrameBufferManager::SetupDepthBuffer ( DEPTH_BUFFER_TYPE i_DepthBufferType,
 	case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH:
 	{
 		// we don't need to sample from it, so we pass -1 as the tex unit id!
-		unsigned int texId = m_TM.Create2DTexture(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, i_Width, i_Height, GL_REPEAT, GL_NEAREST, nullptr, -1, -1, false);
-		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texId, 0);
+		m_DepthTexID = m_TM.Create2DTexture(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, i_Width, i_Height, GL_REPEAT, GL_NEAREST, nullptr, -1, -1, false);
+		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_DepthTexID, 0);
 	}
 	break;
 	case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH_STENCIL:
 	{
 		// we don't need to sample from it, so we pass -1 as the tex unit id!
-		unsigned int texId = m_TM.Create2DTexture(GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, i_Width, i_Height, GL_REPEAT, GL_NEAREST, nullptr, -1, -1, false);
-		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, texId, 0);
+		m_DepthTexID = m_TM.Create2DTexture(GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, i_Width, i_Height, GL_REPEAT, GL_NEAREST, nullptr, -1, -1, false);
+		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, m_DepthTexID, 0);
 	}
 	break;
 	default:  // DEPTH_BUFFER_TYPE::DBT_NO_DEPTH
@@ -452,9 +457,44 @@ void FrameBufferManager::BindColorAttachmentByIndex ( unsigned short i_Index, bo
 	m_TM.BindTexture(m_TM.GetTextureId(i_Index), i_GenerateMipMaps, i_TexUnitId);
 }
 
-void FrameBufferManager::BindDepthAttachment ( void ) const
+void FrameBufferManager::UpdateColorAttachmentSize(unsigned short i_Index, unsigned short i_Width, unsigned short i_Height)
 {
-	m_TM.BindTexture(m_TM.GetDepthTextureId());
+	m_TM.Update2DTextureSize(m_TM.GetTextureId(i_Index), i_Width, i_Height);
+}
+
+void FrameBufferManager::UpdateDepthBufferSize(unsigned short i_Width, unsigned short i_Height)
+{
+	m_TM.Update2DTextureSize(m_TM.GetDepthTextureId(), i_Width, i_Height);
+
+	switch (m_DepthBufferType)
+	{
+	case DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH:
+	{
+		glBindRenderbuffer(GL_RENDERBUFFER, m_RBOID);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, i_Width, i_Height);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	}
+	break;
+	case DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH_STENCIL:
+	{
+		glBindRenderbuffer(GL_RENDERBUFFER, m_RBOID);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, i_Width, i_Height);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	}
+	break;
+	case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH:
+	{
+		m_TM.Update2DTextureSize(m_DepthTexID, i_Width, i_Height);
+	}
+	break;
+	case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH_STENCIL:
+	{
+		m_TM.Update2DTextureSize(m_DepthTexID, i_Width, i_Height);
+	}
+	break;
+	default:  // DEPTH_BUFFER_TYPE::DBT_NO_DEPTH
+		break;
+	}
 }
 
 unsigned int FrameBufferManager::GetQuadVBOID ( void ) const

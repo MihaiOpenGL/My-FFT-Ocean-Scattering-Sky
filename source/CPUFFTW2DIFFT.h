@@ -9,13 +9,10 @@
 #define CPU_FFTW_2D_IFFT_H
 
 #include "Base2DIFFT.h"
-
 #include "FFTW/fftw3.h"
-
 #include "glm/vec2.hpp"
 #include "glm/vec4.hpp"
 #include "MeshBufferManager.h"
-
 #include <complex> //to use std::complex numbers
 
 //OPTIMIZATION: use single precision(float) fftw, by default the double-precision(double) is used!
@@ -36,7 +33,29 @@ class GlobalConfig;
 
 class CPUFFTW2DIFFT: public Base2DIFFT
 {
+public:
+	CPUFFTW2DIFFT(void);
+	CPUFFTW2DIFFT(const GlobalConfig& i_Config);
+	~CPUFFTW2DIFFT(void);
+
+	void Initialize(const GlobalConfig& i_Config) override;
+
+	void Pre2DFFTSetup(const std::complex<float>& i_DX, const std::complex<float>& i_DY, const std::complex<float>& i_DZ, const std::complex<float>& i_SX, const std::complex<float>& i_SZ, unsigned int i_Index);
+	void Perform2DIFFT(void) override;
+	void Post2DFFTSetup(short i_Sign, unsigned int i_Index);
+
+	void UpdateTextureData(void);
+
+	void BindDestinationTexture(void) const override;
+
+	unsigned int GetDestinationTexId(void) const override;
+	unsigned short GetDestinationTexUnitId(void) const override;
+
 private:
+	//// Methods ////
+	void Destroy(void);
+
+	//// Variables ////
 	// Pointers are needed here, because we don't know the exact FFT size
 	// for fast fourier transform
 	fftw_complex *m_pDY, *m_pDX, *m_pDZ; // fft displacement on OX, OY and OZ
@@ -45,30 +64,9 @@ private:
 	fftw_complex *m_pSX, *m_pSZ; // slopes on OX and OZ
 	fftw_plan m_PSX, m_PSZ; // fftw plans
 
-	//////////////
 	unsigned int m_FFTDataTexId;
 
 	std::vector<glm::vec4> m_FFTProcessedData;
-
-	void Destroy ( void );
-
-public:
-	CPUFFTW2DIFFT ( void );
-	CPUFFTW2DIFFT ( const GlobalConfig& i_Config );
-	~CPUFFTW2DIFFT ( void );
-
-	void Initialize ( const GlobalConfig& i_Config ) override;
-
-	void Pre2DFFTSetup ( const std::complex<float>& i_DX, const std::complex<float>& i_DY, const std::complex<float>& i_DZ, const std::complex<float>& i_SX, const std::complex<float>& i_SZ, unsigned int i_Index );
-	void Perform2DIFFT ( void ) override;
-	void Post2DFFTSetup ( short i_Sign, unsigned int i_Index );
-
-	void UpdateTextureData ( void );
-
-	void BindDestinationTexture ( void ) const override;
-
-	unsigned int GetDestinationTexId ( void ) const override;
-	unsigned short GetDestinationTexUnitId ( void ) const override;
 };
 
 #endif /* CPU_FFTW_2D_IFFT_H */

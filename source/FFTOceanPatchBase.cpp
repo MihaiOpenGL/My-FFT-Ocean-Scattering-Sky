@@ -12,22 +12,18 @@ Unified - based on work by: Phillips, Donel, Pierson, Moskowitz, etc. - 1997
 */
 
 #include "FFTOceanPatchBase.h"
-
 #include "GL/glew.h"
-
 #include "glm/gtc/constants.hpp" //pi()
 #include "glm/trigonometric.hpp"
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
-
 #include "Common.h"
-
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
-
 #include "PhysicsConstants.h"
-
+#include "GlobalConfig.h"
 #include "FFTNormalGradientFoldingGPUFrag.h"
 #include "FFTNormalGradientFoldingGPUComp.h"
+
 
 FFTOceanPatchBase::FFTOceanPatchBase ( void )
 	: m_WaveAmplitudeScale(0), m_FFTSize(0), m_PatchSize(0),

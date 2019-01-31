@@ -1,17 +1,14 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Projector.h"
-
 #include <iostream>
-
 #include "Common.h"
-
 #include "HelperFunctions.h"
 #include "ErrorHandler.h"
-
+#include "glm/glm.hpp"
 #include "glm/gtc/constants.hpp" //pi()
-
 #include "GlobalConfig.h"
+
 
 Projector::Projector ( void )
 	: m_IsPlaneWithinFrustum(false), m_IsFrustumVisible(false),

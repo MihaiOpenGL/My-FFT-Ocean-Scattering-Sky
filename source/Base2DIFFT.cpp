@@ -1,17 +1,12 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Base2DIFFT.h"
-
 #include <sstream> // std::stringstream
-
 #include "Common.h"
-
 #include "ErrorHandler.h"
-
 #include "GL/glew.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/constants.hpp" //pi()
-
 #include "GlobalConfig.h"
 
 

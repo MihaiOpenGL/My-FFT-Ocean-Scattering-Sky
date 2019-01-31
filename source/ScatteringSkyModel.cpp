@@ -1,18 +1,14 @@
 /* Author: BAIRAC MIHAI */
 
 #include "ScatteringSkyModel.h"
-
 #include "GL/glew.h"
-
 #include "ErrorHandler.h"
-
 #include "glm/gtc/matrix_transform.hpp" //perspective(), ortho(), lookAt()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
 #include "glm/gtc/constants.hpp" //pi()
-
 #include "PhysicsConstants.h"
-
 #include "GlobalConfig.h"
+
 
 ScatteringSkyModel::ScatteringSkyModel ( void )
 	: m_AtmosphereInnerRadius(0.0f), m_AreCloudsEnabled(false)

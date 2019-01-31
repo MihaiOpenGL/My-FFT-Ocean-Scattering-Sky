@@ -25,15 +25,15 @@ GLM uses row-major matrices column-major vectors!
 #define HELPER_FUNCTIONS_H
 
 #define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
-#include "glm/glm.hpp" //
+#include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
+#include "glm/mat4x4.hpp"
+
 
 namespace HelperFunctions
 {
-
-	///
 	bool LogicXOR ( bool i_A, bool i_B );
 
-	///
 	bool EqualAbs ( float i_A, float i_B, float i_Epsilon = 1e-6f );
 
 

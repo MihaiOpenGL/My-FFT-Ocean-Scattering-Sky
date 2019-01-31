@@ -6,16 +6,12 @@
 #include <string>
 #include <vector>
 #include <map>
-
 #include "FFTOceanPatchBase.h"
-
 #include "ShaderManager.h"
 #include "TextureManager.h"
-
 //#define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
 #include "glm/vec2.hpp" //
 #include "glm/vec4.hpp" //
-
 #include "GPUComp2DIFFT.h"
 
 
@@ -28,7 +24,27 @@ class GlobalConfig;
 
 class FFTOceanPatchGPUComp : public FFTOceanPatchBase
 {
+public:
+	FFTOceanPatchGPUComp(void);
+	FFTOceanPatchGPUComp(const GlobalConfig& i_Config);
+	~FFTOceanPatchGPUComp(void);
+
+	void Initialize(const GlobalConfig& i_Config) override;
+
+	void EvaluateWaves(float i_CrrTime) override;
+
+	float ComputeWaterHeightAt(const glm::vec2& i_XZ) const override;
+
+	void BindFFTWaveDataTexture(void) const override;
+	unsigned short GetFFTWaveDataTexUnitId(void) const override;
+
 private:
+	//// Methods ////
+	void Destroy(void);
+
+	void SetFFTData(void);
+	void InitFFTData(void);
+
 	//// Variables ////
 	GPUComp2DIFFT m_2DIFFT;
 
@@ -46,26 +62,6 @@ private:
 	// self init
 	// name, location
 	std::map<std::string, int> m_FFTHtUniforms;
-
-	//// Methods ////
-	void Destroy ( void );
-
-	void SetFFTData ( void );
-	void InitFFTData ( void );
-
-public:
-	FFTOceanPatchGPUComp( void );
-	FFTOceanPatchGPUComp ( const GlobalConfig& i_Config );
-	~FFTOceanPatchGPUComp( void );
-
-	void Initialize ( const GlobalConfig& i_Config ) override;
-
-	void EvaluateWaves ( float i_CrrTime ) override;
-
-	float ComputeWaterHeightAt ( const glm::vec2& i_XZ ) const override;
-
-	void BindFFTWaveDataTexture ( void ) const override;
-	unsigned short GetFFTWaveDataTexUnitId ( void ) const override;
 };
 
 #endif /* FFT_OCEAN_PATCH_GPU_COMP_H */

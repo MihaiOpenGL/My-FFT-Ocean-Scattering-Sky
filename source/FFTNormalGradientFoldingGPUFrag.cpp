@@ -2,13 +2,11 @@
 /* Author: BAIRAC MIHAI */
 
 #include "FFTNormalGradientFoldingGPUFrag.h"
-
 #include "GL/glew.h"
-
 #include "glm/gtc/type_ptr.hpp"
-
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
+#include "GlobalConfig.h"
 
 
 FFTNormalGradientFoldingGPUFrag::FFTNormalGradientFoldingGPUFrag ( void )

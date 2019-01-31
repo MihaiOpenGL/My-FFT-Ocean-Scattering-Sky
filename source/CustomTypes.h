@@ -59,6 +59,7 @@ namespace CustomTypes
 			PPET_Wavy,
 			PPET_Blur,
 			PPET_EdgeDetection,
+			PPET_NoEffect,
 			PPET_COUNT
 		};
 	}

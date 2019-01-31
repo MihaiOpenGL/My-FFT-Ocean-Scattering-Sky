@@ -14,9 +14,7 @@ License: check the demo package
 #include <string>
 #include <vector>
 #include <map>
-
 #include "Base2DIFFT.h"
-
 #include "ShaderManager.h"
 #include "MeshBufferManager.h"
 #include "FrameBufferManager.h"
@@ -39,10 +37,29 @@ class GlobalConfig;
 
 class GPUFrag2DIFFT: public Base2DIFFT
 {
+public:
+	GPUFrag2DIFFT(void);
+	GPUFrag2DIFFT(const GlobalConfig& i_Config);
+	~GPUFrag2DIFFT(void);
+
+	void Initialize(const GlobalConfig& i_Config) override;
+	void Perform2DIFFT(void) override;
+	void BindDestinationTexture(void) const override;
+
+	unsigned int GetSourceTexId(void) const override;
+	unsigned int GetDestinationTexId(void) const override;
+	unsigned short GetDestinationTexUnitId(void) const override;
+
 private:
-	static const unsigned short m_kPingPongLayerCount = 2;
+	//// Methods ////
+	void Destroy(void);
+
+	float* ComputeButterflyLookupTexture(void);
+	unsigned short BitReverse(unsigned short i_I);
+	void ComputeWeight(unsigned short i_K, float& i_Wr, float& i_Wi);
 
 	//// Variables ////
+	static const unsigned short m_kPingPongLayerCount = 2;
 
 	//////// Horizontal and Vertical passes 
 	ShaderManager m_HorizontalSM, m_VerticalSM;
@@ -56,26 +73,6 @@ private:
 
 	bool m_IsPongTarget;
 	bool m_Use2FBOs;
-
-	//// Methods ////
-	void Destroy ( void );
-
-	float* ComputeButterflyLookupTexture ( void );
-	unsigned short BitReverse ( unsigned short i_I );
-	void ComputeWeight ( unsigned short i_K, float& i_Wr, float& i_Wi );
-
-public:
-	GPUFrag2DIFFT ( void );
-	GPUFrag2DIFFT ( const GlobalConfig& i_Config );
-	~GPUFrag2DIFFT ( void );
-
-	void Initialize (const GlobalConfig& i_Config ) override;
-	void Perform2DIFFT ( void ) override;
-	void BindDestinationTexture ( void ) const override;
-
-	unsigned int GetSourceTexId ( void ) const override;
-	unsigned int GetDestinationTexId ( void ) const override;
-	unsigned short GetDestinationTexUnitId ( void ) const override;
 };
 
 #endif /* GPU_FRAG_2D_IFFT_H */

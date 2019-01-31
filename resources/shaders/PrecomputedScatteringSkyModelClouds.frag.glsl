@@ -83,7 +83,8 @@ vec2 getIrradianceUV (float r, float muS)
 vec3 transmittance (float r, float mu)
 {
     vec2 uv = getTransmittanceUV(r, mu);
-    return texture2D(u_PrecomputedScatteringData.TransmittanceMap, uv).rgb;
+
+	return texture(u_PrecomputedScatteringData.TransmittanceMap, uv).rgb;
 }
 
 // transmittance(=transparency) of atmosphere for infinite ray (r,mu)
@@ -97,7 +98,8 @@ vec3 transmittanceWithShadow (float r, float mu)
 vec3 irradiance (float r, float muS)
 {
     vec2 uv = getIrradianceUV(r, muS);
-    return texture2D(u_PrecomputedScatteringData.IrradianceMap, uv).rgb;
+
+	return texture(u_PrecomputedScatteringData.IrradianceMap, uv).rgb;
 }
 
 // incident sun light at given position (radiance)
@@ -155,8 +157,9 @@ vec4 texture4D (sampler3D table, float r, float mu, float muS, float nu)
     float lerp = (nu + 1.0f) / 2.0f * (float(RES_NU) - 1.0f);
     float uNu = floor(lerp);
     lerp = lerp - uNu;
-    return texture3D(table, vec3((uNu + uMuS) / float(RES_NU), uMu, uR)) * (1.0f - lerp) +
-           texture3D(table, vec3((uNu + uMuS + 1.0f) / float(RES_NU), uMu, uR)) * lerp;
+
+	return texture(table, vec3((uNu + uMuS) / float(RES_NU), uMu, uR)) * (1.0f - lerp) +
+           texture(table, vec3((uNu + uMuS + 1.0f) / float(RES_NU), uMu, uR)) * lerp;
 }
 
 // scattered sunlight between two points
@@ -308,7 +311,7 @@ vec4 cloudColor (vec3 worldP, vec3 worldCamera, vec3 worldSunDir)
     float r = 0.0f;
     for (float i = 0.0f; i < u_CloudsData.Octaves; i += 1.0f)
 	{
-        r -= g * (2.0f * texture2D(u_CloudsData.NoiseMap, st).r - 1.0f);
+		r -= g * (2.0f * texture(u_CloudsData.NoiseMap, st).r - 1.0f);
         st = (m * st) * u_CloudsData.Lacunarity;
         g *= u_CloudsData.Gain;
     }

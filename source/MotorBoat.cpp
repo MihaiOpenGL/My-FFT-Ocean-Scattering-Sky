@@ -1,24 +1,19 @@
 /* Author: BAIRAC MIHAI */
 
 #include "MotorBoat.h"
-
 #include "GL/glew.h"
 #include "GL/glfw3.h"
-
 #include "Camera.h"
-
 #include "Common.h"
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
-
 #include "glm/gtc/matrix_transform.hpp" //translate()
 #include "glm/gtx/rotate_vector.hpp" //rotateY()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
-
 #include "GlobalConfig.h"
 
 
-const short MotorBoat::m_kBoatTrailVertexCount = 24 * 2;
+const short MotorBoat::m_kBoatTrailVertexCount = 48 * 2;
 
 MotorBoat::MotorBoat ( void ) 
 	: m_BoatCurrentPosition(0.0f), m_BoatVelocity(0.0f), m_PropellerWashWidth(0.0f),

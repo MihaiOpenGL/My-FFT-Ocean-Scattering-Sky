@@ -5,7 +5,6 @@
 
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
-
 #include <string>
 
 ////////// Free Flying Camera with optional constrains /////////
@@ -40,7 +39,71 @@ class GlobalConfig;
 
 class Camera
 {
+public:
+	enum CAMERA_DIRECTIONS
+	{
+		CD_FORWARD = 0,
+		CD_BACKWARD,
+		CD_RIGHT,
+		CD_LEFT,
+		CD_UP,
+		CD_DOWN,
+		CD_COUNT
+	};
+
+	//// Methods ////
+	Camera(void);
+	Camera(const std::string& i_Name);
+	Camera(const std::string& i_Name, const GlobalConfig& i_Config);
+	Camera(Camera* i_pCamera);
+	Camera(const Camera& i_Camera);
+	Camera& operator= (const Camera& i_Camera);
+	~Camera(void);
+
+	void Copy(Camera* i_pCamera);
+	void Copy(const Camera& i_Camera);
+
+	void UpdateViewMatrix(void);
+	void UpdatePerspectiveProjectionMatrix(int i_WindowWidth, int i_WindowHeight);
+	void UpdatePerspectiveProjectionMatrix(float i_Fovy, float i_Aspect, float i_ZNear, float i_ZFar);
+	void UpdateOrthographicProjectionMatrix(float i_Left, float i_Right, float i_Bottom, float i_Top, float i_ZNear, float i_ZFar);
+	void UpdateOrientationWithMouse(float i_Dx, float i_Dy);
+	void UpdatePositionWithKeyboard(float i_Value, Camera::CAMERA_DIRECTIONS i_Dir);
+
+	//// Getters ////
+	const glm::vec3& GetPosition(void) const;
+	float GetAltitude(void) const;
+	const glm::vec3& GetForward(void) const;
+	const glm::vec3& GetRight(void) const;
+	const glm::vec3& GetUp(void) const;
+
+	float GetPitch(void) const;
+	float GetYaw(void) const;
+	float GetFOV(void) const;
+
+	const glm::mat4& GetViewMatrix(void) const;
+	const glm::mat4& GetProjectionMatrix(void) const;
+	const glm::mat4& GetProjectionViewMatrix(void) const;
+	const glm::mat4& GetInverseViewMatrix(void) const;
+	const glm::mat4& GetInverseProjectionMatrix(void) const;
+	const glm::mat4& GetInverseProjectionViewMatrix(void) const;
+
+	//// Setters ////
+	void SetPosition(const glm::vec3& i_Position);
+	void SetAltitude(float i_Altitude);
+	void SetForward(const glm::vec3& i_Forward);
+	void SetRight(const glm::vec3& i_Right);
+	void SetUp(const glm::vec3& i_Up);
+
+	void SetFOV(float i_FOV);
+	void ResetFOV(void);
+
+	void SetProjectionMatrix(const glm::mat4& i_ProjectionMatrix);
+
 private:
+	//// Methods ////
+	float ComputePerspectiveProjectionCorrectionFactor(void) const;
+
 	//// Variables ////
 	std::string m_Name;
 
@@ -70,69 +133,6 @@ private:
 	float m_ZFar;
 
 	bool m_UseConstraints;
-
-	float ComputePerspectiveProjectionCorrectionFactor ( void ) const;
-
-public:
-	enum CAMERA_DIRECTIONS 
-	{
-		CD_FORWARD = 0,
-		CD_BACKWARD,
-		CD_RIGHT, 
-		CD_LEFT, 
-		CD_UP,
-		CD_DOWN,
-		CD_COUNT
-	};
-
-	//// Methods ////
-	Camera ( void );
-	Camera ( const std::string& i_Name );
-	Camera ( const std::string& i_Name, const GlobalConfig& i_Config );
-	Camera ( Camera* i_pCamera );
-	Camera ( const Camera& i_Camera );
-	Camera& operator= ( const Camera& i_Camera );
-	~Camera ( void );
-
-	void Copy ( Camera* i_pCamera );
-	void Copy ( const Camera& i_Camera );
-
-	void UpdateViewMatrix ( void );
-	void UpdatePerspectiveProjectionMatrix ( int i_WindowWidth, int i_WindowHeight );
-	void UpdatePerspectiveProjectionMatrix ( float i_Fovy, float i_Aspect, float i_ZNear, float i_ZFar );
-	void UpdateOrthographicProjectionMatrix ( float i_Left, float i_Right, float i_Bottom, float i_Top, float i_ZNear, float i_ZFar );
-	void UpdateOrientationWithMouse ( float i_Dx, float i_Dy );
-	void UpdatePositionWithKeyboard ( float i_Value, Camera::CAMERA_DIRECTIONS i_Dir );
-
-	//// Getters ////
-	const glm::vec3& GetPosition ( void ) const;
-	float GetAltitude ( void ) const;
-	const glm::vec3& GetForward ( void ) const;
-	const glm::vec3& GetRight ( void ) const;
-	const glm::vec3& GetUp ( void ) const;
-
-	float GetPitch ( void ) const;
-	float GetYaw ( void ) const;
-	float GetFOV ( void ) const;
-
-	const glm::mat4& GetViewMatrix ( void ) const;
-	const glm::mat4& GetProjectionMatrix ( void ) const;
-	const glm::mat4& GetProjectionViewMatrix ( void ) const;
-	const glm::mat4& GetInverseViewMatrix ( void ) const;
-	const glm::mat4& GetInverseProjectionMatrix ( void ) const;
-	const glm::mat4& GetInverseProjectionViewMatrix ( void ) const;
-
-	//// Setters ////
-	void SetPosition ( const glm::vec3& i_Position );
-	void SetAltitude ( float i_Altitude);
-	void SetForward ( const glm::vec3& i_Forward );
-	void SetRight ( const glm::vec3& i_Right );
-	void SetUp ( const glm::vec3& i_Up );
-
-	void SetFOV ( float i_FOV );
-	void ResetFOV ( void );
-
-	void SetProjectionMatrix ( const glm::mat4& i_ProjectionMatrix );
 };
 
 

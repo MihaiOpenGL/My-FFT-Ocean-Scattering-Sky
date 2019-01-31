@@ -4,15 +4,12 @@
 #define FFT_OCEAN_PATCH_CPU_FFTW_H
 
 #include <vector>
-
 #include "FFTOceanPatchBase.h"
-
 //#define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
 #include "glm/vec2.hpp" //
-
 #include "CPUFFTW2DIFFT.h"
 
-struct ConfigClass;
+class GlobalConfig;
 
 /*
  CPU implementation of the FFT ocean patch uisng the FFTW thrid-party lib
@@ -22,7 +19,30 @@ struct ConfigClass;
 
 class FFTOceanPatchCPUFFTW : public FFTOceanPatchBase
 {
+public:
+	FFTOceanPatchCPUFFTW(void);
+	FFTOceanPatchCPUFFTW(const GlobalConfig& i_Config);
+	~FFTOceanPatchCPUFFTW(void);
+
+	void Initialize(const GlobalConfig& i_Config) override;
+
+	void EvaluateWaves(float i_CrrTime) override;
+
+	float ComputeWaterHeightAt(const glm::vec2& i_XZ) const override;
+
+	void BindFFTWaveDataTexture(void) const override;
+	unsigned short GetFFTWaveDataTexUnitId(void) const override;
+
 private:
+	//// Methods ////
+	void Destroy(void);
+
+	void SetFFTData(void);
+	void InitFFTData(void);
+
+	std::complex<float> HTilde0(const glm::vec2& i_WaveVector);
+	std::complex<float> HTilde(unsigned int i_Index, float i_CrrTime);
+
 	//// Variables ////
 	CPUFFTW2DIFFT m_2DIFFT;
 
@@ -37,29 +57,6 @@ private:
 	std::vector<FFTInitData> m_FFTInitData;
 
 	float* m_pFFTDisplaymentData;
-
-	//// Methods ////
-	void Destroy ( void );
-
-	void SetFFTData ( void );
-	void InitFFTData ( void );
-
-	std::complex<float> HTilde0 ( const glm::vec2& i_WaveVector );
-	std::complex<float> HTilde ( unsigned int i_Index, float i_CrrTime );
-
-public:
-	FFTOceanPatchCPUFFTW ( void );
-	FFTOceanPatchCPUFFTW ( const GlobalConfig& i_Config );
-	~FFTOceanPatchCPUFFTW ( void );
-
-	void Initialize ( const GlobalConfig& i_Config ) override;
-
-	void EvaluateWaves ( float i_CrrTime ) override;
-
-	float ComputeWaterHeightAt ( const glm::vec2& i_XZ ) const override;
-
-	void BindFFTWaveDataTexture ( void ) const override;
-	unsigned short GetFFTWaveDataTexUnitId ( void ) const override;
 };
 
 #endif /* FFT_OCEAN_PATCH_CPU_FFTW_H */

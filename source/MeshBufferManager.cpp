@@ -1,12 +1,11 @@
 ﻿/* Author: BAIRAC MIHAI */
 
 #include "MeshBufferManager.h"
-
 #include "GL/glew.h"
 #include "ErrorHandler.h"
-
 #include <new> //new, delete
 #include <vector>
+
 
 MeshBufferManager::MeshBufferManager ( void )
 	: m_Name(), m_VAOID(0), m_VBOID(0), m_IBOID(0),

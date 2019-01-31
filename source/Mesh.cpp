@@ -2,12 +2,12 @@
 
 #include "Mesh.h"
 #include "Material.h"
-
 #include "GL/glew.h"
 #include "ErrorHandler.h"
 
+
 Mesh::Mesh ( void )
-	: m_VertexCount(0), m_UseMaterial(false), m_UseFlattenedModel(false)
+	: m_Name(), m_VertexCount(0), m_UseMaterial(false), m_UseFlattenedModel(false)
 {}
 
 Mesh::Mesh ( const std::string& i_Name, const std::vector<MeshBufferManager::VertexData>& i_VertexData, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, const Material::TextureDataArray& i_TextureArray, bool i_UseMaterial, bool i_UseFlattenedModel )

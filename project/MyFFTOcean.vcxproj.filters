@@ -120,6 +120,9 @@
     <ClCompile Include="..\source\Ocean.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Application.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Camera.h">
@@ -228,6 +231,9 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Ocean.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Application.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>
@@ -398,6 +404,9 @@
       <Filter>resources\shaders</Filter>
     </None>
     <None Include="..\resources\shaders\OceanCaustics.frag.glsl">
+      <Filter>resources\shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\PPE_NoEffect.frag.glsl">
       <Filter>resources\shaders</Filter>
     </None>
   </ItemGroup>

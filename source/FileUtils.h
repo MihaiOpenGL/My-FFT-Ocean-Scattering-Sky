@@ -17,7 +17,6 @@ namespace FileUtils
 	};
 
 	bool LoadTextFile ( const std::string& i_TextFileName, FileUtils::TextFile& o_Text );
-
 }
 
 #endif /* FILE_UTILS_H */

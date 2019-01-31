@@ -1,18 +1,13 @@
 /* Author: BAIRAC MIHAI */
 
 #include "ShaderManager.h"
-
 #include "GL/glew.h"
-
 #include <new>
 #include <sstream>
-
 #include "Common.h"
-
 #include "FileUtils.h"
 #include "ErrorHandler.h"
 #include "GlobalConfig.h"
-
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
 

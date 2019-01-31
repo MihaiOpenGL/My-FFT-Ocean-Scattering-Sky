@@ -1,7 +1,7 @@
 /* Author: BAIRAC MIHAI */
 
 #include "HelperFunctions.h"
-
+#include "glm/glm.hpp" //
 #include "glm/gtc/constants.hpp" //epsilon()
 
 

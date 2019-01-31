@@ -1,29 +1,20 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Ocean.h"
-
 #include <sstream> // std::stringstream
 #include <time.h>
-
 #include "GL/glew.h"
-
 #include <glm/gtc/matrix_transform.hpp> //glm::translate()
 #include <glm/gtx/rotate_vector.hpp>
 #include "glm/gtc/constants.hpp" //pi()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
-
 #include "Common.h"
-
 #include "HelperFunctions.h"
-
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
 #include "FileUtils.h"
-
 #include "PhysicsConstants.h"
-
 #include "GlobalConfig.h"
-
 #include "Camera.h"
 #include "FFTOceanPatchGPUFrag.h"
 #include "FFTOceanPatchGPUComp.h"

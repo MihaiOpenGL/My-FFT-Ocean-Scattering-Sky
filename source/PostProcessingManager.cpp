@@ -1,13 +1,9 @@
 /* Author: BAIRAC MIHAI */
 
 #include "PostProcessingManager.h"
-
 #include "GL/glew.h"
-
 #include "ErrorHandler.h"
-
 #include "GlobalConfig.h"
-
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
 
 
@@ -58,6 +54,9 @@ void PostProcessingManager::Initialize ( const GlobalConfig& i_Config )
 		case CustomTypes::PostProcessing::EffectType::PPET_EdgeDetection:
 			fragmentShaderSource = "../resources/shaders/PPE_EdgeDetection.frag.glsl";
 			break;
+		case CustomTypes::PostProcessing::EffectType::PPET_NoEffect:
+			fragmentShaderSource = "../resources/shaders/PPE_NoEffect.frag.glsl";
+			break;
 		default:
 			ERR("Invalid Post Processing Effect !");
 			break;
@@ -106,6 +105,12 @@ void PostProcessingManager::Initialize ( const GlobalConfig& i_Config )
 	}
 
 	m_SM.UnUseProgram();
+}
+
+void PostProcessingManager::UpdateSize(unsigned short i_Width, unsigned short i_Height)
+{
+	m_FBM.UpdateColorAttachmentSize(0, i_Width, i_Height);
+	m_FBM.UpdateDepthBufferSize(i_Width, i_Height);
 }
 
 void PostProcessingManager::Update ( float i_CrrTime, float i_DeltaTime )

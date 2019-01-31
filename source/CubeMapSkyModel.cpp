@@ -1,18 +1,14 @@
 /* Author: BAIRAC MIHAI */
 
 #include "CubeMapSkyModel.h"
-
 #include "GL/glew.h"
-
 #include "Camera.h"
-
 #include "ErrorHandler.h"
-
 #include "glm/gtc/matrix_transform.hpp" //translate()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
 #include "glm/gtc/constants.hpp" //pi()
-
 #include "GlobalConfig.h"
+
 
 CubeMapSkyModel::CubeMapSkyModel ( void )
 {}

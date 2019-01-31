@@ -10,10 +10,9 @@
 
 #include <string>
 #include <map>
-
-#include "GlobalConfig.h"
-
 #include "ShaderManager.h"
+
+class GlobalConfig;
 
 /*
  Base class for FFT gradients of normals and folding computation
@@ -28,6 +27,23 @@
 
 class FFTNormalGradientFoldingBase
 {
+public:
+	FFTNormalGradientFoldingBase(void);
+	FFTNormalGradientFoldingBase(const GlobalConfig& i_Config);
+	virtual ~FFTNormalGradientFoldingBase(void);
+
+	virtual void Initialize(const GlobalConfig& i_Config);
+
+	virtual void ComputeNormalGradientFolding(void);
+
+	virtual void BindTexture(void) const;
+	virtual unsigned short GetTexUnitId(void) const;
+
+	virtual void LinkSourceTex(unsigned int i_SourceTex);
+
+	virtual void SetPatchSize(unsigned short i_PatchSize);
+	virtual void SetChoppyScale(float i_ChoppyScale);
+
 protected:
 	//// Variables ////
 	ShaderManager m_SM;
@@ -39,23 +55,6 @@ protected:
 private:
 	//// Methods ////
 	void Destroy ( void );
-
-public:
-	FFTNormalGradientFoldingBase ( void );
-	FFTNormalGradientFoldingBase ( const GlobalConfig& i_Config );
-	virtual ~FFTNormalGradientFoldingBase ( void );
-
-	virtual void Initialize ( const GlobalConfig& i_Config );
-
-	virtual void ComputeNormalGradientFolding ( void );
-
-	virtual void BindTexture ( void ) const;
-	virtual unsigned short GetTexUnitId ( void ) const;
-
-	virtual void LinkSourceTex ( unsigned int i_SourceTex );
-
-	virtual void SetPatchSize ( unsigned short i_PatchSize );
-	virtual void SetChoppyScale ( float i_ChoppyScale );
 };
 
 #endif /* FFT_NORMAL_GRADIENT_FOLDING_BASE_H */

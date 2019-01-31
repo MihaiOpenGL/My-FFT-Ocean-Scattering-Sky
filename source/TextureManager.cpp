@@ -11,16 +11,13 @@
 */
 
 #include "TextureManager.h"
-
 #include "GL/glew.h"
-
 #include "ErrorHandler.h"
-
 #include "gli/texture.hpp"
 #include "gli/load.hpp"
 #include "gli/gl.hpp"
-
 #include <fstream>
+
 
 int TextureManager::m_MaxTexUnits = 0;
 int TextureManager::m_MaxTextureArrayLayers = 0;
@@ -1509,7 +1506,7 @@ void TextureManager::Update2DTextureData ( unsigned int i_TexId, void* i_pNewDat
 {
 	assert(i_pNewData != nullptr);
 
-	//NOTE! maybe use a std::map instead of std::vector for faster lookup
+	//TODO maybe use a std::map instead of std::vector for faster lookup
 
 	for (unsigned short i = 0; i < m_TextureDataArray.size(); ++i)
 	{
@@ -1544,7 +1541,7 @@ void TextureManager::Update2DArrayTextureData ( unsigned int i_TexId, void* i_pN
 {
 	assert(i_pNewData != nullptr);
 
-	//NOTE! maybe use a std::map instead of std::vector for faster lookup
+	//TODO maybe use a std::map instead of std::vector for faster lookup
 
 	for (unsigned short i = 0; i < m_TextureDataArray.size(); ++i)
 	{
@@ -1567,6 +1564,41 @@ void TextureManager::Update2DArrayTextureData ( unsigned int i_TexId, void* i_pN
 				else
 				{
 					glTexImage3D(ti.target, 0, ti.formatInternal, ti.width, ti.height, ti.layerCount, 0, ti.formatExternal, ti.formatType, i_pNewData);
+				}
+
+				return;
+			}
+		}
+	}
+}
+
+void TextureManager::Update2DTextureSize ( unsigned int i_TexId, unsigned short i_Width, unsigned short i_Height )
+{
+	for (unsigned short i = 0; i < m_TextureDataArray.size(); ++i)
+	{
+		if (m_TextureDataArray[i].texId == i_TexId)
+		{
+			TextureInfo& ti = m_TextureDataArray[i];
+
+			ti.width = i_Width;
+			ti.height = i_Height;
+
+			glBindTexture(ti.target, i_TexId);
+
+			// NOTE! Update the texture with NO DATA !!!!
+			if (ti.target == GL_TEXTURE_2D)
+			{
+				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+					)
+				{
+					glCompressedTexImage2D(ti.target, 0, ti.formatInternal, ti.width, ti.height, 0, ti.width * ti.height * ti.formatType, nullptr);
+				}
+				else
+				{
+					glTexImage2D(ti.target, 0, ti.formatInternal, ti.width, ti.height, 0, ti.formatExternal, ti.formatType, nullptr);
 				}
 
 				return;

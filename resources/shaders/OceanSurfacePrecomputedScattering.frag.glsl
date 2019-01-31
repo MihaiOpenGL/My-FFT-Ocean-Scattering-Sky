@@ -179,7 +179,8 @@ vec2 getTransmittanceUV(float r, float mu)
 vec3 transmittance(float r, float mu)
 {
     vec2 uv = getTransmittanceUV(r, mu);
-    return texture2D(u_PrecomputedScatteringData.TransmittanceMap, uv).rgb;
+
+	return texture(u_PrecomputedScatteringData.TransmittanceMap, uv).rgb;
 }
 
 // transmittance(=transparency) of atmosphere for infinite ray (r,mu)

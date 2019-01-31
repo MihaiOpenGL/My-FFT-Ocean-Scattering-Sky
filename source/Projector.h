@@ -10,12 +10,10 @@
 #define PROJECTOR_H
 
 #include <vector>
-
 #define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
-
 #include "Camera.h"
 
 class GlobalConfig;
@@ -29,7 +27,34 @@ class GlobalConfig;
 
 class Projector
 {
+public:
+	Projector(void);
+	Projector(const GlobalConfig& i_Config, bool i_IsUnderwater);
+	~Projector(void);
+
+	void Initialize(const GlobalConfig& i_Config, bool i_IsUnderwater);
+
+	void Update(const Camera& i_RenderingCamera);
+
+	glm::mat4 ComputeGridCorners(void);
+
+	void SetDisplacementWaveAmplitude(void);
+
+	const glm::mat4& GetProjectingMatrix(void) const;
+	const Camera& GetProjectingCamera(void)  const;
+
+	const glm::vec4& GetPlane(void) const;
+	float GetPlaneDistance(void) const;
+
+	bool IsPlaneWithinFrustum(void) const;
+	bool IsUnderMainPlane(void) const;
+
 private:
+	//// Methods ////
+	void Destroy(void);
+
+	bool ComputeGridCornerPosition(const glm::vec2& i_UV, glm::vec4& o_GridCornerPos);
+
 	//// Variables ////
 	glm::vec3 m_Position, m_Normal;
 	glm::vec4 m_Plane, m_UpperPlane, m_LowerPlane; //m_Plane - base plane
@@ -44,34 +69,6 @@ private:
 	float m_AimPointCorrection;
 
 	bool m_IsUnderMainPlane;
-
-	//// Methods ////
-	void Destroy ( void );
-
-	bool ComputeGridCornerPosition ( const glm::vec2& i_UV, glm::vec4& o_GridCornerPos );
-
-public:
-	Projector ( void );
-	Projector ( const GlobalConfig& i_Config, bool i_IsUnderwater);
-	~Projector ( void );
-
-	void Initialize (const GlobalConfig& i_Config, bool i_IsUnderwater);
-
-
-	void Update ( const Camera& i_RenderingCamera );
-
-	glm::mat4 ComputeGridCorners ( void );
-
-	void SetDisplacementWaveAmplitude ( void );
-
-	const glm::mat4& GetProjectingMatrix ( void ) const;
-	const Camera& GetProjectingCamera ( void )  const;
-
-	const glm::vec4& GetPlane ( void ) const;
-	float GetPlaneDistance ( void ) const;
-
-	bool IsPlaneWithinFrustum ( void ) const;
-	bool IsUnderMainPlane ( void ) const;
 };
 
 #endif /* PROJECTOR_H */

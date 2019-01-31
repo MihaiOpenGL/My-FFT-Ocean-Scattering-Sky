@@ -2,13 +2,10 @@
 
 #include "Camera.h"
 #include "ErrorHandler.h"
-
 #include "GL/glew.h"
-
 #include "glm/gtc/matrix_transform.hpp" //perspective(), ortho(), lookAt()
 #include "glm/gtc/constants.hpp" //pi()
-
-#include "HelperFunctions.h" ////
+#include "HelperFunctions.h"
 #include "GlobalConfig.h"
 
 
@@ -150,6 +147,9 @@ float Camera::ComputePerspectiveProjectionCorrectionFactor ( void ) const
 
 void Camera::UpdatePerspectiveProjectionMatrix ( int i_WindowWidth, int i_WindowHeight )
 {
+	assert(i_WindowWidth > 0);
+	assert(i_WindowHeight > 0);
+
 	float correctionFactor = ComputePerspectiveProjectionCorrectionFactor();
 
 	m_Projection = glm::perspective(glm::radians(m_FOVy), i_WindowWidth /static_cast<float>(i_WindowHeight), m_ZNear * correctionFactor, m_ZFar * correctionFactor);
@@ -166,6 +166,11 @@ void Camera::UpdatePerspectiveProjectionMatrix ( int i_WindowWidth, int i_Window
 
 void Camera::UpdatePerspectiveProjectionMatrix ( float i_Fovy, float i_Aspect, float i_ZNear, float i_ZFar )
 {
+	assert(i_Fovy > 0);
+	assert(i_Aspect > 0);
+	assert(i_ZNear > 0);
+	assert(i_ZFar > 0);
+
 	float correctionFactor = ComputePerspectiveProjectionCorrectionFactor();
 
 	m_Projection = glm::perspective(glm::radians(i_Fovy), i_Aspect, i_ZNear * correctionFactor, i_ZFar * correctionFactor);

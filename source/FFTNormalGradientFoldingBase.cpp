@@ -2,9 +2,10 @@
 /* Author: BAIRAC MIHAI */
 
 #include "FFTNormalGradientFoldingBase.h"
-
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
+#include "GlobalConfig.h"
+
 
 FFTNormalGradientFoldingBase::FFTNormalGradientFoldingBase ( void )
 	: m_FFTSize(0)

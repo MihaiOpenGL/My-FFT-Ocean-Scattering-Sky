@@ -12,9 +12,7 @@
 #include <string>
 #include <vector>
 #include <map>
-
 #include "Base2DIFFT.h"
-
 #include "ShaderManager.h"
 
 class GlobalConfig;
@@ -35,13 +33,37 @@ class GlobalConfig;
 
 class GPUComp2DIFFT: public Base2DIFFT
 {
+public:
+	GPUComp2DIFFT(void);
+	GPUComp2DIFFT(const GlobalConfig& i_Config);
+	~GPUComp2DIFFT(void);
+
+	void Initialize(const GlobalConfig& i_Config) override;
+	void Perform2DIFFT(void) override;
+
+	void BindDestinationTexture(void) const override;
+
+	unsigned int GetSourceTexId(void) const override;
+	unsigned short GetSourceTexUnitId(void) const override;
+	unsigned int GetDestinationTexId(void) const override;
+	unsigned short GetDestinationTexUnitId(void) const override;
+
 private:
+	//// Methods ////
+	void Destroy(void);
+
+	float* ComputeIndicesLookupTexture(void);
+	void ShuffleIndices(float* o_pBuffer, unsigned short i_N, unsigned short i_Offset);
+
+	float* ComputeWeightsLookupTexture(void);
+	void ComputeWeight(unsigned short i_K, float& i_Wr, float& i_Wi);
+
+	//// Variables ////
 	static const unsigned short m_kPingPongLayerCount = 2;
 
 	unsigned int m_IndicesTexId, m_WeightsTexId;
 	unsigned int m_PingPongTexIds[m_kPingPongLayerCount];
 
-	//// Variables ////
 	unsigned short m_NumButterflies;
  
 	ShaderManager m_HorizontalSM, m_VerticalSM;
@@ -50,30 +72,6 @@ private:
 	// name, location
 	std::map<std::string, int> m_HorizontalUniforms;
 	std::map<std::string, int> m_VerticalUniforms;
-
-	//// Methods ////
-	void Destroy ( void );
-
-	float* ComputeIndicesLookupTexture ( void );
-	void ShuffleIndices ( float* o_pBuffer, unsigned short i_N, unsigned short i_Offset );
-
-	float* ComputeWeightsLookupTexture ( void );
-	void ComputeWeight ( unsigned short i_K, float& i_Wr, float& i_Wi );
-
-public:
-	GPUComp2DIFFT ( void );
-	GPUComp2DIFFT ( const GlobalConfig& i_Config );
-	~GPUComp2DIFFT ( void );
-
-	void Initialize ( const GlobalConfig& i_Config ) override;
-	void Perform2DIFFT ( void ) override;
-
-	void BindDestinationTexture ( void ) const override;
-
-	unsigned int GetSourceTexId ( void ) const override;
-	unsigned short GetSourceTexUnitId ( void ) const override;
-	unsigned int GetDestinationTexId ( void ) const override;
-	unsigned short GetDestinationTexUnitId ( void ) const override;
 };
 
 #endif /* GPU_COMP_2D_IFFT_H */

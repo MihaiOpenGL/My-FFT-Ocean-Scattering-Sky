@@ -1,11 +1,8 @@
 /* Author: BAIRAC MIHAI */
 
 #include "XMLParser.h"
-
 #include <fstream>
-
 #include "ErrorHandler.h"
-
 #include "glm/gtc/constants.hpp" //pi()
 
 #define ELEMENT_START 0
@@ -566,7 +563,8 @@ CustomTypes::PostProcessing::EffectType XMLGenericType::ToPostProcessingEffectTy
 {
 	if (m_Value == "EffectInvert" ||  m_Value == "EffectGrey" || m_Value == "EffectBlackWhite" ||
 		m_Value == "EffectSepia" || m_Value == "EffectWavy" ||
-		m_Value == "EffectBlur" || m_Value == "EffectEdgeDetection") // post processing effect
+		m_Value == "EffectBlur" || m_Value == "EffectEdgeDetection" ||
+		m_Value == "NoEffect") // post processing effect
 	{
 		if (m_Value == "EffectInvert")
 			return CustomTypes::PostProcessing::EffectType::PPET_Invert;
@@ -588,6 +586,9 @@ CustomTypes::PostProcessing::EffectType XMLGenericType::ToPostProcessingEffectTy
 
 		if (m_Value == "EffectEdgeDetection")
 			return CustomTypes::PostProcessing::EffectType::PPET_EdgeDetection;
+
+		if (m_Value == "NoEffect")
+			return CustomTypes::PostProcessing::EffectType::PPET_NoEffect;
 	}
 
 	ERR("Invalid token: " << m_Value << "\n");

@@ -4,13 +4,10 @@
 
 #include "Model.h"
 #include "Material.h"
-
 #include <assert.h>
 #include <sstream>
-
 #include "GL/glew.h"
 #include "glm/glm.hpp"
-
 #include "ErrorHandler.h"
 
 

@@ -1,13 +1,10 @@
 /* Author: BAIRAC MIHAI */
 
 #include "GlobalConfig.h"
-
 #include "Common.h"
 #include "ErrorHandler.h"
-
 #include "glm/gtc/constants.hpp"
 #include "glm/trigonometric.hpp"
-
 #include <sstream>
 #include <assert.h>
 

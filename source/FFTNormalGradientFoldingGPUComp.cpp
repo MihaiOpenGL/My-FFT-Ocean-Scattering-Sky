@@ -3,11 +3,11 @@
 
 
 #include "FFTNormalGradientFoldingGPUComp.h"
-
 #include "GL/glew.h"
-
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
+#include "GlobalConfig.h"
+
 
 FFTNormalGradientFoldingGPUComp::FFTNormalGradientFoldingGPUComp ( void )
 	: m_TexId(0), m_SourceTexId(0)

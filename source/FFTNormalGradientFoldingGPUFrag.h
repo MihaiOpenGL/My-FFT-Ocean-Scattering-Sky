@@ -5,12 +5,10 @@
 
 #include <string>
 #include <map>
-
-#include "GlobalConfig.h"
-
 #include "FFTNormalGradientFoldingBase.h"
-
 #include "FrameBufferManager.h"
+
+class GlobalConfig;
 
 /*
   GPU implementation of the normal gradients and folding using fragment shaders
@@ -18,27 +16,26 @@
 
 class FFTNormalGradientFoldingGPUFrag : public FFTNormalGradientFoldingBase
 {
-private:
-	
-	//// Variables ////
-	FrameBufferManager m_FBM;
+public:
+	FFTNormalGradientFoldingGPUFrag(void);
+	FFTNormalGradientFoldingGPUFrag(const GlobalConfig& i_Config);
+	virtual ~FFTNormalGradientFoldingGPUFrag(void);
 
+	void Initialize(const GlobalConfig& i_Config) override;
+
+	void ComputeNormalGradientFolding(void) override;
+
+	void BindTexture(void) const override;
+	unsigned short GetTexUnitId(void) const override;
+
+	void LinkSourceTex(unsigned int i_SourceTex) override;
+
+private:
 	//// Methods ////
 	void Destroy(void);
 
-public:
-	FFTNormalGradientFoldingGPUFrag ( void );
-	FFTNormalGradientFoldingGPUFrag ( const GlobalConfig& i_Config );
-	virtual ~FFTNormalGradientFoldingGPUFrag ( void );
-
-	void Initialize ( const GlobalConfig& i_Config ) override;
-
-	void ComputeNormalGradientFolding ( void ) override;
-
-	void BindTexture ( void ) const override;
-	unsigned short GetTexUnitId ( void ) const override;
-
-	void LinkSourceTex ( unsigned int i_SourceTex ) override;
+	//// Variables ////
+	FrameBufferManager m_FBM;
 };
 
 #endif /* FFT_NORMAL_GRADIENT_FOLDING_GPU_FRAG_H */

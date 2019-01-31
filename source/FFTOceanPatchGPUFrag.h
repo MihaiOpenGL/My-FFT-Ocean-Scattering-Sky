@@ -6,19 +6,14 @@
 #include <string>
 #include <vector>
 #include <map>
-
 #include "FFTOceanPatchBase.h"
-
 #include "ShaderManager.h"
 #include "TextureManager.h"
 #include "FrameBufferManager.h"
-
 //#define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
 #include "glm/vec2.hpp" //
 #include "glm/vec3.hpp" //
-
 #include "GPUFrag2DIFFT.h"
-
 
 class GlobalConfig;
 
@@ -29,7 +24,27 @@ class GlobalConfig;
 
 class FFTOceanPatchGPUFrag : public FFTOceanPatchBase
 {
+public:
+	FFTOceanPatchGPUFrag(void);
+	FFTOceanPatchGPUFrag(const GlobalConfig& i_Config);
+	~FFTOceanPatchGPUFrag(void);
+
+	void Initialize(const GlobalConfig& i_Config) override;
+
+	void EvaluateWaves(float i_CrrTime) override;
+
+	float ComputeWaterHeightAt(const glm::vec2& i_XZ) const override;
+
+	void BindFFTWaveDataTexture(void) const override;
+	unsigned short GetFFTWaveDataTexUnitId(void) const override;
+
 private:
+	//// Methods ////
+	void Destroy(void);
+
+	void SetFFTData(void) override;
+	void InitFFTData(void) override;
+
 	//// Variables ////
 	GPUFrag2DIFFT m_2DIFFT;
 
@@ -48,26 +63,6 @@ private:
 	// self init
 	// name, location
 	std::map<std::string, int> m_FFTHtUniforms;
-
-	//// Methods ////
-	void Destroy ( void );
-
-	void SetFFTData ( void ) override;
-	void InitFFTData ( void ) override;
-
-public:
-	FFTOceanPatchGPUFrag ( void );
-	FFTOceanPatchGPUFrag ( const GlobalConfig& i_Config );
-	~FFTOceanPatchGPUFrag ( void );
-
-	void Initialize ( const GlobalConfig& i_Config ) override;
-
-	void EvaluateWaves ( float i_CrrTime ) override;
-
-	float ComputeWaterHeightAt ( const glm::vec2& i_XZ ) const override;
-
-	void BindFFTWaveDataTexture ( void ) const override;
-	unsigned short GetFFTWaveDataTexUnitId ( void ) const override;
 };
 
 #endif /* FFT_OCEAN_PATCH_GPU_FRAG_H */

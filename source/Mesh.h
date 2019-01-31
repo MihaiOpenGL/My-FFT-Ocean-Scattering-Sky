@@ -5,9 +5,7 @@
 
 #include <string>
 #include <vector>
-
 #include "glm/glm.hpp"
-
 #include "Material.h"
 #include "MeshBufferManager.h"
 #include "TextureManager.h"
@@ -19,16 +17,6 @@
 
 class Mesh 
 {
-private:
-	std::string m_Name;
-	MeshBufferManager m_MBM, m_FlattenedMBM;
-	unsigned int m_VertexCount;
-
-	bool m_UseMaterial;
-	bool m_UseFlattenedModel;
-
-	Material::TextureDataArray m_TextureArray;
-
 public:
 	struct Limits
 	{
@@ -40,15 +28,26 @@ public:
 		float MaxZ;
 	} m_Limits;
 
-	Mesh ( void );
-	Mesh ( const std::string& i_Name, const std::vector<MeshBufferManager::VertexData>& i_VertexData, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, const Material::TextureDataArray& i_TextureArray,  bool i_UseMaterial = false, bool i_UseFlattenedModel = false );
-	~Mesh ( void );
+	Mesh(void);
+	Mesh(const std::string& i_Name, const std::vector<MeshBufferManager::VertexData>& i_VertexData, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, const Material::TextureDataArray& i_TextureArray, bool i_UseMaterial = false, bool i_UseFlattenedModel = false);
+	~Mesh(void);
 
-	void Render ( const ShaderManager& i_SM, const TextureManager& i_TM, unsigned short i_StartTexUnitId, bool i_IsWireframeMode );
-	void Render ( bool i_IsWireframeMode );
-	void RenderFlattened ( void );
+	void Render(const ShaderManager& i_SM, const TextureManager& i_TM, unsigned short i_StartTexUnitId, bool i_IsWireframeMode);
+	void Render(bool i_IsWireframeMode);
+	void RenderFlattened(void);
 
-	const Mesh::Limits& GetLimits ( void ) const;
+	const Mesh::Limits& GetLimits(void) const;
+
+private:
+	//// Variables /////
+	std::string m_Name;
+	MeshBufferManager m_MBM, m_FlattenedMBM;
+	unsigned int m_VertexCount;
+
+	bool m_UseMaterial;
+	bool m_UseFlattenedModel;
+
+	Material::TextureDataArray m_TextureArray;
 };
 
 #endif /* MESH_H */

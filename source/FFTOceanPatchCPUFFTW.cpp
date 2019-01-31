@@ -1,22 +1,15 @@
 /* Author: BAIRAC MIHAI */
 
 #include "FFTOceanPatchCPUFFTW.h"
-
 #include <sstream> // std::stringstream
 #include <time.h>
-
 #include "GL/glew.h"
-
 #include "glm/gtc/constants.hpp" //pi()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
-
 #include "Common.h"
-
 #include "ErrorHandler.h"
 #include "FileUtils.h"
-
 #include "GlobalConfig.h"
-
 #include "FFTNormalGradientFoldingBase.h"
 
 

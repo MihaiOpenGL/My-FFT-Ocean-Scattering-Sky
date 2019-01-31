@@ -5,9 +5,7 @@
 
 #include "CustomTypes.h"
 #include "XMLParser.h"
-
 #include <string>
-
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 

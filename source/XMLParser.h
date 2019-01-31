@@ -4,10 +4,8 @@
 #define XML_PARSER_H
 
 #include "CustomTypes.h"
-
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
-
 #include <string>
 #include <vector>
 #include <map>
@@ -24,32 +22,34 @@
 
 class XMLGenericType
 {
-private:
-	std::string m_Value;
-
-	float ConvertToFloat ( const std::string& i_Token );
-
 public:
-	XMLGenericType ( void );
-	XMLGenericType ( const std::string& i_Obj );
-	XMLGenericType ( const XMLGenericType& i_Obj );
-	~XMLGenericType ( void );
+	XMLGenericType(void);
+	XMLGenericType(const std::string& i_Obj);
+	XMLGenericType(const XMLGenericType& i_Obj);
+	~XMLGenericType(void);
 
-	XMLGenericType& operator = ( const XMLGenericType& i_Val );
-	XMLGenericType& operator = ( const std::string& i_Val );
+	XMLGenericType& operator = (const XMLGenericType& i_Val);
+	XMLGenericType& operator = (const std::string& i_Val);
 
-	bool ToBool ( void );
-	int ToInt ( void );
-	float ToFloat ( void );
-	glm::vec2 ToVec2 ( void );
-	glm::vec3 ToVec3 ( void );
+	bool ToBool(void);
+	int ToInt(void);
+	float ToFloat(void);
+	glm::vec2 ToVec2(void);
+	glm::vec3 ToVec3(void);
 
-	CustomTypes::Sky::ModelType ToSkyModelType ( void );
-	CustomTypes::Ocean::ComputeFFTType ToOceanComputeFFTType ( void );
-	CustomTypes::Ocean::NormalGradientFoldingType ToOceanNormalGradientFoldingType ( void );
-	CustomTypes::Ocean::SpectrumType ToOceanSpectrumType ( void );
-	CustomTypes::Ocean::GridType ToOceanGridType ( void );
-	CustomTypes::PostProcessing::EffectType ToPostProcessingEffectType ( void );
+	CustomTypes::Sky::ModelType ToSkyModelType(void);
+	CustomTypes::Ocean::ComputeFFTType ToOceanComputeFFTType(void);
+	CustomTypes::Ocean::NormalGradientFoldingType ToOceanNormalGradientFoldingType(void);
+	CustomTypes::Ocean::SpectrumType ToOceanSpectrumType(void);
+	CustomTypes::Ocean::GridType ToOceanGridType(void);
+	CustomTypes::PostProcessing::EffectType ToPostProcessingEffectType(void);
+
+private:
+	///// Methods /////
+	float ConvertToFloat(const std::string& i_Token);
+
+	//// Variables /////
+	std::string m_Value;
 };
 
 //////////////////////////////////
@@ -72,29 +72,31 @@ public:
 		std::vector<XMLNode> children;
 	} XMLNode;
 
+	XMLParser(void);
+	XMLParser(const std::string& i_FileName);
+	~XMLParser(void);
+
+	void PopulateKeyMap(std::map<std::string, XMLGenericType>& o_KeyMap);
+
+	XMLGenericType ExtractValue(const std::string& i_Key);
+
 private:
+	///// Methods /////
+	void Initialize(const std::string& i_FileName);
+
+	static void Tokenize(const std::string& i_Content, const std::string& i_Delimiters, std::vector<std::string>& o_Elements, bool i_SkipTabElement = false);
+
+	void AddNode(XMLNode& io_Parent, unsigned short i_LineIndex, const std::vector<std::string>& i_Lines);
+
+	void PopulateKey(const XMLNode& i_Node, const std::string& i_KeyPath, std::map<std::string, XMLGenericType>& o_KeyMap);
+
+	bool FindComplexKey(const std::string& i_ExpectedKeyPath, XMLGenericType& o_Value);
+	bool FindKey(const XMLNode& i_Node, const std::string& i_Key, const std::string& i_ExpectedKeyPath, std::string& o_ActualKeyPath, XMLGenericType& o_Value);
+
+	void Destroy(void);
+
+	///// Variables /////
 	XMLNode m_Tree;
-
-	void Initialize ( const std::string& i_FileName );
-	static void Tokenize ( const std::string& i_Content, const std::string& i_Delimiters, std::vector<std::string>& o_Elements, bool i_SkipTabElement = false );
-
-	void AddNode ( XMLNode& io_Parent, unsigned short i_LineIndex, const std::vector<std::string>& i_Lines );
-
-	void PopulateKey ( const XMLNode& i_Node, const std::string& i_KeyPath, std::map<std::string, XMLGenericType>& o_KeyMap );
-
-	bool FindComplexKey ( const std::string& i_ExpectedKeyPath, XMLGenericType& o_Value );
-	bool FindKey ( const XMLNode& i_Node, const std::string& i_Key, const std::string& i_ExpectedKeyPath, std::string& o_ActualKeyPath, XMLGenericType& o_Value );
-
-	void Destroy ( void );
-
-public:
-	XMLParser ( void );
-	XMLParser ( const std::string& i_FileName );
-	~XMLParser ( void );
-
-	void PopulateKeyMap ( std::map<std::string, XMLGenericType>& o_KeyMap );
-
-	XMLGenericType ExtractValue ( const std::string& i_Key );
 };
 
 #endif /* XML_PARSER_H */

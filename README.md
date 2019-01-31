@@ -36,7 +36,7 @@ Check the GlobalConfig.xml file. It has many parameters, but the main points of 
 
 ## VisualEffects - mainly the Post Processing Effects
 Possible values are: 
-EffectInvert, EffectGrey, EffectBlackWhite, EffectSepia, EffectWavy, EffectBlur, EffectEdgeDetection
+EffectInvert, EffectGrey, EffectBlackWhite, EffectSepia, EffectWavy, EffectBlur, EffectEdgeDetection, NoEffect
 
 Also one can disable/enabled the reflections and refractions.
 NOTE! Refractions are only available underwater (only the boat).

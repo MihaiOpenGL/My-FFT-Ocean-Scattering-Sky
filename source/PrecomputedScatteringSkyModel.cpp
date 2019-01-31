@@ -1,20 +1,16 @@
 /* Author: BAIRAC MIHAI */
 
 #include "PrecomputedScatteringSkyModel.h"
-
 #include "GL/glew.h"
-
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
-
 #include "glm/gtc/matrix_transform.hpp" //translate()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
 #include "glm/gtc/constants.hpp" //pi()
 #include "glm/gtx/rotate_vector.hpp" //just for reference
-
 #include "PhysicsConstants.h"
-
 #include "GlobalConfig.h"
+
 
 PrecomputedScatteringSkyModel::PrecomputedScatteringSkyModel ( void )
 	: m_AreCloudsEnabled(false)

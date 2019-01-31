@@ -1,19 +1,12 @@
 /* Author: BAIRAC MIHAI */
 
 #include "BaseSkyModel.h"
-
-
 #include "Common.h"
-
 #include "ErrorHandler.h"
-
 #include "Camera.h"
-
 #include "GL/glew.h"
-
 #include "glm/glm.hpp"
 #include "glm/gtc/constants.hpp" //pi()
-
 #include "GlobalConfig.h"
 
 

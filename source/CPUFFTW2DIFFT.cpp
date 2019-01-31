@@ -1,13 +1,9 @@
 /* Author: BAIRAC MIHAI */
 
 #include "CPUFFTW2DIFFT.h"
-
 #include "ErrorHandler.h"
-
 #include "GL/glew.h"
-
 #include <assert.h>
-
 #include "GlobalConfig.h"
 
 

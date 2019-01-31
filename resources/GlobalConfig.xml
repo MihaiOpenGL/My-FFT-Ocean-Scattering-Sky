@@ -1,6 +1,6 @@
 <GlobalConfig>
 	<Window>
-		<UseWindowHints>true</UseWindowHints>
+		<UseWindowHints>false</UseWindowHints>
 		<IsWindowMode>true</IsWindowMode>
 		<IsWindowResizable>true</IsWindowResizable>
 	</Window>
@@ -230,8 +230,8 @@
 					</Fog>
 				</UnderWater>
 				<OceanPatch>
-					<FFTSize>256</FFTSize>
-					<PatchSize>368</PatchSize>
+					<FFTSize>512</FFTSize>
+					<PatchSize>512</PatchSize>
 					<WaveAmpltitude>1.0f</WaveAmpltitude>
 					<WindSpeed>50.0f</WindSpeed>
 					<WindSpeedMixLimit>100.0f</WindSpeedMixLimit>

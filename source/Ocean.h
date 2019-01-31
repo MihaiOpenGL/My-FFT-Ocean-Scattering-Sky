@@ -6,17 +6,12 @@
 #include <string>
 #include <vector>
 #include <map>
-
 #include "CustomTypes.h"
-#include "GlobalConfig.h"
-
 #include "ShaderManager.h"
 #include "MeshBufferManager.h"
 #include "FrameBufferManager.h"
 #include "TextureManager.h"
-
 #include "Projector.h"
-
 //#define GLM_SWIZZLE //offers the possibility to use: xx(), xy(), xyz(), ...
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
@@ -24,6 +19,7 @@
 class Camera;
 class MotorBoat;
 class FFTOceanPatchBase;
+class GlobalConfig;
 
 /*
  FFT Ocean implementation
@@ -42,7 +38,96 @@ class FFTOceanPatchBase;
 
 class Ocean
 {
+public:
+	struct BoatPropellerWashData
+	{
+		float DistortFactor;
+	};
+
+	struct BoatKelvinWakeData
+	{
+		glm::vec3 BoatPosition;
+		glm::vec3 WakePosition;
+		float Amplitude;
+		float FoamAmount;
+	};
+
+	Ocean(void);
+	Ocean(const GlobalConfig& i_Config);
+	~Ocean(void);
+
+	void Initialize(const GlobalConfig& i_Config);
+
+	void Update(const Camera& i_Camera, const glm::vec3& i_SunDirection, bool i_IsWireframeMode, bool i_IsFrustumVisible, float i_CrrTime);
+	void UpdateGrid(unsigned short i_WindowWidth, unsigned short i_WindowHeight);
+	void UpdateBoatEffects(const MotorBoat& i_MotorBoat);
+
+	void Render(const Camera& i_CurrentViewingCamera);
+
+	float ComputeWaterHeightAt(const glm::vec2& i_XZ);
+	float ComputeAverageWaterHeightAt(const glm::vec2& i_XZ, const glm::ivec2& i_Zone);
+
+	float GetWaveAmplitude(void) const;
+	unsigned short GetPatchSize(void) const;
+	float GetWindSpeed(void) const;
+	float GetWindDirectionX(void) const;
+	float GetWindDirectionZ(void) const;
+	glm::vec3 GetWindDir(void) const;
+	float GetOpposingWavesFactor(void) const;
+	float GetVerySmallWavesFactor(void) const;
+	float GetChoppyScale(void) const;
+	float GetTileScale(void) const;
+
+	unsigned short GetGodRaysNumberOfSamples(void) const;
+	float GetGodRaysExposure(void) const;
+	float GetGodRaysDecay(void) const;
+	float GetGodRaysDensity(void) const;
+	float GetGodRaysWeight(void) const;
+
+	bool IsUnderWater(void) const;
+
+	void SetWaveAmplitude(float i_WaveAmplitude);
+	void SetPatchSize(unsigned short i_PatchSize);
+	void SetWindSpeed(float i_WindSpeed);
+	void SetWindDirectionX(float i_WindDirectionX);
+	void SetWindDirectionZ(float i_WindDirectionZ);
+	void SetOpposingWavesFactor(float i_OpposingWavesFactor);
+	void SetVerySmallWavesFactor(float i_VerySmallWavesFactor);
+	void SetChoppyScale(float i_ChoppyScale);
+	void SetTileScale(float i_TileScale);
+
+	void SetGodRaysNumberOfSamples(unsigned short i_NumberOfSamples);
+	void SetGodRaysExposure(float i_Exposure);
+	void SetGodRaysDecay(float i_Decay);
+	void SetGodRaysDensity(float i_Density);
+	void SetGodRaysWeight(float i_Weight);
+
 private:
+	//// Methods ////
+	void SetupGrid(const GlobalConfig& i_Config);
+	void SetupOceanSurface(const GlobalConfig& i_Config);
+	void SetupScreenSpaceGrid(unsigned short i_WindowWidth, unsigned short i_WindowHeight);
+
+	void SetupOceanBottom(const GlobalConfig& i_Config);
+	void SetupOceanBottomCaustics(const GlobalConfig& i_Config);
+	void SetupOceanBottomGodRays(const GlobalConfig& i_Config);
+	void SetupDebugFrustum(const GlobalConfig& i_Config);
+	void SetupTextures(const GlobalConfig& i_Config);
+
+	void UpdateOceanSurface(const Camera& i_Camera, const glm::vec3& i_SunDirection, float i_CrrTime);
+	void UpdateOceanBottom(const Camera& i_Camera, const glm::vec3& i_SunDirection, glm::mat4& o_BottomGridCorners);
+	void UpdateOceanBottomCaustics(const glm::mat4& i_BottomGridCorners, const glm::vec3& i_SunDirection);
+	void UpdateOceanBottomGodRays(const Camera& i_Camera, const glm::vec3& i_SunDirection);
+	void UpdateDebugFrustum(const Camera& i_Camera);
+
+	void RenderOceanSurface(const Camera& i_CurrentViewingCamera);
+	void RenderOceanBottom(const Camera& i_CurrentViewingCamera);
+	void RenderOceanBottomCaustics(const Camera& i_CurrentViewingCamera);
+	void RenderOceanBottomGodRays(void);
+	void RenderDebugFrustum(const Camera& i_CurrentViewingCamera);
+
+	void Destroy(void);
+
 	//// Projector
 	Projector m_WaveProjector, m_BottomProjector;
 
@@ -103,96 +188,6 @@ private:
 	bool m_EnableBottomCaustics;
 	bool m_EnableBoatKelvinWake;
 	bool m_EnableBoatPropellerWash;
-
-	//// Methods ////
-	void SetupGrid ( const GlobalConfig& i_Config );
-	void SetupOceanSurface ( const GlobalConfig& i_Config );
-	void SetupScreenSpaceGrid ( unsigned short i_WindowWidth, unsigned short i_WindowHeight );
-
-	void SetupOceanBottom ( const GlobalConfig& i_Config );
-	void SetupOceanBottomCaustics ( const GlobalConfig& i_Config );
-	void SetupOceanBottomGodRays ( const GlobalConfig& i_Config );
-	void SetupDebugFrustum ( const GlobalConfig& i_Config );
-	void SetupTextures ( const GlobalConfig& i_Config );
-
-	void UpdateOceanSurface ( const Camera& i_Camera, const glm::vec3& i_SunDirection, float i_CrrTime );
-	void UpdateOceanBottom ( const Camera& i_Camera, const glm::vec3& i_SunDirection, glm::mat4& o_BottomGridCorners );
-	void UpdateOceanBottomCaustics ( const glm::mat4& i_BottomGridCorners, const glm::vec3& i_SunDirection );
-	void UpdateOceanBottomGodRays ( const Camera& i_Camera, const glm::vec3& i_SunDirection );
-	void UpdateDebugFrustum ( const Camera& i_Camera );
-
-	void RenderOceanSurface ( const Camera& i_CurrentViewingCamera );
-	void RenderOceanBottom ( const Camera& i_CurrentViewingCamera );
-	void RenderOceanBottomCaustics ( const Camera& i_CurrentViewingCamera );
-	void RenderOceanBottomGodRays ( void );
-	void RenderDebugFrustum ( const Camera& i_CurrentViewingCamera );
-
-
-	void Destroy ( void );
-
-public:
-	struct BoatPropellerWashData
-	{
-		float DistortFactor;
-	};
-
-	struct BoatKelvinWakeData
-	{
-		glm::vec3 BoatPosition;
-		glm::vec3 WakePosition;
-		float Amplitude;
-		float FoamAmount;
-	};
-
-	Ocean ( void );
-	Ocean ( const GlobalConfig& i_Config );
-	~Ocean ( void );
-
-	void Initialize ( const GlobalConfig& i_Config );
-
-	void Update ( const Camera& i_Camera, const glm::vec3& i_SunDirection,  bool i_IsWireframeMode, bool i_IsFrustumVisible, float i_CrrTime );
-	void UpdateGrid ( unsigned short i_WindowWidth, unsigned short i_WindowHeight );
-	void UpdateBoatEffects (const MotorBoat& i_MotorBoat );
-
-	void Render ( const Camera& i_CurrentViewingCamera );
-
-	float ComputeWaterHeightAt ( const glm::vec2& i_XZ );
-	float ComputeAverageWaterHeightAt ( const glm::vec2& i_XZ, const glm::ivec2& i_Zone );
-
-	float GetWaveAmplitude ( void ) const;
-	unsigned short GetPatchSize ( void ) const;
-	float GetWindSpeed ( void ) const;
-	float GetWindDirectionX ( void ) const;
-	float GetWindDirectionZ ( void ) const;
-	glm::vec3 GetWindDir ( void ) const;
-	float GetOpposingWavesFactor ( void ) const;
-	float GetVerySmallWavesFactor ( void ) const;
-	float GetChoppyScale ( void ) const;
-	float GetTileScale ( void ) const;
-
-	unsigned short GetGodRaysNumberOfSamples ( void ) const;
-	float GetGodRaysExposure ( void ) const;
-	float GetGodRaysDecay ( void ) const;
-	float GetGodRaysDensity ( void ) const;
-	float GetGodRaysWeight ( void ) const;
-
-	bool IsUnderWater ( void ) const;
-
-	void SetWaveAmplitude ( float i_WaveAmplitude );
-	void SetPatchSize ( unsigned short i_PatchSize );
-	void SetWindSpeed ( float i_WindSpeed );
-	void SetWindDirectionX ( float i_WindDirectionX );
-	void SetWindDirectionZ ( float i_WindDirectionZ );
-	void SetOpposingWavesFactor ( float i_OpposingWavesFactor );
-	void SetVerySmallWavesFactor ( float i_VerySmallWavesFactor );
-	void SetChoppyScale ( float i_ChoppyScale );
-	void SetTileScale ( float i_TileScale );
-
-	void SetGodRaysNumberOfSamples ( unsigned short i_NumberOfSamples );
-	void SetGodRaysExposure ( float i_Exposure );
-	void SetGodRaysDecay ( float i_Decay );
-	void SetGodRaysDensity ( float i_Density );
-	void SetGodRaysWeight ( float i_Weight );
 };
 
 #endif /* OCEAN_H */

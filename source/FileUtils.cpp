@@ -1,9 +1,7 @@
 /* Author: BAIRAC MIHAI */
 
 #include "FileUtils.h"
-
 #include <fstream>
-
 #include "ErrorHandler.h"
 
 

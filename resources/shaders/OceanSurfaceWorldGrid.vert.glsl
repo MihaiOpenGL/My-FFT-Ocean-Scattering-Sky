@@ -158,6 +158,8 @@ float calculateWaveDisplacementAttenuation (float d, float dmin, float dmax)
 
     float att = d > dmax ? 0.0f: clamp(0.0f, 1.0f, (1.0f / ((dmin - dmax) * (dmin - dmax))) * ((d - dmax) * (d - dmax)));
 
+	att = clamp(att, 0.0f, 1.0f);
+
 	return att;
 }
 
@@ -302,7 +304,8 @@ void main (void)
 
 	// better and smoother blending !!!
 	// make blend factor the same with falloff factor
-	v_blendFactor = calculateWaveDisplacementAttenuation(dist, u_WaveBlending.Begin, u_WaveBlending.End);
+	//v_blendFactor = calculateWaveDisplacementAttenuation(dist, u_WaveBlending.Begin, u_WaveBlending.End);
+	v_blendFactor = clamp((u_WaveBlending.End - dist) / (u_WaveBlending.End - u_WaveBlending.Begin), 0.0f, 1.0f);
 
 	// FOR DEBUGGING
 	//v_blendFactor = 1.0f - v_blendFactor; //inverse displacement
