@@ -63,7 +63,7 @@ TEXTURE UNIT ALLOCATION
 
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
-
+#include "Common.h"
 
 ///////// Timer - check elapsed time
 /** Use to init the clock */
@@ -383,7 +383,7 @@ GLFWwindow* InitGLContext(void)
 		}
 		////
 
-		//	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+			glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); /// MAC OS X fix !!!
 		//	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
 		//	glfwWindowHint(GLFW_SAMPLES, 8); // big perfornace penalty!
@@ -490,11 +490,7 @@ GLFWwindow* InitGLContext(void)
 	//glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTexUnits);
 	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTexUnits);
 	std::cout << "Max Texture Units: " << maxTexUnits << std::endl;
-
-	int maxImageUnits = 0;
-	glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
-	std::cout << "Max Image Units: " << maxImageUnits << std::endl;
-
+	
 	//// http://stackoverflow.com/questions/29707968/get-maximum-number-of-framebuffer-color-attachments
 	int maxColorAtts = 0;
 	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAtts);
@@ -515,10 +511,18 @@ GLFWwindow* InitGLContext(void)
 	int maxTexCoords = 0;
 	glGetIntegerv(GL_MAX_TEXTURE_COORDS, &maxTexCoords);
 	std::cout << "Max Texture Coordinates: " << maxTexCoords << std::endl;
+	
+	int maxVertexOutputs = 0;
+	glGetIntegerv(GL_MAX_VERTEX_OUTPUT_COMPONENTS, &maxVertexOutputs);
+	std::cout << "Max Vertex Outputs: " << maxVertexOutputs << std::endl;
 
 	int maxVertexUniforms = 0;
 	glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &maxVertexUniforms);
 	std::cout << "Max Vertex Uniforms: " << maxVertexUniforms << std::endl;
+
+	int maxFragmentInputs = 0;
+	glGetIntegerv(GL_MAX_FRAGMENT_INPUT_COMPONENTS, &maxFragmentInputs);
+	std::cout << "Max Fragment Inputs: " << maxFragmentInputs << std::endl;
 
 	int maxFragmentUniforms = 0;
 	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxFragmentUniforms);
@@ -552,6 +556,26 @@ GLFWwindow* InitGLContext(void)
 	if (glewGetExtension("GL_ARB_geometry_shader4"))
 	{
 		std::cout << "YES to Geometry Shaders!" << std::endl;
+		
+			int maxGeometryOutputVertices = 0;
+			glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &maxGeometryOutputVertices);
+			std::cout << "Max Geometry Output Vertices: " << maxGeometryOutputVertices << std::endl;
+
+			int maxGeometryInputComponents = 0;
+			glGetIntegerv(GL_MAX_GEOMETRY_INPUT_COMPONENTS, &maxGeometryInputComponents);
+			std::cout << "Max Geometry Input Components: " << maxGeometryInputComponents << std::endl;
+
+			int maxGeometryOutputComponents = 0;
+			glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_COMPONENTS, &maxGeometryOutputComponents);
+			std::cout << "Max Geometry Output Components: " << maxGeometryOutputComponents << std::endl;
+
+			int maxGeometryTotalOutputComponents = 0;
+			glGetIntegerv(GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS, &maxGeometryTotalOutputComponents);
+			std::cout << "Max Geometry Total Output Components: " << maxGeometryTotalOutputComponents << std::endl;
+			
+			int maxGeometryUniformComponents = 0;
+			glGetIntegerv(GL_MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS, &maxGeometryUniformComponents);
+			std::cout << "Max Geometry Uniform Components" << maxGeometryUniformComponents << std::endl;
 	}
 	else
 	{
@@ -561,17 +585,39 @@ GLFWwindow* InitGLContext(void)
 		g_Config.Scene.Ocean.Grid.Type = CustomTypes::Ocean::GridType::GT_WORLD_SPACE;
 	}
 
-	int maxGeometryOutputVertices = 0;
-	glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &maxGeometryOutputVertices);
-	std::cout << "Max Geometry Output Vertices: " << maxGeometryOutputVertices << std::endl;
-
-	int maxGeometryOutputComponents = 0;
-	glGetIntegerv(GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS, &maxGeometryOutputComponents);
-	std::cout << "Max Geometry Output Components: " << maxGeometryOutputComponents << std::endl;
-
 	if (glewGetExtension("GL_ARB_compute_shader"))
 	{
 		std::cout << "YES to Compute Shaders!" << std::endl;
+		
+		int maxWorkGroupsCount[3];
+		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkGroupsCount[0]); //X
+		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkGroupsCount[1]); //Y
+		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkGroupsCount[2]); //Z
+
+		std::cout << "Max dispatchable Work Groups: X: " << maxWorkGroupsCount[0] << std::endl;
+		std::cout << "Max dispatchable Work Groups: Y: " << maxWorkGroupsCount[1] << std::endl;
+		std::cout << "Max dispatchable Work Groups: Z: " << maxWorkGroupsCount[2] << std::endl;
+
+		int maxWorkGroupsSize[3];
+		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxWorkGroupsSize[0]); //X
+		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxWorkGroupsSize[1]); //Y
+		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxWorkGroupsSize[2]); //Z
+
+		std::cout << "Max Work Groups Size: X: " << maxWorkGroupsSize[0] << std::endl;
+		std::cout << "Max Work Groups Size: Y: " << maxWorkGroupsSize[1] << std::endl;
+		std::cout << "Max Work Groups Size: Z: " << maxWorkGroupsSize[2] << std::endl;
+
+		int maxInvocationsWithinWorkGroup = 0;
+		glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &maxInvocationsWithinWorkGroup);
+		std::cout << "Max Invocations with a work group: " << maxInvocationsWithinWorkGroup << std::endl;
+
+		int maxSharedMemorySize = 0;
+		glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, &maxSharedMemorySize);
+		std::cout << "Max Shared Storage Size: " << maxSharedMemorySize << std::endl;
+		
+		int maxImageUnits = 0;
+		glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
+		std::cout << "Max Image Units: " << maxImageUnits << std::endl;
 	}
 	else
 	{
@@ -587,32 +633,6 @@ GLFWwindow* InitGLContext(void)
 	{
 		std::cout << "NO to compute_variable_group_size!" << std::endl;
 	}
-
-	int maxWorkGroupsCount[3];
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkGroupsCount[0]); //X
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkGroupsCount[1]); //Y
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkGroupsCount[2]); //Z
-
-	std::cout << "Max dispatchable Work Groups: X: " << maxWorkGroupsCount[0] << std::endl;
-	std::cout << "Max dispatchable Work Groups: Y: " << maxWorkGroupsCount[1] << std::endl;
-	std::cout << "Max dispatchable Work Groups: Z: " << maxWorkGroupsCount[2] << std::endl;
-
-	int maxWorkGroupsSize[3];
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxWorkGroupsSize[0]); //X
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxWorkGroupsSize[1]); //Y
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxWorkGroupsSize[2]); //Z
-
-	std::cout << "Max Work Groups Size: X: " << maxWorkGroupsSize[0] << std::endl;
-	std::cout << "Max Work Groups Size: Y: " << maxWorkGroupsSize[1] << std::endl;
-	std::cout << "Max Work Groups Size: Z: " << maxWorkGroupsSize[2] << std::endl;
-
-	int maxInvagationsWithinWorkGroup = 0;
-	glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &maxInvagationsWithinWorkGroup);
-	std::cout << "Max Invovations with a work group: " << maxInvagationsWithinWorkGroup << std::endl;
-
-	int maxSahredMemorySize = 0;
-	glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, &maxSahredMemorySize);
-	std::cout << "Max Shared Storage Size: " << maxSahredMemorySize << std::endl;
 
 	if (glewGetExtension("GL_EXT_texture_filter_anisotropic"))
 	{
@@ -706,9 +726,10 @@ void Run ( GLFWwindow* i_pWindow )
 	int windowWidth = 0, windowHeight = 0;
 	glfwGetFramebufferSize(i_pWindow, &windowWidth, &windowHeight);
 
+ERROR_CHECK_START
 	g_pApplication = new Application(g_Config, windowWidth, windowHeight);
 	assert(g_pApplication != nullptr);
-
+ERROR_CHECK_END
 	while (!glfwWindowShouldClose(i_pWindow))
 	{
 
@@ -724,6 +745,8 @@ clock_t begin = clock();
 
 		crrTime *= g_Config.Simulation.TimeScale;
 
+ERROR_CHECK_START
+
 		////////////////////////////
 		if (g_pApplication)
 		{
@@ -732,6 +755,8 @@ clock_t begin = clock();
 		}
 
 		UpdateInput(i_pWindow);
+
+ERROR_CHECK_END
 
 		CalcFPS(i_pWindow, 1.0f, "My FFT Ocean + Scattering Sky");
 
@@ -746,8 +771,9 @@ clock_t end = clock();
 double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 std::cout << "time spent: " << time_spent << std::endl;
 #endif // CHECK_TIME_IN_UPDATE
-
 	}
+	
+	SAFE_DELETE(g_pApplication);
 }
 
 void TerminateGLContext ( GLFWwindow* i_pWindow )

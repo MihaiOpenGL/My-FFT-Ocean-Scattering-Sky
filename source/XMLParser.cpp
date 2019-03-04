@@ -3,6 +3,7 @@
 #include "XMLParser.h"
 #include <fstream>
 #include "ErrorHandler.h"
+// glm::vec2, glm::vec3, come from the header
 #include "glm/gtc/constants.hpp" //pi()
 
 #define ELEMENT_START 0
@@ -57,7 +58,7 @@ void XMLParser::Initialize ( const std::string& i_FileName )
 	// tokenize the file content into lines
 	std::vector<std::string> lines;
 
-	std::string delimiters = "\n";
+	std::string delimiters = "\r\n";
 	Tokenize(fileContent, delimiters, lines);
 
 	// parse each line and build the XML tree

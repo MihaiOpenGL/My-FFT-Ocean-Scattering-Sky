@@ -5,8 +5,9 @@
 #include "Common.h"
 #include "ErrorHandler.h"
 #include "GL/glew.h"
-#include "glm/glm.hpp" //
-#include "glm/gtc/constants.hpp" //pi()
+#include "glm/exponential.hpp" //log2(), pow()
+#include "glm/trigonometric.hpp" //cos(), sin() 
+#include "glm/gtc/constants.hpp" //two_pi()
 #include "GlobalConfig.h"
 
 
@@ -63,11 +64,15 @@ void GPUComp2DIFFT::Initialize ( const GlobalConfig& i_Config )
 		m_PingPongTexIds[i] = m_TM.Create2DArrayTexture(m_FFTLayerCount, GL_RGBA16F, GL_RGBA, GL_FLOAT, m_FFTSize, m_FFTSize, GL_REPEAT, GL_LINEAR, nullptr, i_Config.TexUnit.Ocean.GPU2DIFFTComp.PingArrayMap + i, m_kMipmapCount);
 	}
 
-	float* pIndicesData = ComputeIndicesLookupTexture();
+	float* pIndicesData = new float[m_FFTSize];
+	assert(pIndicesData != nullptr);
+	ComputeIndicesLookupTexture(pIndicesData);
 	m_IndicesTexId = m_TM.Create1DTexture(GL_R16F, GL_RED, GL_FLOAT, m_FFTSize, GL_CLAMP_TO_EDGE, GL_NEAREST, pIndicesData, i_Config.TexUnit.Ocean.GPU2DIFFTComp.IndicesMap);
 	SAFE_ARRAY_DELETE(pIndicesData);
 
-	float* pWeightsData = ComputeWeightsLookupTexture();
+	float* pWeightsData = new float[m_NumButterflies * m_FFTSize * 2];
+	assert(pWeightsData != nullptr);
+	ComputeWeightsLookupTexture(pWeightsData);
 	m_WeightsTexId = m_TM.Create2DTexture(GL_RG16F, GL_RG, GL_FLOAT, m_FFTSize, m_NumButterflies, GL_CLAMP_TO_EDGE, GL_NEAREST, pWeightsData, i_Config.TexUnit.Ocean.GPU2DIFFTComp.WeightsMap);
 	SAFE_ARRAY_DELETE(pWeightsData);
 	//////////////
@@ -115,20 +120,16 @@ void GPUComp2DIFFT::Initialize ( const GlobalConfig& i_Config )
 }
 
 ///////////////////////////////////
-float* GPUComp2DIFFT::ComputeIndicesLookupTexture ( void )
+void GPUComp2DIFFT::ComputeIndicesLookupTexture ( float* i_pIndices )
 {
-	float* pIndices = new float[m_FFTSize];
-	assert(pIndices != nullptr);
-
+	assert(i_pIndices != nullptr);
 
 	for (unsigned short i = 0; i < m_FFTSize; ++i)
 	{
-		pIndices[i] = i;
+		i_pIndices[i] = i;
 	}
 
-	ShuffleIndices(pIndices, m_FFTSize, 0);
-
-	return pIndices;
+	ShuffleIndices(i_pIndices, m_FFTSize, 0);
 }
 
 void GPUComp2DIFFT::ShuffleIndices ( float* o_pBuffer, unsigned short i_N, unsigned short i_Offset )
@@ -159,10 +160,9 @@ void GPUComp2DIFFT::ShuffleIndices ( float* o_pBuffer, unsigned short i_N, unsig
 	}
 }
 
-float* GPUComp2DIFFT::ComputeWeightsLookupTexture ( void )
+void GPUComp2DIFFT::ComputeWeightsLookupTexture ( float* i_pWeights )
 {
-	float* pWeights = new float[m_NumButterflies * m_FFTSize * 2];
-	assert(pWeights != nullptr);
+	assert(i_pWeights != nullptr);
 
 	for (unsigned short i = 0; i < m_NumButterflies; ++i)
 	{
@@ -178,13 +178,11 @@ float* GPUComp2DIFFT::ComputeWeightsLookupTexture ( void )
 				ComputeWeight(k * nBlocks, wr, wi);
 
 				unsigned short offset = 2 * (i * m_FFTSize + i1);
-				pWeights[offset + 0] = wr;
-				pWeights[offset + 1] = wi;
+				i_pWeights[offset + 0] = wr;
+				i_pWeights[offset + 1] = wi;
 			}
 		}
 	}
-
-	return pWeights;
 }
 
 void GPUComp2DIFFT::ComputeWeight ( unsigned short i_K, float& i_Wr, float& i_Wi )

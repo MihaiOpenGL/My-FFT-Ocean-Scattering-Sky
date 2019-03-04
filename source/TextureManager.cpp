@@ -12,11 +12,14 @@
 
 #include "TextureManager.h"
 #include "GL/glew.h"
+#include "Common.h"
 #include "ErrorHandler.h"
 #include "gli/texture.hpp"
 #include "gli/load.hpp"
 #include "gli/gl.hpp"
+#include "glm/vec3.hpp"
 #include <fstream>
+#include <assert.h>
 
 
 int TextureManager::m_MaxTexUnits = 0;
@@ -55,8 +58,11 @@ void TextureManager::Initialize ( const std::string& i_Name )
 void TextureManager::Destroy ( void )
 {
 	// These are the targets we use
+	glBindTexture(GL_TEXTURE_1D, 0);
+	glBindTexture(GL_TEXTURE_1D_ARRAY, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+	glBindTexture(GL_TEXTURE_3D, 0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
 	for (size_t i = 0; i < m_TextureDataArray.size(); ++ i)
@@ -73,13 +79,7 @@ unsigned int TextureManager::Load1DTexture ( const std::string& i_ImageFileName,
 	if (texture.empty())
 	{
 		ERR("Image file " + i_ImageFileName + " failed to load!");
-		return 2;
-	}
-
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
+		return 0;
 	}
 
 	gli::gl GL;
@@ -87,14 +87,10 @@ unsigned int TextureManager::Load1DTexture ( const std::string& i_ImageFileName,
 	if (target != GL_TEXTURE_1D)
 	{
 		ERR("Texture target must be GL_TEXTURE_1D!");
-		return 2;
+		return 0;
 	}
 
-	unsigned int texId = 0;
-	glGenTextures(1, &texId);
-
-	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(target, texId);
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
 	gli::gl::format format = GL.translate(texture.format());
 	if (i_IsGammaCorrected)
@@ -124,53 +120,7 @@ unsigned int TextureManager::Load1DTexture ( const std::string& i_ImageFileName,
 		glTexImage1D(target, 0, format.Internal, dimensions.x, 0, format.External, format.Type, texture.data());
 	}
 
-	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	if (i_AnisoFiltering)
-	{
-		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
-	}
-
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
@@ -180,13 +130,7 @@ unsigned int TextureManager::Load1DArrayTexture ( const std::vector<std::string>
 	if (i_ImageFileNameArray.empty())
 	{
 		ERR("Image file array is empty!");
-		return 2;
-	}
-
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
+		return 0;
 	}
 
 	unsigned int texId = 0;
@@ -197,7 +141,7 @@ unsigned int TextureManager::Load1DArrayTexture ( const std::vector<std::string>
 		if (texture.empty())
 		{
 			ERR("Image file " + i_ImageFileNameArray[i] + " failed to load!");
-			return 2;
+			return 0;
 		}
 
 		gli::gl GL;
@@ -205,7 +149,7 @@ unsigned int TextureManager::Load1DArrayTexture ( const std::vector<std::string>
 		if (target != GL_TEXTURE_1D_ARRAY)
 		{
 			ERR("Texture target must be GL_TEXTURE_1D_ARRAY!");
-			return 2;
+			return 0;
 		}
 
 		gli::gl::format format = GL.translate(texture.format());
@@ -225,11 +169,7 @@ unsigned int TextureManager::Load1DArrayTexture ( const std::vector<std::string>
 
 		if (i == 0)
 		{
-			texId = 0;
-			glGenTextures(1, &texId);
-
-			if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-			glBindTexture(target, texId);
+			texId = GenAndBindTexture(target, i_TexUnitId);
 
 			if (gli::is_compressed(texture.format()))
 			{
@@ -259,54 +199,7 @@ unsigned int TextureManager::Load1DArrayTexture ( const std::vector<std::string>
 		}
 	}
 
-	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	if (i_AnisoFiltering)
-	{
-		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
-	}
-
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-
-
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
@@ -317,13 +210,7 @@ unsigned int TextureManager::Load2DTexture ( const std::string& i_ImageFileName,
 	if (texture.empty())
 	{
 		ERR("Image file " + i_ImageFileName + " failed to load!");
-		return 2;
-	}
-
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
+		return 0;
 	}
 
 	gli::gl GL;
@@ -331,14 +218,10 @@ unsigned int TextureManager::Load2DTexture ( const std::string& i_ImageFileName,
 	if (target != GL_TEXTURE_2D)
 	{
 		ERR("Texture target must be GL_TEXTURE_2D!");
-		return 2;
+		return 0;
 	}
 
-	unsigned int texId = 0;
-	glGenTextures(1, &texId);
-
-	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(target, texId);
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
 	gli::gl::format format = GL.translate(texture.format());
 	if (i_IsGammaCorrected)
@@ -368,55 +251,7 @@ unsigned int TextureManager::Load2DTexture ( const std::string& i_ImageFileName,
 		glTexImage2D(target, 0, format.Internal, dimensions.x, dimensions.y, 0, format.External, format.Type, texture.data());
 	}
 
-	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_T, i_WrapType);
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	if (i_AnisoFiltering)
-	{
-		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
-	}
-
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-
-	
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
@@ -426,13 +261,7 @@ unsigned int TextureManager::Load2DArrayTexture ( const std::vector<std::string>
 	if (i_ImageFileNameArray.empty())
 	{
 		ERR("Image file array is empty!");
-		return 2;
-	}
-
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
+		return 0;
 	}
 
 	unsigned int texId = 0;
@@ -443,7 +272,7 @@ unsigned int TextureManager::Load2DArrayTexture ( const std::vector<std::string>
 		if (texture.empty())
 		{
 			ERR("Image file " + i_ImageFileNameArray[i] + " failed to load!");
-			return 2;
+			return 0;
 		}
 
 		gli::gl GL;
@@ -451,7 +280,7 @@ unsigned int TextureManager::Load2DArrayTexture ( const std::vector<std::string>
 		if (target != GL_TEXTURE_2D_ARRAY)
 		{
 			ERR("Texture target must be GL_TEXTURE_2D_ARRAY!");
-			return 2;
+			return 0;
 		}
 
 		gli::gl::format format = GL.translate(texture.format());
@@ -471,11 +300,7 @@ unsigned int TextureManager::Load2DArrayTexture ( const std::vector<std::string>
 
 		if (i == 0)
 		{
-			texId = 0;
-			glGenTextures(1, &texId);
-
-			if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-			glBindTexture(target, texId);
+			texId = GenAndBindTexture(target, i_TexUnitId);
 
 			if (gli::is_compressed(texture.format()))
 			{
@@ -505,55 +330,7 @@ unsigned int TextureManager::Load2DArrayTexture ( const std::vector<std::string>
 		}
 	}
 
-	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_T, i_WrapType);
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	if (i_AnisoFiltering)
-	{
-		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
-	}
-
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-
-
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
@@ -564,13 +341,7 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::string& i_ImageFile
 	if (texture.empty())
 	{
 		ERR("Image file " + i_ImageFileName + " failed to load!");
-		return 2;
-	}
-
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
+		return 0;
 	}
 
 	gli::gl GL;
@@ -578,14 +349,10 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::string& i_ImageFile
 	if (target != GL_TEXTURE_CUBE_MAP)
 	{
 		ERR("Texture target must be GL_TEXTURE_CUBE_MAP!");
-		return 2;
+		return 0;
 	}
 
-	unsigned int texId = 0;
-	glGenTextures(1, &texId);
-
-	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(target, texId);
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
 	gli::gl::format format = GL.translate(texture.format());
 	if (i_IsGammaCorrected)
@@ -618,50 +385,7 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::string& i_ImageFile
 		}
 	}
 
-	if (i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_CLAMP_TO_EDGE wrap type is supported!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_T, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_R, i_WrapType);
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount);
 
 	return texId;
 }
@@ -671,26 +395,16 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::vector<std::string>
 	if (i_ImageFileArray.empty())
 	{
 		ERR("Image file array is empty!");
-		return 2;
+		return 0;
 	}
 
 	if (i_ImageFileArray.size() != 6)
 	{
 		ERR("Image file array must ccontain 6 images/faces!");
-		return 2;
+		return 0;
 	}
 
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
-	}
-
-	unsigned int texId = 0;
-	glGenTextures(1, &texId);
-
-	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, texId);
+	unsigned int texId = GenAndBindTexture(GL_TEXTURE_CUBE_MAP, i_TexUnitId);
 
 	for (unsigned short i = 0; i < i_ImageFileArray.size(); ++ i)
 	{
@@ -698,7 +412,7 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::vector<std::string>
 		if (texture.empty())
 		{
 			ERR("Image file " + std::string(i_ImageFileArray[i]) + " failed to load!");
-			return 2;
+			return 0;
 		}
 
 		gli::gl GL;
@@ -706,7 +420,7 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::vector<std::string>
 		if (target != GL_TEXTURE_2D)
 		{
 			ERR("Texture target must be GL_TEXTURE_2D!");
-			return 2;
+			return 0;
 		}
 
 		gli::gl::format format = GL.translate(texture.format());
@@ -744,122 +458,22 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::vector<std::string>
 		}
 	}
 
-	if (i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_CLAMP_TO_EDGE wrap type is supported!");
-		return 2;
-	}
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, i_WrapType);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, i_WrapType);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, i_WrapType);
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
-
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-	}
+	SetupTextureParameteres(GL_TEXTURE_CUBE_MAP, i_WrapType, i_FilterType, i_MipMapCount);
 
 	return texId;
 }
 
 unsigned int TextureManager::Create1DTexture ( unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering )
 {
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
-	}
-
-	unsigned int texId = 0;
-	glGenTextures(1, &texId);
-
 	unsigned int target = GL_TEXTURE_1D;
 
-	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(target, texId);
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
 	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, 0, i_WrapType, i_FilterType, i_MipMapCount, 1));
 	// allocate memory and load the texture data
 	glTexImage1D(target, 0, i_FormatInternal, i_Width, 0, i_FormatExternal, i_FormatType, i_pData);
 
-	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	if (i_AnisoFiltering)
-	{
-		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
-	}
-
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-
-
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
@@ -869,195 +483,63 @@ unsigned int TextureManager::Create1DArrayTexture ( unsigned short i_LayerCount,
 	if (!TextureManager::CheckLayerCount(i_LayerCount))
 	{
 		ERR("Number of layers exceeds the supported level!");
-		return 2;
+		return 0;
 	}
-
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
-	}
-
-	unsigned int texId = 0;
-	glGenTextures(1, &texId);
 
 	unsigned int target = GL_TEXTURE_1D_ARRAY;
 
-	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(target, texId);
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
 	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, 0, i_WrapType, i_FilterType, i_MipMapCount, i_LayerCount));
 	// allocate memory and load the texture data
 	glTexImage2D(target, 0, i_FormatInternal, i_Width, i_LayerCount, 0, i_FormatExternal, i_FormatType, i_pData);
 
-	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	if (i_AnisoFiltering)
-	{
-		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
-	}
-
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
 
 unsigned int TextureManager::Create2DTexture ( unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering )
 {
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
-	}
-
-	unsigned int texId = 0;
-	glGenTextures(1, &texId);
-
 	unsigned int target = GL_TEXTURE_2D;
 
-	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(target, texId);
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
 	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, 1));
 	// allocate memory and load the texture data
 	glTexImage2D(target, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_FormatType, i_pData);
 
-	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_T, i_WrapType);
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	if (i_AnisoFiltering)
-	{
-		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
-	}
-
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-
-	
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
 
 unsigned int TextureManager::Create2DRawTexture ( const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering, unsigned short i_DataOffset )
 {
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
-	}
-
 	if (i_FormatExternal != GL_RED && i_FormatExternal != GL_RG &&
 		i_FormatExternal != GL_RGB && i_FormatExternal != GL_RGBA &&
 		i_FormatExternal != GL_RGB16F && i_FormatExternal != GL_RGBA16F)
 	{
 		ERR("Only GL_RED, GL_RG, GL_RGB, GL_RGBA, GL_RGB16F and GL_RGBA16F external formats are supported!");
-		return 2;
+		return 0;
 	}
 
 	if (i_DataType != GL_UNSIGNED_BYTE && i_DataType != GL_FLOAT)
 	{
 		ERR("Only GL_UNSIGNED_BYTE and GL_FLOAT data types are supported!");
-		return 2;
+		return 0;
 	}
-
-	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
-		return 2;
-	}
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
 
 	FILE* pF = fopen(i_ImageFileName.c_str(), "rb");
 
 	if (!pF)
 	{
 		ERR("Failed to open " + i_ImageFileName + " image file name!");
-		return 2;
+		return 0;
 	}
 
-	void* pData = nullptr;
+	unsigned char* pUCharData = nullptr;
+	float* pFloatData = nullptr;
 
 	unsigned short channelCount = 1;
 	switch (i_FormatExternal)
@@ -1083,83 +565,47 @@ unsigned int TextureManager::Create2DRawTexture ( const std::string& i_ImageFile
 	if (i_DataOffset >= size)
 	{
 		ERR("Data offset " << i_DataOffset << " is bigger than the size of the image!");
-		return 2;
+		return 0;
 	}
 
 	size += i_DataOffset;
 
 	if (i_DataType == GL_UNSIGNED_BYTE)
 	{
-		pData = new unsigned char[size];
-
-		fread(pData, 1, size * sizeof(unsigned char), pF);
+		pUCharData = new unsigned char[size];
+		assert(pUCharData != nullptr);
+		fread(pUCharData, 1, size * sizeof(unsigned char), pF);
 	}
 	else if (i_DataType == GL_FLOAT)
 	{
-		pData = new float[size];
-
-		fread(pData, 1, size * sizeof(float), pF);
+		pFloatData = new float[size];
+		assert(pFloatData != nullptr);
+		fread(pFloatData, 1, size * sizeof(float), pF);
 	}
 
 	fclose(pF);
 
-	unsigned int texId = 0;
-	glGenTextures(1, &texId);
-
 	unsigned int target = GL_TEXTURE_2D;
 
-	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(target, texId);
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
 	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_DataType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, 1));
 	// allocate memory and load the texture data
 
 	if (i_DataType == GL_UNSIGNED_BYTE)
 	{
-		glTexImage2D(target, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_DataType, (unsigned char*)pData + i_DataOffset);
+		glTexImage2D(target, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_DataType, pUCharData + i_DataOffset);
+		
+		SAFE_ARRAY_DELETE(pUCharData);
 	}
 	else if (i_DataType == GL_FLOAT)
 	{
-		glTexImage2D(target, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_DataType, (float*)pData + i_DataOffset);
+		glTexImage2D(target, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_DataType, pFloatData + i_DataOffset);
+		
+		SAFE_ARRAY_DELETE(pFloatData);
 	}
 
-	delete[] pData;
-	pData = nullptr;
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_T, i_WrapType);
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	if (i_AnisoFiltering)
-	{
-		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
-	}
-
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
@@ -1169,111 +615,36 @@ unsigned int TextureManager::Create2DArrayTexture ( unsigned short i_LayerCount,
 	if (!TextureManager::CheckLayerCount(i_LayerCount))
 	{
 		ERR("Number of layers exceeds the supported level!");
-		return 2;
+		return 0;
 	}
-
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
-	}
-
-	unsigned int texId = 0;
-	glGenTextures(1, &texId);
 
 	unsigned int target = GL_TEXTURE_2D_ARRAY;
 
-	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(target, texId);
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
 	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, i_LayerCount));
 	// allocate memory and load the texture data
 	glTexImage3D(target, 0, i_FormatInternal, i_Width, i_Height, i_LayerCount, 0, i_FormatExternal, i_FormatType, i_pData);
 
-	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_T, i_WrapType);
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
-	}
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	if (i_AnisoFiltering)
-	{
-		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
-	}
-
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
 
 unsigned int TextureManager::Create3DRawTexture ( const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned short i_Depth, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering, unsigned short i_DataOffset )
 {
-	if (i_TexUnitId >= m_MaxTexUnits)
-	{
-		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
-	}
-
 	if (i_FormatExternal != GL_RED && i_FormatExternal != GL_RG &&
 		i_FormatExternal != GL_RGB && i_FormatExternal != GL_RGBA &&
 		i_FormatExternal != GL_RGB16F && i_FormatExternal != GL_RGBA16F)
 	{
 		ERR("Only GL_RGB, GL_RGBA, GL_RGB16F and GL_RGBA16F external formats are supported!");
-		return 2;
+		return 0;
 	}
 
 	if (i_DataType != GL_UNSIGNED_BYTE && i_DataType != GL_FLOAT)
 	{
 		ERR("Only GL_UNSIGNED_BYTE and GL_FLOAT data types are supported!");
-		return 2;
-	}
-
-	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
-	{
-		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
-		return 2;
-	}
-
-	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
-	{
-		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
+		return 0;
 	}
 
 	FILE* pF = fopen(i_ImageFileName.c_str(), "rb");
@@ -1281,10 +652,11 @@ unsigned int TextureManager::Create3DRawTexture ( const std::string& i_ImageFile
 	if (!pF)
 	{
 		ERR("Failed to open " + i_ImageFileName + " image file name!");
-		return 1;
+		return 0;
 	}
 
-	void* pData = nullptr;
+	unsigned char* pUCharData = nullptr;
+	float* pFloatData = nullptr;
 
 	unsigned short channelCount = 1;
 	switch (i_FormatExternal)
@@ -1310,161 +682,172 @@ unsigned int TextureManager::Create3DRawTexture ( const std::string& i_ImageFile
 	if (i_DataOffset >= size)
 	{
 		ERR("Data offset " << i_DataOffset << " is bigger than the size of the image!");
-		return 2;
+		return 0;
 	}
 
 	size += i_DataOffset;
 
 	if (i_DataType == GL_UNSIGNED_BYTE)
 	{
-		pData = new unsigned char[size];
-
-		fread(pData, 1, size * sizeof(unsigned char), pF);
+		pUCharData = new unsigned char[size];
+		assert(pUCharData);
+		fread(pUCharData, 1, size * sizeof(unsigned char), pF);
 	}
 	else if (i_DataType == GL_FLOAT)
 	{
-		pData = new float[size];
-
-		fread(pData, 1, size * sizeof(float), pF);
+		pFloatData = new float[size];
+		assert(pFloatData != nullptr);
+		fread(pFloatData, 1, size * sizeof(float), pF);
 	}
 
 	fclose(pF);
 
-	unsigned int texId = 0;
-	glGenTextures(1, &texId);
-
 	unsigned int target = GL_TEXTURE_3D;
 
-	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(target, texId);
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
 	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_DataType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, 1));
 	// allocate memory and load the texture data
 	if (i_DataType == GL_UNSIGNED_BYTE)
 	{
-		glTexImage3D(target, 0, i_FormatInternal, i_Width, i_Height, i_Depth, 0, i_FormatExternal, i_DataType, (unsigned char*)pData + i_DataOffset);
+		glTexImage3D(target, 0, i_FormatInternal, i_Width, i_Height, i_Depth, 0, i_FormatExternal, i_DataType, pUCharData + i_DataOffset);
+		
+		SAFE_ARRAY_DELETE(pUCharData);
 	}
 	else if (i_DataType == GL_FLOAT)
 	{
-		glTexImage3D(target, 0, i_FormatInternal, i_Width, i_Height, i_Depth, 0, i_FormatExternal, i_DataType, (float*)pData + i_DataOffset);
+		glTexImage3D(target, 0, i_FormatInternal, i_Width, i_Height, i_Depth, 0, i_FormatExternal, i_DataType, pFloatData + i_DataOffset);
+		
+		SAFE_ARRAY_DELETE(pFloatData);
 	}
 
-
-	delete[] pData;
-	pData = nullptr;
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_T, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_R, i_WrapType);
-
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
-
-	if (i_AnisoFiltering)
-	{
-		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
-	}
-
-	if (i_MipMapCount > 1000)
-	{
-		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
-	}
-
-	if (i_MipMapCount >= 0)
-	{
-		if (i_FilterType == GL_NEAREST)
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-
-		if (i_MipMapCount > 0)
-		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
-		}
-		glGenerateMipmap(target);
-	}
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
 
 unsigned int TextureManager::CreateCubeMapTexture ( unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData, short i_TexUnitId, short i_MipMapCount )
 {
+	unsigned int target = GL_TEXTURE_CUBE_MAP;
+
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
+
+	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, 1));
+
+	for (unsigned short i = 0; i < 6; ++i)
+	{
+		// allocate memory and load the texture data
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_FormatType, nullptr);
+
+
+		if (i_pData != nullptr)
+		{
+			// copy data
+			glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, i, i_Width, 0, i_FormatExternal, i_FormatType, i_pData);
+		}
+	}
+
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount);
+
+	return texId;
+}
+
+unsigned int TextureManager::GenAndBindTexture(unsigned int i_Target, short i_TexUnitId)
+{
+	if (i_Target != GL_TEXTURE_1D && i_Target != GL_TEXTURE_1D_ARRAY && i_Target != GL_TEXTURE_2D &&
+		i_Target != GL_TEXTURE_2D_ARRAY && i_Target != GL_TEXTURE_3D && i_Target != GL_TEXTURE_CUBE_MAP)
+	{
+		ERR("Tex target is invalid!");
+		return 0;
+	}
+
 	if (i_TexUnitId >= m_MaxTexUnits)
 	{
 		ERR("Tex Unit Id exceeds the supported level!");
-		return 2;
+		return 0;
 	}
 
 	unsigned int texId = 0;
 	glGenTextures(1, &texId);
 
-	unsigned int target = GL_TEXTURE_CUBE_MAP;
-
 	if (i_TexUnitId >= 0) glActiveTexture(GL_TEXTURE0 + i_TexUnitId);
-	glBindTexture(target, texId);
+	glBindTexture(i_Target, texId);
 
-	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, 1));
+	return texId;
+}
 
-	// test data
-	std::vector<unsigned char> testData(i_Width * i_Height * 256, 128);
-	for (unsigned short i = 0; i < 6; ++i)
+unsigned int TextureManager::SetupTextureParameteres(unsigned int i_Target, unsigned int i_WrapType, unsigned int i_FilterType, short i_MipMapCount, bool i_AnisoFiltering)
+{
+	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
 	{
-		// allocate memory and load the texture data
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_FormatType, &testData[0]);
+		ERR("Only GL_REPEAT and GL_CLAMP_TO_EDGE wrap types are supported!");
+		return 0;
 	}
-
-	if (i_WrapType != GL_CLAMP_TO_EDGE)
+	
+	switch (i_Target)
 	{
-		ERR("Only GL_CLAMP_TO_EDGE wrap type is supported!");
-		return 2;
+		case GL_TEXTURE_1D:
+		case GL_TEXTURE_1D_ARRAY:
+			glTexParameteri(i_Target, GL_TEXTURE_WRAP_S, i_WrapType);
+			break;
+		case GL_TEXTURE_2D:
+		case GL_TEXTURE_2D_ARRAY:
+			glTexParameteri(i_Target, GL_TEXTURE_WRAP_S, i_WrapType);
+			glTexParameteri(i_Target, GL_TEXTURE_WRAP_T, i_WrapType);
+			break;
+		case GL_TEXTURE_3D:
+		case GL_TEXTURE_CUBE_MAP:
+			glTexParameteri(i_Target, GL_TEXTURE_WRAP_S, i_WrapType);
+			glTexParameteri(i_Target, GL_TEXTURE_WRAP_T, i_WrapType);
+			glTexParameteri(i_Target, GL_TEXTURE_WRAP_R, i_WrapType);
+			break;
+		default:
+			ERR("Invalid target when setting filter type!")
+			break;
 	}
-
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_T, i_WrapType);
-	glTexParameteri(target, GL_TEXTURE_WRAP_R, i_WrapType);
 
 	if (i_FilterType != GL_NEAREST && i_FilterType != GL_LINEAR)
 	{
 		ERR("Only GL_NEAREST and GL_LINEAR filter types are supported(not taking mipmaps into account)!");
-		return 2;
+		return 0;
 	}
 
-	// this line is necesarry for cubemap textures!
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(i_Target, GL_TEXTURE_MAG_FILTER, i_FilterType);
+	glTexParameteri(i_Target, GL_TEXTURE_MIN_FILTER, i_FilterType);
 
-	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, i_FilterType);
-	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, i_FilterType);
+	if (i_AnisoFiltering)
+	{
+		glTexParameterf(i_Target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
+	}
+
+	glTexParameteri(i_Target, GL_TEXTURE_BASE_LEVEL, 0);
+
 
 	if (i_MipMapCount > 1000)
 	{
 		ERR("MipMap count can not be bigger than 1000!");
-		return 2;
+		return 0;
 	}
 
 	if (i_MipMapCount >= 0)
 	{
 		if (i_FilterType == GL_NEAREST)
 		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+			glTexParameteri(i_Target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 		}
 		else
 		{
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(i_Target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		}
 
 		if (i_MipMapCount > 0)
 		{
-			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
+			glTexParameteri(i_Target, GL_TEXTURE_MAX_LEVEL, i_MipMapCount - 1);
 		}
-		glGenerateMipmap(target);
+		glGenerateMipmap(i_Target);
 	}
 
-	return texId;
+	return 0;
 }
 
 void TextureManager::Update1DTextureData ( unsigned int i_TexId, void* i_pNewData ) const

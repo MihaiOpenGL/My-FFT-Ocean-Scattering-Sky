@@ -3,6 +3,8 @@
 #include "FrameBufferManager.h"
 #include <assert.h>
 #include "GL/glew.h"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 #include "ErrorHandler.h"
 
 
@@ -66,6 +68,62 @@ void FrameBufferManager::Destroy ( void )
 	LOG("[" + m_Name + "] FrameBufferManager has been destroyed successfully!");
 }
 
+void FrameBufferManager::CreateSimple(unsigned short i_ColorAttachmentCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, bool i_AnisoFiltering, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType)
+{
+	SetupSimple(i_ColorAttachmentCount, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_AnisoFiltering, i_DepthBufferType);
+
+	CreateQuadModel();
+}
+
+void FrameBufferManager::CreateSimple(const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, unsigned short i_ColorAttachmentCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, bool i_AnisoFiltering, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType)
+{
+	SetupSimple(i_ColorAttachmentCount, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_AnisoFiltering, i_DepthBufferType);
+
+	CreateQuadModel(i_ModelVertexAttributes);
+}
+
+void FrameBufferManager::CreateLayered(unsigned short i_ColorAttachmentCount, unsigned short i_LayerCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, short i_StartTexUnitID, short i_MipMapCount, bool i_AnisoFiltering, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType)
+{
+	SetupLayered(i_ColorAttachmentCount, i_LayerCount, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_AnisoFiltering, i_DepthBufferType);
+
+	CreateQuadModel();
+}
+
+void FrameBufferManager::CreateLayered(const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, unsigned short i_ColorAttachmentCount, unsigned short i_LayerCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, short i_StartTexUnitID, short i_MipMapCount, bool i_AnisoFiltering, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType)
+{
+	SetupLayered(i_ColorAttachmentCount, i_LayerCount, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_AnisoFiltering, i_DepthBufferType);
+
+	CreateQuadModel(i_ModelVertexAttributes);
+}
+
+void FrameBufferManager::CreateLayered(unsigned int i_ColorAttachmentTexId, unsigned short i_ColorAttachmentLayerCount)
+{
+	SetupLayered(i_ColorAttachmentTexId, i_ColorAttachmentLayerCount);
+
+	CreateQuadModel();
+}
+
+void FrameBufferManager::CreateLayered(const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, unsigned int i_ColorAttachmentTexId, unsigned short i_ColorAttachmentLayerCount)
+{
+	SetupLayered(i_ColorAttachmentTexId, i_ColorAttachmentLayerCount);
+
+	CreateQuadModel(i_ModelVertexAttributes);
+}
+
+void FrameBufferManager::CreateCubeMaped(unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType)
+{
+	SetupCubeMaped(i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_DepthBufferType);
+
+	CreateQuadModel();
+}
+
+void FrameBufferManager::CreateCubeMaped(const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType)
+{
+	SetupCubeMaped(i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_DepthBufferType);
+
+	CreateQuadModel(i_ModelVertexAttributes);
+}
+
 void FrameBufferManager::CreateQuadModel ( void )
 {
 	std::vector<MeshBufferManager::VertexData> quadData;
@@ -110,9 +168,9 @@ void FrameBufferManager::SetupSimple ( unsigned short i_ColorAttachmentCount, un
 		return;
 	}
 
-	glGenFramebuffers(1, &m_FBOID);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBOID);
+	GenAndBindFramebuffer();
 
+	// setup draw buffers
 	m_DrawBuffers.resize(i_ColorAttachmentCount);
 
 	unsigned short texUnitID = i_StartTexUnitID;
@@ -122,24 +180,17 @@ void FrameBufferManager::SetupSimple ( unsigned short i_ColorAttachmentCount, un
 
 		unsigned int texId = m_TM.Create2DTexture(i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, nullptr, texUnitID, i_MipMapCount, i_AnisoFiltering);
 
-		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, texId, 0);
+		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, m_DrawBuffers[i], texId, 0);
 
 		++texUnitID;
 	}
 
+	glDrawBuffer(m_DrawBuffers[0]);
+	//
+
 	SetupDepthBuffer(i_DepthBufferType, i_Width, i_Height);
 
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-	int error = 0;
-	if ((error = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		glDeleteFramebuffers(1, &m_FBOID);
-		m_FBOID = 0;
-		ERR("The Auxiliary Framebuffer is incomplete! " + error);
-		return;
-	}
+	CheckCompletenessStatus();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -158,9 +209,9 @@ void FrameBufferManager::SetupLayered ( unsigned short i_ColorAttachmentCount, u
 		return;
 	}
 
-	glGenFramebuffers(1, &m_FBOID);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBOID);
+	GenAndBindFramebuffer();
 
+	// setup draw buffers
 	m_DrawBuffers.resize(i_ColorAttachmentCount * i_LayerCount);
 
 	unsigned short texUnitID = i_StartTexUnitID;
@@ -170,27 +221,22 @@ void FrameBufferManager::SetupLayered ( unsigned short i_ColorAttachmentCount, u
 
 		for (unsigned short j = 0; j < i_LayerCount; ++j)
 		{
-			m_DrawBuffers[i * i_LayerCount + j] = GL_COLOR_ATTACHMENT0 + i_LayerCount * i + j;
+			unsigned int idx = i * i_LayerCount + j;
 
-			glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i_LayerCount * i + j, texId, 0, j);
+			m_DrawBuffers[idx] = GL_COLOR_ATTACHMENT0 + idx;
+
+			glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, m_DrawBuffers[idx], texId, 0, j);
 		}
 
 		++texUnitID;
 	}
 
+	glDrawBuffer(m_DrawBuffers[0]);
+	//
+
 	SetupDepthBuffer(i_DepthBufferType, i_Width, i_Height);
 
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-	int error = 0;
-	if ((error = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		glDeleteFramebuffers(1, &m_FBOID);
-		m_FBOID = 0;
-		ERR("The Auxiliary Framebuffer is incomplete! " + error);
-		return;
-	}
+	CheckCompletenessStatus();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -203,45 +249,37 @@ void FrameBufferManager::SetupLayered ( unsigned int i_ColorAttachmentTexId, uns
 		return;
 	}
 
-	glGenFramebuffers(1, &m_FBOID);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBOID);
+	GenAndBindFramebuffer();
 
+	// setup draw buffers
 	m_DrawBuffers.resize(i_ColorAttachmentLayerCount);
 
 	for (unsigned short i = 0; i < i_ColorAttachmentLayerCount; ++i)
 	{
 		m_DrawBuffers[i] = GL_COLOR_ATTACHMENT0 + i;
 
-		glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, i_ColorAttachmentTexId, 0, i);
+		glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, m_DrawBuffers[i], i_ColorAttachmentTexId, 0, i);
 	}
 
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	glDrawBuffer(m_DrawBuffers[0]);
+	//
 
-	int error = 0;
-	if ((error = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		glDeleteFramebuffers(1, &m_FBOID);
-		m_FBOID = 0;
-		ERR("The Auxiliary Framebuffer is incomplete! " + error);
-		return;
-	}
+	CheckCompletenessStatus();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void FrameBufferManager::SetupCubeMaped ( unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType )
 {
-	glGenFramebuffers(1, &m_FBOID);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBOID);
+	GenAndBindFramebuffer();
 
+	// setup draw buffers
 	m_DrawBuffers.resize(1);
 	m_DrawBuffers[0] = GL_COLOR_ATTACHMENT0;
 
 	// http://stackoverflow.com/questions/462721/rendering-to-cube-map
 	// http://www.gamedev.net/topic/610644-rendering-to-cubemap-for-environment-mapping/
 	// http://gamedev.stackexchange.com/questions/19461/opengl-glsl-render-to-cube-map
-
 
 	m_CubeMapTexId = m_TM.CreateCubeMapTexture(i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, nullptr, i_StartTexUnitID, i_MipMapCount);
 
@@ -254,23 +292,22 @@ void FrameBufferManager::SetupCubeMaped ( unsigned int i_FormatInternal, unsigne
 	2) we need an additional geometry shader to redirect the image to the required face of the cubemap
 	   using the geometry shader we need to render to the quad only once per frame
 */
-	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_CubeMapTexId, 0);
+	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, m_DrawBuffers[0], m_CubeMapTexId, 0);
+
+	glDrawBuffer(m_DrawBuffers[0]);
+	//
 
 	SetupDepthBuffer(i_DepthBufferType, i_Width, i_Height);
 
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-	int error = 0;
-	if ((error = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		glDeleteFramebuffers(1, &m_FBOID);
-		m_FBOID = 0;
-		ERR("The Auxiliary Framebuffer is incomplete! " + error);
-		return;
-	}
+	CheckCompletenessStatus();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void FrameBufferManager::GenAndBindFramebuffer()
+{
+	glGenFramebuffers(1, &m_FBOID);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBOID);
 }
 
 void FrameBufferManager::SetupDepthBuffer ( DEPTH_BUFFER_TYPE i_DepthBufferType, unsigned short i_Width, unsigned short i_Height )
@@ -318,62 +355,6 @@ void FrameBufferManager::SetupDepthBuffer ( DEPTH_BUFFER_TYPE i_DepthBufferType,
 	}
 }
 
-void FrameBufferManager::CreateSimple ( unsigned short i_ColorAttachmentCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, bool i_AnisoFiltering, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType )
-{
-	SetupSimple(i_ColorAttachmentCount, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_AnisoFiltering, i_DepthBufferType);
-
-	CreateQuadModel();
-}
-
-void FrameBufferManager::CreateSimple ( const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, unsigned short i_ColorAttachmentCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, bool i_AnisoFiltering, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType )
-{
-	SetupSimple(i_ColorAttachmentCount, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_AnisoFiltering, i_DepthBufferType);
-
-	CreateQuadModel(i_ModelVertexAttributes);
-}
-
-void FrameBufferManager::CreateLayered ( unsigned short i_ColorAttachmentCount, unsigned short i_LayerCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, short i_StartTexUnitID, short i_MipMapCount, bool i_AnisoFiltering, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType )
-{
-	SetupLayered(i_ColorAttachmentCount, i_LayerCount, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_AnisoFiltering, i_DepthBufferType);
-
-	CreateQuadModel();
-}
-
-void FrameBufferManager::CreateLayered ( const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, unsigned short i_ColorAttachmentCount, unsigned short i_LayerCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, short i_StartTexUnitID, short i_MipMapCount, bool i_AnisoFiltering, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType )
-{
-	SetupLayered(i_ColorAttachmentCount, i_LayerCount, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_AnisoFiltering, i_DepthBufferType);
-
-	CreateQuadModel(i_ModelVertexAttributes);
-}
-
-void FrameBufferManager::CreateLayered ( unsigned int i_ColorAttachmentTexId, unsigned short i_ColorAttachmentLayerCount )
-{
-	SetupLayered(i_ColorAttachmentTexId, i_ColorAttachmentLayerCount);
-
-	CreateQuadModel();
-}
-
-void FrameBufferManager::CreateLayered ( const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, unsigned int i_ColorAttachmentTexId, unsigned short i_ColorAttachmentLayerCount )
-{
-	SetupLayered(i_ColorAttachmentTexId, i_ColorAttachmentLayerCount);
-
-	CreateQuadModel(i_ModelVertexAttributes);
-}
-
-void FrameBufferManager::CreateCubeMaped ( unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType )
-{
-	SetupCubeMaped(i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_DepthBufferType);
-
-	CreateQuadModel();
-}
-
-void FrameBufferManager::CreateCubeMaped ( const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType)
-{
-	SetupCubeMaped(i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_StartTexUnitID, i_MipMapCount, i_DepthBufferType);
-
-	CreateQuadModel(i_ModelVertexAttributes);
-}
-
 void FrameBufferManager::SetupDrawBuffers (unsigned short i_ColorAttachmentCount, unsigned short i_Index )
 {
 
@@ -384,13 +365,7 @@ void FrameBufferManager::SetupDrawBuffers (unsigned short i_ColorAttachmentCount
 	}
 
 	// NOTE! FBO must be bound before calling this function !
-	int drawFboId = 0;
-	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
-	if (drawFboId != m_FBOID)
-	{
-		ERR("The default framebuffer is bound! A FBO must be bound to use this function!");
-		return;
-	}
+	CheckBufferBinding();
 
 	assert((unsigned short)(i_Index + i_ColorAttachmentCount) <= m_DrawBuffers.size());
 
@@ -406,23 +381,33 @@ void FrameBufferManager::AttachCubeMapFace ( unsigned short i_FaceIndex )
 	}
 
 	// NOTE! FBO must be bound before calling this function !
-	int drawFboId = 0;
-	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
-	if (drawFboId != m_FBOID)
-	{
-		ERR("The default framebuffer is bound! A FBO must be bound to use this function!");
-		return;
-	}
+	CheckBufferBinding();
 
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i_FaceIndex, m_CubeMapTexId, 0);
 
+	CheckCompletenessStatus();
+}
+
+void FrameBufferManager::CheckCompletenessStatus(void)
+{
 	int error = 0;
 	if ((error = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE)
 	{
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glDeleteFramebuffers(1, &m_FBOID);
 		m_FBOID = 0;
-		ERR("The Auxiliary Framebuffer is incomplete!");
+		ERR("The Auxiliary Framebuffer is incomplete! " + error);
+		return;
+	}
+}
+
+void FrameBufferManager::CheckBufferBinding(void)
+{
+	int drawFboId = 0;
+	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
+	if (drawFboId != m_FBOID)
+	{
+		ERR("The default framebuffer is bound! A FBO must be bound to use this function!");
 		return;
 	}
 }

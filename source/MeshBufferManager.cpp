@@ -5,6 +5,9 @@
 #include "ErrorHandler.h"
 #include <new> //new, delete
 #include <vector>
+// glm::vec2, glm::vec3 come from the header
+
+#define offsetof(s,m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 
 
 MeshBufferManager::MeshBufferManager ( void )

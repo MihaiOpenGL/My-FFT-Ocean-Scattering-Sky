@@ -1,6 +1,7 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Mesh.h"
+#include <limits>
 #include "Material.h"
 #include "GL/glew.h"
 #include "ErrorHandler.h"

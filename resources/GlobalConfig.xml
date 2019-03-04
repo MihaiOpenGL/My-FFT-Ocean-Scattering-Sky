@@ -2,7 +2,7 @@
 	<Window>
 		<UseWindowHints>false</UseWindowHints>
 		<IsWindowMode>true</IsWindowMode>
-		<IsWindowResizable>true</IsWindowResizable>
+		<IsWindowResizable>false</IsWindowResizable>
 	</Window>
 	<OpenGLContext>
 		<OpenGLVersion>

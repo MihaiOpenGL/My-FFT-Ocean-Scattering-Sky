@@ -15,6 +15,7 @@
 //#define GLM_SWIZZLE //offers the possibility to use: xx(), xy(), xyz(), ...
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
+#include "glm/mat4x4.hpp"
 
 class Camera;
 class MotorBoat;

@@ -5,7 +5,6 @@
 
 #include <string>
 #include <vector>
-#include "glm/glm.hpp"
 #include "Material.h"
 #include "MeshBufferManager.h"
 #include "TextureManager.h"

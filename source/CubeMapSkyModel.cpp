@@ -4,9 +4,10 @@
 #include "GL/glew.h"
 #include "Camera.h"
 #include "ErrorHandler.h"
+// glm::mat4 comes from the header
+#include "glm/mat3x3.hpp"
 #include "glm/gtc/matrix_transform.hpp" //translate()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
-#include "glm/gtc/constants.hpp" //pi()
 #include "GlobalConfig.h"
 
 

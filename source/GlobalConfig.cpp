@@ -3,8 +3,8 @@
 #include "GlobalConfig.h"
 #include "Common.h"
 #include "ErrorHandler.h"
-#include "glm/gtc/constants.hpp"
-#include "glm/trigonometric.hpp"
+// glm::vec2, glm::vec3 come from the header
+#include "glm/trigonometric.hpp" //radians()
 #include <sstream>
 #include <assert.h>
 
@@ -310,12 +310,32 @@ void GlobalConfig::Setup ( void )
 	///////////////////////////////////
 	// SHADER DEFINES REMAIN IN HERE !!!
 
-	ShaderDefines.Header = "#version 330 core\n\n\n";
+	// OpenGL/GLSL mapping across the versions
+	std::map<std::string, std::string> opengl2glslVerMap = 
+	{{"20", "110"}, {"21", "120"}, {"30", "130"}, {"31", "140"}, {"32", "150"}, {"33", "330"},
+	 {"40", "400"}, {"41", "410"}, {"42", "420"}, {"43", "430"}, {"44", "440"}, {"45", "450"},
+	 {"46", "460"}};
+	
+
+	std::string openglVer = std::to_string(OpenGLContext.OpenGLVersion.major) + std::to_string(OpenGLContext.OpenGLVersion.minor);
+	std::string glslVer = opengl2glslVerMap[openglVer];
+
+	std::string openglProfile = OpenGLContext.IsCoreProfile ? " core" : "";
+	ShaderDefines.Header = "#version " + glslVer + openglProfile + "\n\n\n";
+
+	LOG("Selected OpenGL version:" + openglVer);
+	LOG("Selected OpenGL profile: " + openglProfile);
+	LOG("Selected GLSL shader version: " + ShaderDefines.Header);
 
 	if (Scene.Ocean.Surface.OceanPatch.ComputeFFT.Type == CustomTypes::Ocean::ComputeFFTType::CFT_GPU_COMP ||
 		Scene.Ocean.Surface.OceanPatch.NormalGradientFolding.Type == CustomTypes::Ocean::NormalGradientFoldingType::NGF_GPU_COMP)
 	{
-		ShaderDefines.Header = "#version 440 core\n\n\n"; //NOTE! We need ver. 440 to support compute shaders and constant expresion in compute shader layout definition !!!
+		//NOTE! We need ver. 440 to support compute shaders and constant expresion in compute shader layout definition !!!
+		if (OpenGLContext.OpenGLVersion.major != 4 &&
+			OpenGLContext.OpenGLVersion.minor < 3 )
+			{
+				ERR("To support compute shaders Opengl 4.3 minimum is needed !!!!");
+			}
 	}
 
 	std::stringstream ss;

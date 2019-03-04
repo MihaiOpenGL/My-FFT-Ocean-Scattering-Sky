@@ -52,10 +52,10 @@ private:
 	//// Methods ////
 	void Destroy(void);
 
-	float* ComputeIndicesLookupTexture(void);
+	void ComputeIndicesLookupTexture (float* i_pIndices);
 	void ShuffleIndices(float* o_pBuffer, unsigned short i_N, unsigned short i_Offset);
 
-	float* ComputeWeightsLookupTexture(void);
+	void ComputeWeightsLookupTexture (float* i_pWeights);
 	void ComputeWeight(unsigned short i_K, float& i_Wr, float& i_Wi);
 
 	//// Variables ////

@@ -4,9 +4,12 @@
 #include "GL/glew.h"
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
-#include "glm/gtc/matrix_transform.hpp" //translate()
+// glm::mat4 comes from the header
+#include "glm/vec3.hpp"
+#include "glm/mat3x3.hpp"
+#include "glm/gtc/matrix_transform.hpp" //translate(), rotate()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
-#include "glm/gtc/constants.hpp" //pi()
+#include "glm/gtc/constants.hpp" //pi(). half_pi(), two_pi()
 #include "glm/gtx/rotate_vector.hpp" //just for reference
 #include "PhysicsConstants.h"
 #include "GlobalConfig.h"

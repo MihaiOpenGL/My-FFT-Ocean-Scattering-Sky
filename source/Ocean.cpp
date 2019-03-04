@@ -4,10 +4,14 @@
 #include <sstream> // std::stringstream
 #include <time.h>
 #include "GL/glew.h"
+// glm::vec2, glm::vec3, glm::mat4 come from the header
+#include "glm/vec4.hpp"
+#include "glm/common.hpp" //ceil()
 #include <glm/gtc/matrix_transform.hpp> //glm::translate()
-#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/rotate_vector.hpp> //rotateY()
 #include "glm/gtc/constants.hpp" //pi()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
+#include "glm/vector_relational.hpp" //any(), notEqual()
 #include "Common.h"
 #include "HelperFunctions.h"
 //#define ENABLE_ERROR_CHECK

@@ -4,10 +4,13 @@
 
 #include "Model.h"
 #include "Material.h"
-#include <assert.h>
+#include <limits>
 #include <sstream>
+#include <cstdio>
+#include <cstring>
 #include "GL/glew.h"
-#include "glm/glm.hpp"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 #include "ErrorHandler.h"
 
 
@@ -92,7 +95,7 @@ bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bo
 			{
 				char mtlFilePath[128];
 
-				fscanf(pObjFile, "%s\n", &mtlFilePath);
+				fscanf(pObjFile, "%s\n", mtlFilePath);
 
 				std::string mtlFN = directory + "/" + std::string(mtlFilePath);
 				FILE* pMtlFile = fopen(mtlFN.c_str(), "r");
@@ -126,7 +129,7 @@ bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bo
 					{
 						char mtlName[128];
 
-						fscanf(pMtlFile, "%s\n", &mtlName);
+						fscanf(pMtlFile, "%s\n", mtlName);
 
 						// gather previous material data
 						if (materialCrrIndex > 0)
@@ -145,7 +148,7 @@ bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bo
 					{
 						char map_Ka[128];
 
-						fscanf(pMtlFile, "%s\n", &map_Ka);
+						fscanf(pMtlFile, "%s\n", map_Ka);
 
 						std::string texPath(directory + "/" + std::string(map_Ka));
 
@@ -161,7 +164,7 @@ bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bo
 					{
 						char map_Kd[128];
 
-						fscanf(pMtlFile, "%s\n", &map_Kd);
+						fscanf(pMtlFile, "%s\n", map_Kd);
 
 						std::string texPath(directory + "/" + std::string(map_Kd));
 
@@ -177,7 +180,7 @@ bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bo
 					{
 						char map_Ks[128];
 
-						fscanf(pMtlFile, "%s\n", &map_Ks);
+						fscanf(pMtlFile, "%s\n", map_Ks);
 
 						std::string texPath(directory + "/" + std::string(map_Ks));
 
@@ -193,7 +196,7 @@ bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bo
 					{
 						char map_Bump[128];
 
-						fscanf(pMtlFile, "%s\n", &map_Bump);
+						fscanf(pMtlFile, "%s\n", map_Bump);
 
 						std::string texPath(directory + "/" + std::string(map_Bump));
 
@@ -287,7 +290,7 @@ bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bo
 			{
 				char mtlName[128];
 
-				fscanf(pObjFile, "%s\n", &mtlName);
+				fscanf(pObjFile, "%s\n", mtlName);
 
 				std::map<std::string, Material::MaterialDetails>::iterator it = materialMap.find(std::string(mtlName));
 				if (it != materialMap.end() && meshCrrIndex > 0)

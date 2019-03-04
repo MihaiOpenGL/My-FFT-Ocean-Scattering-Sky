@@ -5,8 +5,9 @@
 #include "Common.h"
 #include "HelperFunctions.h"
 #include "ErrorHandler.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/constants.hpp" //pi()
+// glm::vec2, glm::vec3, glm::mat4 come from the header
+#include "glm/common.hpp" //mix(), abs()
+#include "glm/geometric.hpp" //normalize()
 #include "GlobalConfig.h"
 
 

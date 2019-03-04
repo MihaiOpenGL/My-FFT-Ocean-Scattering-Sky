@@ -52,6 +52,10 @@ public:
 
 	void AttachCubeMapFace(unsigned short i_FaceIndex);
 
+	void CheckCompletenessStatus(void);
+
+	void CheckBufferBinding(void);
+
 	void RenderToQuad(void) const;
 
 	void Bind(void) const;
@@ -80,6 +84,8 @@ private:
 	void SetupLayered(unsigned short i_ColorAttachmentCount, unsigned short i_LayerCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, bool i_AnisoFiltering, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType);
 	void SetupLayered(unsigned int i_ColorAttachmentTexId, unsigned short i_ColorAttachmentLayerCount);
 	void SetupCubeMaped(unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType);
+
+	void GenAndBindFramebuffer();
 
 	void SetupDepthBuffer(DEPTH_BUFFER_TYPE i_DepthBufferType, unsigned short i_Width, unsigned short i_Height);
 

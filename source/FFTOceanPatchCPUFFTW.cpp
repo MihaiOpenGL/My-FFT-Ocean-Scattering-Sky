@@ -4,8 +4,12 @@
 #include <sstream> // std::stringstream
 #include <time.h>
 #include "GL/glew.h"
-#include "glm/gtc/constants.hpp" //pi()
-#include "glm/gtc/type_ptr.hpp" //value_ptr()
+// glm::vec2 comes from the header
+#include "glm/common.hpp" //abs()
+#include "glm/geometric.hpp" //length()
+#include "glm/exponential.hpp" //sqrt()
+#include "glm/trigonometric.hpp" //sin(), cos()
+#include "glm/gtc/constants.hpp" //pi(), two_pi()
 #include "Common.h"
 #include "ErrorHandler.h"
 #include "FileUtils.h"

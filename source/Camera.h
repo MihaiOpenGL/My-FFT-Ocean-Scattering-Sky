@@ -35,6 +35,8 @@ class GlobalConfig;
   !!! ORDERING CONVENTION
   GLM uses column major ordering by default, and all vectors are represented as column vectors.
   !!!
+  
+  NOTE! By default glm::lookAt() uses a right hand system which suits our needs as OpenGL is right handed !!!
 */
 
 class Camera

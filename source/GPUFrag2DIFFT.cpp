@@ -5,12 +5,15 @@
 #include <sstream> // std::stringstream
 
 #include "Common.h"
-
+//#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
 
 #include "GL/glew.h"
-#include "glm/glm.hpp" //
+#include "glm/vec4.hpp"
+#include "glm/exponential.hpp" //pow()
+#include "glm/trigonometric.hpp" // sin(). cos()
 #include "glm/gtc/constants.hpp" //pi()
+#include "glm/vector_relational.hpp" //any(), notEqual()
 
 #include "GlobalConfig.h"
 
@@ -66,9 +69,11 @@ void GPUFrag2DIFFT::Initialize ( const GlobalConfig& i_Config )
 	We work with complex numbers hence the 4d vectors: which hold 2 complex numbers: [r1, i1], [r2, i2]
 	*/
 
-	float* pButterFlyData = ComputeButterflyLookupTexture();
+	float* pButterFlyData = new float[m_FFTSize * m_NumButterflies * 4];
+	assert(pButterFlyData != nullptr);
+	ComputeButterflyLookupTexture(pButterFlyData);
 
-	m_TM.Initialize("GPUFrag2DIFFT");
+	m_TM.Initialize("GPUFrag2DIFFT - Butterfly Lookup Texture");
 	m_TM.Create2DTexture(GL_RGBA16F, GL_RGBA, GL_FLOAT, m_FFTSize, m_NumButterflies, GL_CLAMP_TO_EDGE, GL_NEAREST, pButterFlyData, i_Config.TexUnit.Ocean.GPU2DIFFT.ButterflyMap);
 
 	SAFE_ARRAY_DELETE(pButterFlyData);
@@ -212,10 +217,9 @@ void GPUFrag2DIFFT::Initialize ( const GlobalConfig& i_Config )
 
 ///////////////////////////////////
 // source from Eric Bruneton's fft ocean demo:  http://www-evasion.imag.fr/people/Eric.Bruneton/
-float* GPUFrag2DIFFT::ComputeButterflyLookupTexture ( void )
+void GPUFrag2DIFFT::ComputeButterflyLookupTexture ( float* i_pData )
 {
-	float* pData = new float[m_FFTSize * m_NumButterflies * 4];
-	assert(pData != nullptr);
+	assert(i_pData != nullptr);
 
 	for (unsigned short i = 0; i < m_NumButterflies; ++i)
 	{
@@ -246,21 +250,19 @@ float* GPUFrag2DIFFT::ComputeButterflyLookupTexture ( void )
 
 				float fFFTSize = static_cast<float>(m_FFTSize);
 				unsigned short offset1 = 4 * (i1 + i * m_FFTSize);
-				pData[offset1 + 0] = (j1 + 0.5f) / fFFTSize;
-				pData[offset1 + 1] = (j2 + 0.5f) / fFFTSize;
-				pData[offset1 + 2] = wr;
-				pData[offset1 + 3] = wi;
+				i_pData[offset1 + 0] = (j1 + 0.5f) / fFFTSize;
+				i_pData[offset1 + 1] = (j2 + 0.5f) / fFFTSize;
+				i_pData[offset1 + 2] = wr;
+				i_pData[offset1 + 3] = wi;
 
 				unsigned short offset2 = 4 * (i2 + i * m_FFTSize);
-				pData[offset2 + 0] = (j1 + 0.5f) / fFFTSize;
-				pData[offset2 + 1] = (j2 + 0.5f) / fFFTSize;
-				pData[offset2 + 2] = -wr;
-				pData[offset2 + 3] = -wi;
+				i_pData[offset2 + 0] = (j1 + 0.5f) / fFFTSize;
+				i_pData[offset2 + 1] = (j2 + 0.5f) / fFFTSize;
+				i_pData[offset2 + 2] = -wr;
+				i_pData[offset2 + 3] = -wi;
 			}
 		}
 	}
-
-	return pData;
 }
 
 unsigned short GPUFrag2DIFFT::BitReverse ( unsigned short i_I )

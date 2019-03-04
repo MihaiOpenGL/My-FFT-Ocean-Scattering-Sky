@@ -3,9 +3,15 @@
 #include "ScatteringSkyModel.h"
 #include "GL/glew.h"
 #include "ErrorHandler.h"
+// glm::mat4 comes from the header
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+#include "glm/mat3x3.hpp"
+#include "glm/exponential.hpp" //pow()
+#include "glm/trigonometric.hpp" //sin(), cos()
 #include "glm/gtc/matrix_transform.hpp" //perspective(), ortho(), lookAt()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
-#include "glm/gtc/constants.hpp" //pi()
+#include "glm/gtc/constants.hpp" //pi(), two_pi()
 #include "PhysicsConstants.h"
 #include "GlobalConfig.h"
 

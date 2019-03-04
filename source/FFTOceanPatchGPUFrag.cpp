@@ -4,8 +4,11 @@
 #include <sstream> // std::stringstream
 #include <time.h>
 #include "GL/glew.h"
-#include "glm/gtc/constants.hpp" //pi()
-#include "glm/gtc/type_ptr.hpp" //value_ptr()
+// glm::vec2, glm::vec3 come from the header
+#include "glm/common.hpp" //abs()
+#include "glm/exponential.hpp" //sqrt()
+#include "glm/gtc/constants.hpp" //pi(), two_pi()
+#include "glm/vector_relational.hpp" //any(), notEqual()
 #include "Common.h"
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
@@ -39,7 +42,7 @@ void FFTOceanPatchGPUFrag::Destroy ( void )
 }
 
 void FFTOceanPatchGPUFrag::Initialize ( const GlobalConfig& i_Config )
-{
+{	
 	FFTOceanPatchBase::Initialize(i_Config);
 
 	///////////////

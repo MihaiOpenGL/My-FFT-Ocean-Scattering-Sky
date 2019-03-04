@@ -11,8 +11,8 @@
 #include "TextureManager.h"
 #include "FrameBufferManager.h"
 //#define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
-#include "glm/vec2.hpp" //
-#include "glm/vec3.hpp" //
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 #include "GPUFrag2DIFFT.h"
 
 class GlobalConfig;

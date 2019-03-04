@@ -5,8 +5,7 @@
 #include "Common.h"
 #include "ErrorHandler.h"
 #include "GL/glew.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/constants.hpp" //pi()
+#include "glm/exponential.hpp" //log2()
 #include "GlobalConfig.h"
 
 

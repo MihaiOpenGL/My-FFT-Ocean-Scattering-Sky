@@ -182,6 +182,132 @@ Under BoatEffects option we also have these options:
 
 /////////////////////////////
 
+### HOW TO BUILD
+
+a) # Windows
+
+UPDATE! Now its proj files have been updated to VS 2017!
+
+This project was built using Visual Studio 2015 Community Edition. Its project files reflect this.
+In case you use VS 2017 you can retarget the project. In case you use an older version of VS you can change the toolset yourself.
+Both Debug and Release modes work.
+
+NOTE! The dependecy libs - glfw, glew, fftw and AntweakBar which needed to be built depend on the os they are compiled for!
+For Windows I used the pre-built libs offered by the developers of those libs.
+
+TOOLS: Visual Studio 2017
+Other requirements: N/A
+
+b) # Linux
+
+Check the Makefile.
+Run: make CFG=release for release build, release is also the default rule.
+For debug run: make CFG=debug.
+To cleanup run: make clean CFG=release or just make clean for release.
+To cleanup for debug run: make clean CFG=debug.
+
+NOTE! The dependecy libs - glfw, glew, fftw and AntweakBar which needed to be built depend on the os they are compiled for!
+For Linux(Ubuntu) I compiled them myself.
+
+TOOLS: g++, make
+Other requirements: install the package libglu10mesa-dev to solve the glu.h header issues while compiling
+
+c) # Mac OS X
+
+Check the Makefile_osx.
+Run: make -f Makefile_osx CFG=release for release build, release is also the default rule.
+For debug run: make -f Makefile_osx CFG=debug.
+To cleanup run: make -f Makefile_osx clean CFG=release or just make -f Makefile_osx clean for release.
+To cleanup for debug run: make -f Makefile_osx clean CFG=debug.
+
+NOTE! The dependecy libs - glfw, glew, fftw and AntweakBar which needed to be built depend on the os they are compiled for!
+For MacOSX(Mojave) I compiled them myself.
+
+NOTE! If the built libs are used on an older version of MAc OS X there may be linking warnings!
+
+TOOLS: XCode (it includes g++, make)
+Other requirements: N/A
+
+
+### TESTS
+I have no automatic tests. A couple of manual tests were performed on each platform.
+
+** On Windows 10 I used this setup:
+- nvidia drivers directly.
+- supported opengl version = 4.60
+- tests went smooth, no issues.
+- config - ok
+
+** On Ubuntu I used this setup:
+
+a) native hardware using the a Ubuntu live stick
+- nvidia drivers directly
+- supported opengl version = 4.60
+- tests went smooth, no issues.
+- config - some issues if using the core profile.
+It may be better if window hints are not used
+
+b) vmware machine with Ubuntu as guest
+- Mesa 18.3.3 version of the driver for SVGA vmware configuration
+- supported opengl version = 3.30 (max at this point)
+- vmware offers hardware acceleration
+- encountered rendering issues like no correct waves displacement when using FFTGpuFrag type
+because of the driver no supporting fragment shader multiple output streas properly.
+The sahders compiled and linked correctly, but the issue was there at runtime.
+Another issue was the controls: keybord all good, but the mouse dx and dy were totally off,
+because of another driver bug.
+- config - some issues if using the core profile.
+It may be better if window hints are not used
+
+** On Mac OS X I used this setup:
+a) native hardware using a separate hard drive
+It wasn't easy, but in the end I managed to create a hackintosh an a separate hard driver and use it to test the application.
+- nvidia web drivers (special drivers for mac)
+- supported opengl version = 4.10
+- tests went almost smooth. Issue - I had mouse movement, but couldn't access the GUI, keyboard ok.
+- config - mac os x is limited to these parameters:
+* windows hints - on
+* opengl version >= 3.2
+* core profile - on
+
+* Without proper drivers & clover setup for the nvidia card, the system falls back to the apple software renderer, which is no good.
+Using the software renderer in this case, I managed to start the app and see some garphics, but it had many artifacts and was not 
+feasable for testing - extremely low fps.
+
+*I had to use Mac os X High Sierra, as it is the only last mac os version which supports the last nVidia 10x family (Polaris) cards.
+Mojave has no proper support in this case.
+
+Useful links:
+To create a usb stick with mac os high sierra + clover setup to be able to boot it on non-mac hardware
+https://hackintosher.com/guides/high-sierra-install-full-guide/#bios
+https://hackintosher.com/guides/macos-high-sierra-hackintosh-install-clover-walkthrough/
+
+Using clover + nvidia web drivers to have access to a dedicate video card + hardware acceleration
+https://github.com/Benjamin-Dobell/nvidia-update/blob/master/nvidia-update.sh
+
+b) vmware machine with Mac OS X (Mojave) as guest
+- first vmware doesn't support mac os systems yet, so I unlocked this feature using 
+the Unlocker tool: https://github.com/DrDonk/unlocker/releases
+this I've done prior to creating a machine for mac os x.
+- no hardware acceleration for Mac os
+- mac os x i vmware offers only an opengl software renderer
+- supported opengl version = 4.10
+- I managed to compile & link, but no actual tests were feasable,
+because of extremely low framerate
+
+* Useful links:
+Mac os x vmware disk:
+https://www.geekrar.com/download-macos-mojave-vmware-virtualbox/
+
+I used these steps in the mac os x virtual machine in my attempt to create a live or extarnal disck with mac os x on it
+http://osxdaily.com/2018/09/29/download-full-macos-mojave-installer/
+
+https://www.macworld.co.uk/how-to/mac-software/macos-external-hard-drive-3659666/
+
+https://lifehacker.com/how-to-create-a-portable-hackintosh-on-a-usb-thumb-driv-5739259
+
+
+
 ### License
 
 This code and its resources are licensed under MIT License

@@ -4,6 +4,8 @@
 #include "GL/glew.h"
 #include "ErrorHandler.h"
 #include "GlobalConfig.h"
+#include "glm/vec4.hpp"
+#include "glm/exponential.hpp" //sqrt()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
 
 

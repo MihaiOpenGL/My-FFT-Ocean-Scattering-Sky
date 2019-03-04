@@ -50,10 +50,12 @@ public:
 	unsigned int Create2DTexture(unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData = nullptr, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = true);
 	unsigned int Create2DRawTexture(const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = false, unsigned short i_DataOffset = 0);
 	unsigned int Create2DArrayTexture(unsigned short i_LayerCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData = nullptr, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = true);
-
 	unsigned int Create3DRawTexture(const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned short i_Depth, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = false, unsigned short i_DataOffset = 0);
-
 	unsigned int CreateCubeMapTexture(unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData = nullptr, short i_TexUnitId = -1, short i_MipMapCount = -1);
+
+	unsigned int GenAndBindTexture(unsigned int i_Target, short i_TexUnitId);
+
+	unsigned int SetupTextureParameteres(unsigned int i_Target, unsigned int i_WrapType, unsigned int i_FilterType, short i_MipMapCount, bool i_AnisoFiltering = false);
 
 	void Update1DTextureData(unsigned int i_TexId, void* i_pNewData) const;
 	void Update2DTextureData(unsigned int i_TexId, void* i_pNewData) const;

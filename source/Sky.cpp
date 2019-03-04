@@ -4,9 +4,7 @@
 #include "GL/glew.h"
 #include "Common.h"
 #include "ErrorHandler.h"
-#include "glm/gtc/matrix_transform.hpp" //translate()
-#include "glm/gtc/type_ptr.hpp" //value_ptr()
-#include "glm/gtc/constants.hpp" //pi()
+// glm::vec3, glm::mat4 come from the header
 #include "GlobalConfig.h"
 #include "CubeMapSkyModel.h"
 #include "ScatteringSkyModel.h"

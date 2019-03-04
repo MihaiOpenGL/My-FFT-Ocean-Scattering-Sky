@@ -1,7 +1,10 @@
 /* Author: BAIRAC MIHAI */
 
 #include "HelperFunctions.h"
-#include "glm/glm.hpp" //
+// glm::vec3, glm::vec4, glm::mat4 come from the header
+#include "glm/mat3x3.hpp"
+#include "glm/common.hpp" //abs()
+#include "glm/geometric.hpp" //dot(), normalize()
 #include "glm/gtc/constants.hpp" //epsilon()
 
 

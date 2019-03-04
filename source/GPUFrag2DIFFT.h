@@ -54,7 +54,7 @@ private:
 	//// Methods ////
 	void Destroy(void);
 
-	float* ComputeButterflyLookupTexture(void);
+	void ComputeButterflyLookupTexture (float* i_pData);
 	unsigned short BitReverse(unsigned short i_I);
 	void ComputeWeight(unsigned short i_K, float& i_Wr, float& i_Wi);
 

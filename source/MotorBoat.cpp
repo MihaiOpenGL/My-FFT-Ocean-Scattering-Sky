@@ -7,8 +7,12 @@
 #include "Common.h"
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
-#include "glm/gtc/matrix_transform.hpp" //translate()
-#include "glm/gtx/rotate_vector.hpp" //rotateY()
+// glm::vec3, glm::mat4 come from the header
+#include "glm/vec4.hpp"
+#include "glm/common.hpp" //min() max()
+#include "glm/geometric.hpp" //cross(), normalize()
+#include "glm/trigonometric.hpp" //sin(), cos(), radians()
+#include "glm/gtc/matrix_transform.hpp" //translate(), rotate()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
 #include "GlobalConfig.h"
 

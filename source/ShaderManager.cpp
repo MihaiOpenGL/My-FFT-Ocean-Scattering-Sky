@@ -4,6 +4,7 @@
 #include "GL/glew.h"
 #include <new>
 #include <sstream>
+#include <assert.h>
 #include "Common.h"
 #include "FileUtils.h"
 #include "ErrorHandler.h"
@@ -367,6 +368,7 @@ bool ShaderManager::CreateShader ( const std::string& i_ShaderFileName, unsigned
 		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &logLength);
 
 		char* pLog = new char[logLength];
+		assert(pLog != nullptr);
 		if (!pLog)
 		{
 			glDeleteShader(shaderID);
@@ -436,6 +438,7 @@ bool ShaderManager::LinkProgram ( void )
 		glGetProgramiv(m_ShaderProgramID, GL_INFO_LOG_LENGTH, &logLength);
 
         char* pLog = new char[logLength];
+		assert(pLog != nullptr);
 		if (!pLog)
         {
 			glDeleteProgram(m_ShaderProgramID);
@@ -468,6 +471,7 @@ bool ShaderManager::LinkProgram ( void )
 			glGetProgramiv(m_ShaderProgramID, GL_INFO_LOG_LENGTH, &logLength);
 
 			char* pLog = new char[logLength];
+			assert(pLog != nullptr);
 			if (!pLog)
 			{
 				glDeleteProgram(m_ShaderProgramID);

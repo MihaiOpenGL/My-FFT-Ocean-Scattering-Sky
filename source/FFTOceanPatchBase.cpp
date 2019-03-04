@@ -13,9 +13,12 @@ Unified - based on work by: Phillips, Donel, Pierson, Moskowitz, etc. - 1997
 
 #include "FFTOceanPatchBase.h"
 #include "GL/glew.h"
-#include "glm/gtc/constants.hpp" //pi()
-#include "glm/trigonometric.hpp"
-#include "glm/gtc/type_ptr.hpp" //value_ptr()
+// glm::vec2, glm::vec3 come from the header
+#include "glm/common.hpp" //floor()
+#include "glm/gtc/constants.hpp" //two_pi()
+#include "glm/exponential.hpp" //exp(), pow(), log(), sqrt()
+#include "glm/trigonometric.hpp" //cos(), atan(), tanh()
+#include "glm/geometric.hpp" // dot(), normalize(), length()
 #include "Common.h"
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"

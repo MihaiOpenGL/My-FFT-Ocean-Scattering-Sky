@@ -5,8 +5,11 @@
 //#define GLEW_STATIC // when linking to glew32s.lib instead of glew32.lib !
 #include "GL/glew.h" //glew include must be set before glfw
 #define GLM_MESSAGES //info about GLM
+// glm::vec3 comes from the header
+#include "glm/common.hpp" //clamp()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
 #include "glm/gtc/matrix_transform.hpp" //scale()
+#include "glm/gtc/constants.hpp" //epsilon
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
 #include "PhysicsConstants.h"

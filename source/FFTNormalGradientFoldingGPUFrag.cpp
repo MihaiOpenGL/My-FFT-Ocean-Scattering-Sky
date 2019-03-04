@@ -3,7 +3,8 @@
 
 #include "FFTNormalGradientFoldingGPUFrag.h"
 #include "GL/glew.h"
-#include "glm/gtc/type_ptr.hpp"
+#include "glm/vec4.hpp"
+#include "glm/vector_relational.hpp" //any(), notEqual()
 //#define ENABLE_ERROR_CHECK
 #include "ErrorHandler.h"
 #include "GlobalConfig.h"

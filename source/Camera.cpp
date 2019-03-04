@@ -3,8 +3,11 @@
 #include "Camera.h"
 #include "ErrorHandler.h"
 #include "GL/glew.h"
-#include "glm/gtc/matrix_transform.hpp" //perspective(), ortho(), lookAt()
-#include "glm/gtc/constants.hpp" //pi()
+// glm::vec3, glm::mat4 come from the header
+#include "glm/gtc/matrix_transform.hpp" //perspective(), ortho(), lookAt(), transpose(), inerse()
+#include "glm/geometric.hpp" //dot(), normalize(), cross()
+#include "glm/trigonometric.hpp" //sin(), cos(), radians()
+#include "glm/gtc/constants.hpp" //hlf_pi()
 #include "HelperFunctions.h"
 #include "GlobalConfig.h"
 

@@ -5,8 +5,9 @@
 #include "ErrorHandler.h"
 #include "Camera.h"
 #include "GL/glew.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/constants.hpp" //pi()
+// glm::vec3, glm::vec4 come from the header
+#include "glm/trigonometric.hpp" //sin(), cos()
+#include "glm/gtc/constants.hpp" //half_pi(), two_pi()
 #include "GlobalConfig.h"
 
 
