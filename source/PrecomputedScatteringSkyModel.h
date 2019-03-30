@@ -11,12 +11,12 @@
 #define PRECOMPUTED_SCATTERING_SKY_MODEL_H
 
 #include "BaseSkyModel.h"
-#include <string>
-#include <vector>
-#include <map>
 #include "glm/mat4x4.hpp"
 #include "Camera.h"
 #include "TextureManager.h"
+#include <string>
+#include <vector>
+#include <map>
 
 class GlobalConfig;
 class Camera;

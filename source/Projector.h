@@ -28,11 +28,18 @@ class GlobalConfig;
 class Projector
 {
 public:
+	enum class PROJ_TYPE
+	{
+		PT_SURFACE = 0,
+		PT_UNDERWATER,
+		PT_COUNT
+	};
+
 	Projector(void);
-	Projector(const GlobalConfig& i_Config, bool i_IsUnderwater);
+	Projector(const GlobalConfig& i_Config, Projector::PROJ_TYPE i_Type);
 	~Projector(void);
 
-	void Initialize(const GlobalConfig& i_Config, bool i_IsUnderwater);
+	void Initialize(const GlobalConfig& i_Config, Projector::PROJ_TYPE i_Type);
 
 	void Update(const Camera& i_RenderingCamera);
 
@@ -68,6 +75,7 @@ private:
 	float m_StrengthElevation;
 	float m_AimPointCorrection;
 
+	Projector::PROJ_TYPE m_Type;
 	bool m_IsUnderMainPlane;
 };
 

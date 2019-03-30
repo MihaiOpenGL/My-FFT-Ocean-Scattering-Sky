@@ -3,9 +3,6 @@
 #ifndef FFT_OCEAN_PATCH_GPU_COMP_H
 #define FFT_OCEAN_PATCH_GPU_COMP_H
 
-#include <string>
-#include <vector>
-#include <map>
 #include "FFTOceanPatchBase.h"
 #include "ShaderManager.h"
 #include "TextureManager.h"
@@ -13,7 +10,9 @@
 #include "glm/vec2.hpp" //
 #include "glm/vec4.hpp" //
 #include "GPUComp2DIFFT.h"
-
+#include <string>
+#include <vector>
+#include <map>
 
 class GlobalConfig;
 
@@ -62,6 +61,8 @@ private:
 	// self init
 	// name, location
 	std::map<std::string, int> m_FFTHtUniforms;
+
+	bool m_IsComputedStageSupported;
 };
 
 #endif /* FFT_OCEAN_PATCH_GPU_COMP_H */

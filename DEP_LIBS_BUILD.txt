@@ -1,4 +1,4 @@
-The required dependecy libs are already built for each supported platform:
+﻿The required dependecy libs are already built for each supported platform:
 windows, linux and macosx.
 
 The libs are os dependent, so the developer may be forced to rebuilt them.
@@ -14,62 +14,28 @@ notepad ++
 apt-file (for gettings package name for a specific file/header/etc.)
 mesa-utils (for glxinfo tool)
 libglu1-mesa-dev (for <GL/glu.h> header)
+nvidia linux drivers
 
-#PACKAGES TO INSTALL On MAC OS (tested on Mojave version)
+#PACKAGES TO INSTALL On MAC OS (tested on Mojave/High Sierra versions)
 xcode
-(installing xocde installes also: gcc/g++, make)
+(installing xcode installes also: gcc/g++, make)
 cmake
+web nvidia drivers for mac os x
 
 Macosx system frameworks !!! (aka libs)
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks
 
-### BUILDING GLFW ####
-1) download glfw source files from www.glfw.org
-2) Follow the steps detailed in here:
-https://stackoverflow.com/questions/17768008/how-to-build-install-glfw-3-and-use-it-in-a-linux-project
-to get glfw dependecies
 
-Run the below command in a terminal
-sudo apt-get build-dep glfw3
+### BUILDING SDL2 ####
 
-NOTE! In case of error
-"E: You must put some 'source' URIs in your sources.list
-Open Software & Updates tool from Settings and add
-the "Source code" content, then try again
+1) download glfw source files from https://www.libsdl.org/download-2.0.php
 
-3) generate glfw makefiles 
-cmake <dir> -G "Unix Makefiles"
-NOTE! Install cmake if not installed
+2) follow the steps https://wiki.libsdl.org/Installation
+(basically: ./configure, make)
 
-4) Compile glfw (v3.2.1)
-make
+3) run make install to copy the libs to /usr/local/libs
 
-It will also require the following dependecy:
-X11/externsions/XINput2.h - not found
-install the pacakge: libxi-dev
-
-5) the static lib path: 
-<build_folder>/src/libglfw3.a
-
-USEFUL:
-To see the path of the missing header install:
-apt-file and use it like this
-
-apt-file search <path>
-
-
-##### BUILDING GLEW ####
-
-1) download source from http://glew.sourceforge.net/
-
-2) run make in Terminal
-
-NOTE! I needed to install a dependency package
-as the header GL/glu.h was not found
-libglu1-mesa-dev was the name of the package
-
-3) static lib path:
-lib/libGLEW.a
+4) check for the libSDL2.a and libSDL2main.a libs in /usr/local/libs
 
 
 ##### BUILDING FFTW ####
@@ -83,34 +49,17 @@ make
 3) static lib path: (hidden folder)
 .libs/libfftw3f.a
 
+
 ###### BUILDING ANTWEAKBAR ####
 
-1) download source from http://anttweakbar.sourceforge.net/
+1) download source from https://github.com/MihaiBairac/AntTweakBar_116_Improved
+I created a git repo with the old AntTweakBar code and improved it to my needs.
 
 2) cd src
 
 3) in Terminal run:
-make
-
-NOTE! On Mac OS X some changes had to be made to the source code of the lib as it is old and not maintained.
-I should replace it with a new GUI lib which is maintained.
-
-Changes:
-a) About the “glMultiDrawElements” and “glShaderSource” error in LoadOGLCore.h :
-2 “const” are missing inside the header to match the gl.h header of El Capitan OpenGL framework.
-Corrected function headers are :
-ANT_GL_CORE_DECL(void, glMultiDrawElements, (GLenum mode, const GLsizei count, GLenum type, const GLvoid const indices, GLsizei draw count))
-and
-ANT_GL_CORE_DECL(void, glShaderSource, (GLuint shader, GLsizei count, const GLchar const *string, const GLint *length))
-
-b) Without this change the Antweakbar will fail to load opengl with an error at runtime.
-
-To fix do this:
- in LoadOGLCore.cpp/LoadOGL.cpp
-Replace:
-	gl_dyld = dlopen("OpenGL", RTLD_LAZY);
-with
-	gl_dyld = dlopen("System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", RTLD_LAZY);
+make (for linux)
+make -f Makefile.osx (for mac os x)
 
 4) static lib path:
 lib/libAntTweakBar.a	

@@ -12,16 +12,13 @@ Unified - based on work by: Phillips, Donel, Pierson, Moskowitz, etc. - 1997
 */
 
 #include "FFTOceanPatchBase.h"
-#include "GL/glew.h"
+#include "CommonHeaders.h"
 // glm::vec2, glm::vec3 come from the header
 #include "glm/common.hpp" //floor()
 #include "glm/gtc/constants.hpp" //two_pi()
 #include "glm/exponential.hpp" //exp(), pow(), log(), sqrt()
 #include "glm/trigonometric.hpp" //cos(), atan(), tanh()
 #include "glm/geometric.hpp" // dot(), normalize(), length()
-#include "Common.h"
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
 #include "PhysicsConstants.h"
 #include "GlobalConfig.h"
 #include "FFTNormalGradientFoldingGPUFrag.h"
@@ -37,6 +34,7 @@ FFTOceanPatchBase::FFTOceanPatchBase ( void )
 	  m_SpectrumType(CustomTypes::Ocean::SpectrumType::ST_COUNT),
 	  m_pNormalGradientFolding(nullptr)
 {
+	LOG("FFTOceanPatchBase successfully created!");
 }
 
 FFTOceanPatchBase::FFTOceanPatchBase ( const GlobalConfig& i_Config )
@@ -61,7 +59,7 @@ void FFTOceanPatchBase::Destroy ( void )
 	// should free resources
 	SAFE_DELETE(m_pNormalGradientFolding);
 
-	LOG("FFTOceanPatchBase has been destroyed successfully!");
+	LOG("FFTOceanPatchBase successfully destroyed!");
 }
 
 void FFTOceanPatchBase::Initialize ( const GlobalConfig& i_Config )
@@ -112,7 +110,7 @@ void FFTOceanPatchBase::Initialize ( const GlobalConfig& i_Config )
 	}
 	assert(m_pNormalGradientFolding != nullptr);
 	
-	LOG("FFTOceanPatchBase has been created successfully!");
+	LOG("FFTOceanPatchBase successfully created!");
 }
 
 void FFTOceanPatchBase::SetFFTData ( void )

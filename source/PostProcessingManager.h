@@ -2,12 +2,11 @@
 
 #ifndef POST_PROCESSING_MANANGER_H
 #define POST_PROCESSING_MANANGER_H
-
-#include <string>
-#include <map>
 #include "FrameBufferManager.h"
 #include "ShaderManager.h"
 #include "CustomTypes.h"
+#include <string>
+#include <map>
 
 class GlobalConfig;
 
@@ -18,6 +17,7 @@ class GlobalConfig;
 class PostProcessingManager
 {
 public:
+	PostProcessingManager();
 	PostProcessingManager(const GlobalConfig& i_Config);
 	~PostProcessingManager(void);
 

@@ -11,13 +11,13 @@ License: check the demo package
 #ifndef GPU_FRAG_2D_IFFT_H
 #define GPU_FRAG_2D_IFFT_H
 
-#include <string>
-#include <vector>
-#include <map>
 #include "Base2DIFFT.h"
 #include "ShaderManager.h"
 #include "MeshBufferManager.h"
 #include "FrameBufferManager.h"
+#include <string>
+#include <vector>
+#include <map>
 
 class GlobalConfig;
 

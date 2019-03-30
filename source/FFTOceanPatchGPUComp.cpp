@@ -1,28 +1,27 @@
 /* Author: BAIRAC MIHAI */
 
 #include "FFTOceanPatchGPUComp.h"
-#include <sstream> // std::stringstream
-#include <time.h>
-#include "GL/glew.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
+#include "GLExtensionVars.h"
 // glm::vec2, glm::vec4 come from the header
 #include "glm/common.hpp" //abs()
 #include "glm/gtc/constants.hpp" //pi(), wo_pi()
 #include "glm/exponential.hpp" //sqrt()
-#include "Common.h"
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
 #include "FileUtils.h"
 #include "GlobalConfig.h"
 #include "FFTNormalGradientFoldingBase.h"
+#include <time.h>
 
 
 FFTOceanPatchGPUComp::FFTOceanPatchGPUComp ( void )
-	: m_FFTInitDataTexId(0), m_pFFTDisplaymentData(nullptr)
+	: m_FFTInitDataTexId(0), m_pFFTDisplaymentData(nullptr), m_IsComputedStageSupported(false)
 {
+	LOG("FFTOceanPatchGPUComp successfully created!");
 }
 
 FFTOceanPatchGPUComp::FFTOceanPatchGPUComp ( const GlobalConfig& i_Config )
-	: m_FFTInitDataTexId(0), m_pFFTDisplaymentData(nullptr)
+	: m_FFTInitDataTexId(0), m_pFFTDisplaymentData(nullptr), m_IsComputedStageSupported(false)
 {
 	Initialize(i_Config);
 }
@@ -37,11 +36,13 @@ void FFTOceanPatchGPUComp::Destroy ( void )
 	// should free resources
 	SAFE_ARRAY_DELETE(m_pFFTDisplaymentData);
 
-	LOG("FFTOceanPatchGPUComp has been destroyed successfully!");
+	LOG("FFTOceanPatchGPUComp successfully destroyed!");
 }
 
 void FFTOceanPatchGPUComp::Initialize ( const GlobalConfig& i_Config )
 {
+	m_IsComputedStageSupported = i_Config.GLExtVars.IsComputeStageSupported;
+
 	FFTOceanPatchBase::Initialize(i_Config);
 	///////////////
 	m_2DIFFT.Initialize(i_Config);
@@ -53,7 +54,7 @@ void FFTOceanPatchGPUComp::Initialize ( const GlobalConfig& i_Config )
 	InitFFTData();
 
 	//// Create H0Omega texture
-	m_FFTTM.Initialize("FFTOceanPatchGPUComp");
+	m_FFTTM.Initialize("FFTOceanPatchGPUComp", i_Config);
 	m_FFTInitDataTexId = m_FFTTM.Create2DTexture(GL_RGBA16F, GL_RGBA, GL_FLOAT, m_FFTSize, m_FFTSize, GL_REPEAT, GL_NEAREST, &m_FFTInitData[0], i_Config.TexUnit.Ocean.FFTOceanPatchGPUComp.FFTInitDataMap);
 
 	m_pFFTDisplaymentData = new float[m_FFTSize * m_FFTSize * 4 * sizeof(float)];
@@ -99,7 +100,7 @@ void FFTOceanPatchGPUComp::Initialize ( const GlobalConfig& i_Config )
 		}
 	}
 
-	LOG("FFTOceanPatchGPUComp has been created successfully!");
+	LOG("FFTOceanPatchGPUComp successfully created!");
 }
 
 void FFTOceanPatchGPUComp::SetFFTData ( void )
@@ -174,8 +175,11 @@ void FFTOceanPatchGPUComp::EvaluateWaves ( float i_CrrTime )
 		glBindImageTexture(1, m_2DIFFT.GetSourceTexId(), 0, GL_TRUE, 2, GL_WRITE_ONLY, GL_RGBA16F);
 	}
 
-	// Process all vertices. No synchronization needed, so start NxN threads with local size of 1x1.
-	glDispatchCompute(m_FFTSize, m_FFTSize, 1);
+	if (m_IsComputedStageSupported)
+	{
+		// Process all vertices. No synchronization needed, so start NxN threads with local size of 1x1.
+		glDispatchCompute(m_FFTSize, m_FFTSize, 1);
+	}
 
 	// Make sure, all values are written.
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

@@ -3,10 +3,12 @@
 #ifndef FRAME_BUFFER_MANAGER_H
 #define FRAME_BUFFER_MANAGER_H
 
-#include <string>
-#include <vector>
 #include "MeshBufferManager.h"
 #include "TextureManager.h"
+#include <string>
+#include <vector>
+
+class GlobalConfig;
 
 /*
  Manager for custom framebuffers
@@ -27,10 +29,10 @@ public:
 	};
 
 	FrameBufferManager(void);
-	FrameBufferManager(const std::string& i_Name);
+	FrameBufferManager(const std::string& i_Name, const GlobalConfig& i_Config);
 	~FrameBufferManager(void);
 
-	void Initialize(const std::string& i_Name);
+	void Initialize(const std::string& i_Name, const GlobalConfig& i_Config);
 
 	// i_MipMapCount can have the values: 
 	// -1 - no mipmaps
@@ -74,7 +76,7 @@ public:
 
 private:
 	//// Methods ////
-	void Init(void);
+	void Init(const GlobalConfig& i_Config);
 	void Destroy(void);
 
 	void CreateQuadModel(void);

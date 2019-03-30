@@ -3,10 +3,10 @@
 #ifndef FFT_NORMAL_GRADIENT_FOLDING_GPU_FRAG_H
 #define FFT_NORMAL_GRADIENT_FOLDING_GPU_FRAG_H
 
-#include <string>
-#include <map>
 #include "FFTNormalGradientFoldingBase.h"
 #include "FrameBufferManager.h"
+#include <string>
+#include <map>
 
 class GlobalConfig;
 

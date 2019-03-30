@@ -5,9 +5,10 @@
 
 #include "CustomTypes.h"
 #include "XMLParser.h"
-#include <string>
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
+#include "GLExtensionVars.h"
+#include <string>
 
 /*
  This class implements the Global Config system
@@ -19,6 +20,8 @@ class GlobalConfig
 {
 public:
 	// Project
+
+	struct GLExtVars GLExtVars;
 
 	struct Window
 	{
@@ -597,7 +600,7 @@ private:
 	XMLParser* m_pConfigParser;
 
 	// Methods
-	void Setup ( void );
+	bool Setup ( void );
 	void Destroy ( void );
 
 public:
@@ -605,7 +608,7 @@ public:
 	GlobalConfig ( const std::string& i_FileName );
 	~GlobalConfig ( void );
 
-	void Initialize ( const std::string& i_FileName );
+	bool Initialize ( const std::string& i_FileName );
 };
 
 #endif /* GLOBAL_CONFIG_H */

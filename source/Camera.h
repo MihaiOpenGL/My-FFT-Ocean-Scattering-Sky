@@ -73,6 +73,8 @@ public:
 	void UpdatePositionWithKeyboard(float i_Value, Camera::CAMERA_DIRECTIONS i_Dir);
 
 	//// Getters ////
+	const std::string& GetName() const;
+
 	const glm::vec3& GetPosition(void) const;
 	float GetAltitude(void) const;
 	const glm::vec3& GetForward(void) const;
@@ -82,6 +84,7 @@ public:
 	float GetPitch(void) const;
 	float GetYaw(void) const;
 	float GetFOV(void) const;
+
 
 	const glm::mat4& GetViewMatrix(void) const;
 	const glm::mat4& GetProjectionMatrix(void) const;
@@ -136,6 +139,5 @@ private:
 
 	bool m_UseConstraints;
 };
-
 
 #endif /* CAMERA_H */

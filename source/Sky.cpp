@@ -1,9 +1,7 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Sky.h"
-#include "GL/glew.h"
-#include "Common.h"
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
 // glm::vec3, glm::mat4 come from the header
 #include "GlobalConfig.h"
 #include "CubeMapSkyModel.h"
@@ -14,7 +12,9 @@
 
 Sky::Sky ( void )
 	: m_pSkyModel(nullptr), m_ModelType(CustomTypes::Sky::ModelType::MT_COUNT)
-{}
+{
+	LOG("Sky successfully created!");
+}
 
 Sky::Sky ( const GlobalConfig& i_Config )
 	: m_pSkyModel(nullptr), m_ModelType(CustomTypes::Sky::ModelType::MT_COUNT)
@@ -31,7 +31,7 @@ void Sky::Destroy ( void )
 {
 	SAFE_DELETE(m_pSkyModel);
 
-	LOG("Sky has been destroyed successfully!");
+	LOG("Sky successfully destroyed!");
 }
 
 void Sky::Initialize ( const GlobalConfig& i_Config )
@@ -54,7 +54,7 @@ void Sky::Initialize ( const GlobalConfig& i_Config )
 	}
 	assert(m_pSkyModel != nullptr);
 
-	LOG("Sky has been created successfully!");
+	LOG("Sky successfully created!");
 }
 
 void Sky::Update ( const Camera& i_Camera, bool i_IsUnderWater, bool i_IsWireframeMode, float i_CrrTime )

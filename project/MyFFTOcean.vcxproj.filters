@@ -19,6 +19,9 @@
     <Filter Include="resources\models\motor_boat">
       <UniqueIdentifier>{3fdbf14e-0a0f-4804-96e6-0370575229c6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="glad">
+      <UniqueIdentifier>{4fa28cc5-b845-4b28-ae78-cc6c1296a607}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Main.cpp">
@@ -123,12 +126,12 @@
     <ClCompile Include="..\source\Application.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\glad\glad.cpp">
+      <Filter>glad</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\Camera.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\ErrorHandler.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\source\FileUtils.h">
@@ -144,9 +147,6 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\source\HelperFunctions.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Common.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\source\FrameBufferManager.h">
@@ -234,6 +234,33 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\source\Application.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\GLConfig.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\SDLConfig.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\GLErrorHandler.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Logger.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AppConfig.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\CommonHeaders.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\glad\khrplatform.h">
+      <Filter>glad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\glad\glad.h">
+      <Filter>glad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\GLExtensionVars.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

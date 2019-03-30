@@ -3,28 +3,28 @@
 */
 
 #include "Model.h"
+#include "CommonHeaders.h"
 #include "Material.h"
+#include "GLConfig.h"
+#include "GlobalConfig.h"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 #include <limits>
 #include <sstream>
 #include <cstdio>
 #include <cstring>
-#include "GL/glew.h"
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
-#include "ErrorHandler.h"
 
 
 Model::Model ( void )
-	: m_Name("")
+	: m_Name("Default")
 {
+	LOG("Model [%s] successfully created!", m_Name.c_str());
 }
 
-Model::Model ( const std::string& i_Name, const std::string& i_Path, bool i_UseMaterial, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, bool i_UseFlattenedModel )
+Model::Model ( const std::string& i_Name, const std::string& i_Path, bool i_UseMaterial, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, bool i_UseFlattenedModel, const GlobalConfig& i_Config)
 	: m_Name(i_Name)
 {
-	m_TM.Initialize(i_Name);
-
-	LoadModel(i_Name, i_Path, i_UseMaterial, i_ModelVertexAttributes, i_UseFlattenedModel);
+	Initialize(i_Name, i_Path, i_UseMaterial, i_ModelVertexAttributes, i_UseFlattenedModel, i_Config);
 }
 
 Model::~Model()
@@ -37,42 +37,73 @@ void Model::Destroy ( void )
 	for (unsigned int i = 0; i < m_Meshes.size(); ++ i)
 	{
 		if (m_Meshes[i])
+		{
 			delete m_Meshes[i];
+		}
 	}
 
-	LOG("[" + m_Name + "] Model has been destroyed successfully!");
+	LOG("Model [%s] successfully destroyed!", m_Name.c_str());
 }
 
-bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bool i_UseMaterial, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, bool i_UseFlattenedModel )
+bool Model::Initialize ( const std::string& i_Name, const std::string& i_ObjPath, bool i_UseMaterial, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, bool i_UseFlattenedModel, const GlobalConfig& i_Config)
 {
 	m_Name = i_Name;
+	
+	if (i_UseMaterial)
+	{
+		m_TM.Initialize(i_Name, i_Config);
+	}
 
-	std::vector<glm::vec3> positions, normals;
-	std::vector<glm::vec2> uvs;
+	ParseObjFile(i_ObjPath, i_UseMaterial, i_ModelVertexAttributes, i_UseFlattenedModel);
 
-	std::vector<unsigned int> positionIndices, normalIndices, uvIndices;
+	// compute additional data like: 
+	// model minX, maxX, minY, maxY, minZ, maxZ
+	// model width, height and width
+	m_Limits.MinX = std::numeric_limits<float>::max(); m_Limits.MaxX = 0.0f;
+	m_Limits.MinY = std::numeric_limits<float>::max(), m_Limits.MaxY = 0.0f;
+	m_Limits.MinZ = std::numeric_limits<float>::max(), m_Limits.MaxZ = 0.0f;
+	for (unsigned short i = 0; i < m_Meshes.size(); ++i)
+	{
+		if (m_Meshes[i])
+		{
+			Mesh::Limits meshLimits = m_Meshes[i]->GetLimits();
 
-	std::vector<unsigned int> meshVertexCount;
-	unsigned short meshCrrIndex = 0;
-	unsigned int prevSize = 0;
+			if (meshLimits.MinX < m_Limits.MinX) m_Limits.MinX = meshLimits.MinX;
+			if (meshLimits.MaxX >= m_Limits.MaxX) m_Limits.MaxX = meshLimits.MaxX;
 
+			if (meshLimits.MinY < m_Limits.MinY) m_Limits.MinY = meshLimits.MinY;
+			if (meshLimits.MaxY >= m_Limits.MaxY) m_Limits.MaxY = meshLimits.MaxY;
+
+			if (meshLimits.MinZ < m_Limits.MinZ) m_Limits.MinZ = meshLimits.MinZ;
+			if (meshLimits.MaxZ >= m_Limits.MaxZ) m_Limits.MaxZ = meshLimits.MaxZ;
+		}
+	}
+
+	m_Dimensions.Width = m_Limits.MaxX - m_Limits.MinX;
+	m_Dimensions.Height = m_Limits.MaxY - m_Limits.MinY;
+	m_Dimensions.Depth = m_Limits.MaxZ - m_Limits.MinZ;
+
+	LOG("Model [%s] successfully created!", m_Name.c_str());
+
+	return true;
+}
+
+bool Model::ParseObjFile(const std::string& i_ObjPath, bool i_UseMaterial, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, bool i_UseFlattenedModel)
+{
+	std::vector<Model::MeshData*> meshDataVector;
+	std::map<std::string, Material> materialMap;
+	int crrMeshIndex = -1;
+
+	std::string directory = i_ObjPath.substr(0, i_ObjPath.find_last_of('/'));
 
 	FILE* pObjFile = nullptr;
 	// i_Path - path to the obj file
-	pObjFile = fopen(i_Path.c_str(), "r");
+	pObjFile = fopen(i_ObjPath.c_str(), "r");
 	if (pObjFile == nullptr)
 	{
-		ERR("Failed to open the obj file: " + i_Path + "!\n");
+		ERR("Failed to open the obj file: %s!", i_ObjPath.c_str());
 		return false;
 	}
-
-	std::string directory = i_Path.substr(0, i_Path.find_last_of('/'));
-
-
-	std::map<std::string, Material::MaterialDetails> materialMap;
-	// mesh id, material name
-	std::map<unsigned short, std::string> meshMaterialMap;
-
 
 	while (true)
 	{
@@ -81,11 +112,8 @@ bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bo
 		int res = fscanf(pObjFile, "%s", lineHeader);
 		if (res == EOF)
 		{
-			// save the last data also
-			meshVertexCount.push_back(positionIndices.size() - prevSize);
-
-			++meshCrrIndex;
-
+			fclose(pObjFile);
+			LOG("File %s has been successfully parsed!", i_ObjPath.c_str());
 			break;
 		}
 
@@ -93,143 +121,56 @@ bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bo
 		{
 			if (i_UseMaterial)
 			{
-				char mtlFilePath[128];
+				char mtlFileName[128];
+				fscanf(pObjFile, "%s\n", mtlFileName);
 
-				fscanf(pObjFile, "%s\n", mtlFilePath);
-
-				std::string mtlFN = directory + "/" + std::string(mtlFilePath);
-				FILE* pMtlFile = fopen(mtlFN.c_str(), "r");
-				if (pMtlFile == nullptr)
-				{
-					ERR("Failed to open the mtl file: " + mtlFN + "!\n");
-					return false;
-				}
-
-
-				Material::MaterialDetails materialDetails;
-				materialDetails.Id = 0;
-				unsigned short materialCrrIndex = 0;
-
-				while (true)
-				{
-					char lineHeader[128];
-
-					int res = fscanf(pMtlFile, "%s", lineHeader);
-					if (res == EOF)
-					{
-						// gather previous material data
-						materialMap[materialDetails.Name] = materialDetails;
-
-						++materialCrrIndex;
-
-						break;
-					}
-
-					if (strcmp(lineHeader, "newmtl") == 0) // material name
-					{
-						char mtlName[128];
-
-						fscanf(pMtlFile, "%s\n", mtlName);
-
-						// gather previous material data
-						if (materialCrrIndex > 0)
-						{
-							materialMap[materialDetails.Name] = materialDetails;
-						}
-
-						materialDetails.Id = materialCrrIndex;
-						materialDetails.Name = mtlName;
-
-						materialDetails.TextureArray.clear(); //reset texture array
-
-						++materialCrrIndex;
-					}
-					else if (strcmp(lineHeader, "map_Ka") == 0) // material ambient texture map
-					{
-						char map_Ka[128];
-
-						fscanf(pMtlFile, "%s\n", map_Ka);
-
-						std::string texPath(directory + "/" + std::string(map_Ka));
-
-						unsigned int texId = m_TM.Load2DTexture(texPath.c_str(), GL_REPEAT, GL_LINEAR, true);
-
-						Material::TextureData texData;
-						texData.Id = texId;
-						texData.Type = Material::TEXTURE_MAP_TYPE::TMT_AMBIENT;
-
-						materialDetails.TextureArray.push_back(texData);
-					}
-					else if (strcmp(lineHeader, "map_Kd") == 0) // material diffuse texture map
-					{
-						char map_Kd[128];
-
-						fscanf(pMtlFile, "%s\n", map_Kd);
-
-						std::string texPath(directory + "/" + std::string(map_Kd));
-
-						unsigned int texId = m_TM.Load2DTexture(texPath.c_str(), GL_REPEAT, GL_LINEAR, true);
-
-						Material::TextureData texData;
-						texData.Id = texId;
-						texData.Type = Material::TEXTURE_MAP_TYPE::TMT_DIFFUSE;
-
-						materialDetails.TextureArray.push_back(texData);
-					}
-					else if (strcmp(lineHeader, "map_Ks") == 0) // material specular texture map
-					{
-						char map_Ks[128];
-
-						fscanf(pMtlFile, "%s\n", map_Ks);
-
-						std::string texPath(directory + "/" + std::string(map_Ks));
-
-						unsigned int texId = m_TM.Load2DTexture(texPath.c_str(), GL_REPEAT, GL_LINEAR, true);
-
-						Material::TextureData texData;
-						texData.Id = texId;
-						texData.Type = Material::TEXTURE_MAP_TYPE::TMT_SPECULAR;
-
-						materialDetails.TextureArray.push_back(texData);
-					}
-					else if (strcmp(lineHeader, "map_Bump") == 0) // material normal texture map
-					{
-						char map_Bump[128];
-
-						fscanf(pMtlFile, "%s\n", map_Bump);
-
-						std::string texPath(directory + "/" + std::string(map_Bump));
-
-						unsigned int texId = m_TM.Load2DTexture(texPath.c_str(), GL_REPEAT, GL_LINEAR, false);
-
-						Material::TextureData texData;
-						texData.Id = texId;
-						texData.Type = Material::TEXTURE_MAP_TYPE::TMT_NORMAL;
-
-						materialDetails.TextureArray.push_back(texData);
-					}
-				}
-
-				fclose(pMtlFile);
+				ParseMTLFile(mtlFileName, directory, materialMap);
 			}
+		}
+		else if (strcmp(lineHeader, "o") == 0) // object - aka mesh
+		{
+			char meshName[128];
+			fscanf(pObjFile, "%s", meshName);
+
+			meshDataVector.push_back(new MeshData(meshName));
+
+			crrMeshIndex++;
 		}
 		else if (strcmp(lineHeader, "v") == 0) // vertex position
 		{
 			glm::vec3 position;
 			fscanf(pObjFile, "%f %f %f\n", &position.x, &position.y, &position.z);
-			positions.push_back(position);
+			
+			assert(crrMeshIndex >= 0 && crrMeshIndex < meshDataVector.size());
+
+			if (meshDataVector[crrMeshIndex])
+			{
+				meshDataVector[crrMeshIndex]->VertexPositions.push_back(position);
+			}
 		}
 		else if (strcmp(lineHeader, "vn") == 0) // vertex normal
 		{
 			glm::vec3 normal;
 			fscanf(pObjFile, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-			normals.push_back(normal);
+			
+			assert(crrMeshIndex >= 0 && crrMeshIndex < meshDataVector.size());
+
+			if (meshDataVector[crrMeshIndex])
+			{
+				meshDataVector[crrMeshIndex]->VertexNormals.push_back(normal);
+			}
 		}
 		else if (strcmp(lineHeader, "vt") == 0) // vertex texture coordinates
 		{
 			glm::vec2 uv;
 			fscanf(pObjFile, "%f %f\n", &uv.x, &uv.y);
-			uvs.push_back(uv);
+			
+			assert(crrMeshIndex >= 0 && crrMeshIndex < meshDataVector.size());
+
+			if (meshDataVector[crrMeshIndex])
+			{
+				meshDataVector[crrMeshIndex]->VertexUVs.push_back(uv);
+			}
 		}
 		else if (strcmp(lineHeader, "f") == 0) // face
 		{
@@ -259,104 +200,202 @@ bool Model::LoadModel ( const std::string& i_Name, const std::string& i_Path, bo
 				}
 			}
 
-			positionIndices.push_back(positionIndex[0]);
-			positionIndices.push_back(positionIndex[1]);
-			positionIndices.push_back(positionIndex[2]);
-			uvIndices.push_back(uvIndex[0]);
-			uvIndices.push_back(uvIndex[1]);
-			uvIndices.push_back(uvIndex[2]);
-			normalIndices.push_back(normalIndex[0]);
-			normalIndices.push_back(normalIndex[1]);
-			normalIndices.push_back(normalIndex[2]);
-		}
-		else if (strcmp(lineHeader, "g") == 0) // group
-		{
+			assert(crrMeshIndex >= 0 && crrMeshIndex < meshDataVector.size());
 
-		}
-		else if (strcmp(lineHeader, "o") == 0) // object - aka mesh
-		{
-			if (meshCrrIndex > 0)
+			if (meshDataVector[crrMeshIndex])
 			{
-				// gather previous mesh data
-				meshVertexCount.push_back(positionIndices.size() - prevSize);
-				prevSize = positionIndices.size();
+				meshDataVector[crrMeshIndex]->PositionIndices.push_back(positionIndex[0]);
+				meshDataVector[crrMeshIndex]->PositionIndices.push_back(positionIndex[1]);
+				meshDataVector[crrMeshIndex]->PositionIndices.push_back(positionIndex[2]);
+				meshDataVector[crrMeshIndex]->UVsIndices.push_back(uvIndex[0]);
+				meshDataVector[crrMeshIndex]->UVsIndices.push_back(uvIndex[1]);
+				meshDataVector[crrMeshIndex]->UVsIndices.push_back(uvIndex[2]);
+				meshDataVector[crrMeshIndex]->NormalsIndices.push_back(normalIndex[0]);
+				meshDataVector[crrMeshIndex]->NormalsIndices.push_back(normalIndex[1]);
+				meshDataVector[crrMeshIndex]->NormalsIndices.push_back(normalIndex[2]);
 			}
-
-			++ meshCrrIndex;
 		}
 		else if (strcmp(lineHeader, "usemtl") == 0) // use material from material file
 		{
 			if (i_UseMaterial)
 			{
-				char mtlName[128];
+				char materialName[128];
+				fscanf(pObjFile, "%s\n", materialName);
 
-				fscanf(pObjFile, "%s\n", mtlName);
+				assert(crrMeshIndex >= 0 && crrMeshIndex < meshDataVector.size());
 
-				std::map<std::string, Material::MaterialDetails>::iterator it = materialMap.find(std::string(mtlName));
-				if (it != materialMap.end() && meshCrrIndex > 0)
+				if (meshDataVector[crrMeshIndex])
 				{
-					meshMaterialMap[meshCrrIndex - 1] = it->second.Name;
+					meshDataVector[crrMeshIndex]->MaterialName = materialName;
 				}
 			}
 		}
 	}
 
-	fclose(pObjFile);
 
-	// create each mesh data
-	unsigned int crrIndex = 0;
-	for (unsigned int i = 0; i < meshVertexCount.size(); ++i)
+	// process mesh & material data
+	unsigned int crrPosIndexOffset = 0, crrNormalIndexOffset = 0, crrUVIndexOffset = 0;
+	for (unsigned int i = 0; i < meshDataVector.size(); ++i)
 	{
-		std::vector<MeshBufferManager::VertexData> vertices;
-		vertices.resize(meshVertexCount[i]);
+		const Model::MeshData* meshData = meshDataVector[i];
 
-		// add primary vertex attributes
-		for (unsigned int j = 0, k = crrIndex; k < crrIndex + meshVertexCount[i]; ++j, ++k)
+		if (meshData)
 		{
-			MeshBufferManager::VertexData vert;
+			// indices size check
+			if (meshData->PositionIndices.size() != meshData->NormalsIndices.size() &&
+				meshData->PositionIndices.size() != meshData->UVsIndices.size())
+			{
+				ERR("Invalid indices for mesh %s", meshData->Name.c_str());
+				return false;
+			}
 
-			vert.position = positions[positionIndices[k] - 1]; //obj indexes start from 1, c++ array indexes from 0
-			vert.normal = normals[normalIndices[k] - 1];
-			vert.uv = uvs[uvIndices[k] - 1];
+			std::vector<MeshBufferManager::VertexData> vertices;
+			vertices.resize(meshData->PositionIndices.size());
+			for (unsigned int j = 0; j < vertices.size(); ++j)
+			{
+				// obj indices start from 1, but in c++ indices - from 0
+				// the indices value doesn't restart for each mesh, it just goes on increasing
+				unsigned int idx = meshData->PositionIndices[j] - crrPosIndexOffset - 1;
+				vertices[j].position = meshData->VertexPositions[idx];
 
-			vertices[j] = vert;
-		}
-		crrIndex += meshVertexCount[i];
+				idx = meshData->NormalsIndices[j] - crrNormalIndexOffset - 1;
+				vertices[j].normal = meshData->VertexNormals[idx];
 
-		std::stringstream ss;
-		ss << m_Name << " [Mesh " << i << "]";
+				idx = meshData->UVsIndices[j] - crrUVIndexOffset - 1;
+				vertices[j].uv = meshData->VertexUVs[idx];
+			}
 
-		m_Meshes.push_back(new Mesh(ss.str(), vertices, i_ModelVertexAttributes, materialMap[meshMaterialMap[i]].TextureArray, i_UseMaterial, i_UseFlattenedModel));
-	}
+			crrPosIndexOffset += meshData->VertexPositions.size();
+			crrNormalIndexOffset += meshData->VertexNormals.size();
+			crrUVIndexOffset += meshData->VertexUVs.size();
 
-	// compute additional data like: 
-	// model minX, maxX, minY, maxY, minZ, maxZ
-	// model width, height and width
-	m_Limits.MinX = std::numeric_limits<float>::max(); m_Limits.MaxX = 0.0f;
-	m_Limits.MinY = std::numeric_limits<float>::max(), m_Limits.MaxY = 0.0f;
-	m_Limits.MinZ = std::numeric_limits<float>::max(), m_Limits.MaxZ = 0.0f;
-	for (unsigned short i = 0; i < m_Meshes.size(); ++i)
-	{
-		if (m_Meshes[i])
-		{
-			Mesh::Limits meshLimits = m_Meshes[i]->GetLimits();
-
-			if (meshLimits.MinX < m_Limits.MinX) m_Limits.MinX = meshLimits.MinX;
-			if (meshLimits.MaxX >= m_Limits.MaxX) m_Limits.MaxX = meshLimits.MaxX;
-
-			if (meshLimits.MinY < m_Limits.MinY) m_Limits.MinY = meshLimits.MinY;
-			if (meshLimits.MaxY >= m_Limits.MaxY) m_Limits.MaxY = meshLimits.MaxY;
-
-			if (meshLimits.MinZ < m_Limits.MinZ) m_Limits.MinZ = meshLimits.MinZ;
-			if (meshLimits.MaxZ >= m_Limits.MaxZ) m_Limits.MaxZ = meshLimits.MaxZ;
+			// create a mesh
+			m_Meshes.push_back(new Mesh(meshData->Name, vertices, i_ModelVertexAttributes, materialMap[meshData->MaterialName].TextureArray, i_UseMaterial, i_UseFlattenedModel));
 		}
 	}
 
-	m_Dimensions.Width = m_Limits.MaxX - m_Limits.MinX;
-	m_Dimensions.Height = m_Limits.MaxY - m_Limits.MinY;
-	m_Dimensions.Depth = m_Limits.MaxZ - m_Limits.MinZ;
+	// cleanup mesh data
+	for (unsigned int i = 0; i < meshDataVector.size(); ++i)
+	{
+		SAFE_DELETE(meshDataVector[i]);
+	}
 
 	return true;
+}
+
+bool Model::ParseMTLFile(const std::string& i_MTLFileName, const std::string& i_Directory, std::map<std::string, Material>& o_MaterialMap)
+{
+	std::string mtlFilePath = i_Directory + "/" + i_MTLFileName;
+
+	FILE* pMtlFile = fopen(mtlFilePath.c_str(), "r");
+	if (pMtlFile == nullptr)
+	{
+		ERR("Failed to open the mtl file: %s!", mtlFilePath.c_str());
+		return false;
+	}
+
+	std::vector<Model::LoadedTextureData> loadedTextureVector;
+
+	std::string crrMaterialName;
+
+	while (true)
+	{
+		char lineHeader[128];
+
+		int res = fscanf(pMtlFile, "%s", lineHeader);
+		if (res == EOF)
+		{
+			fclose(pMtlFile);
+			LOG("File %s has been successfully parsed!", mtlFilePath.c_str());
+			break;
+		}
+
+		if (strcmp(lineHeader, "newmtl") == 0) // material name
+		{
+			char mtlName[128];
+			fscanf(pMtlFile, "%s\n", mtlName);
+
+			crrMaterialName = mtlName;
+
+			Material material(crrMaterialName);
+			o_MaterialMap[crrMaterialName] = material;
+		}
+		else if (strcmp(lineHeader, "map_Ka") == 0) // material ambient texture map
+		{
+			char map_Ka[128];
+			fscanf(pMtlFile, "%s\n", map_Ka);
+
+			std::string texPath(i_Directory + "/" + std::string(map_Ka));
+
+			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_AMBIENT, loadedTextureVector);
+
+			o_MaterialMap[crrMaterialName].TextureArray.push_back(texData);
+		}
+		else if (strcmp(lineHeader, "map_Kd") == 0) // material diffuse texture map
+		{
+			char map_Kd[128];
+			fscanf(pMtlFile, "%s\n", map_Kd);
+
+			std::string texPath(i_Directory + "/" + std::string(map_Kd));
+
+			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_DIFFUSE, loadedTextureVector);
+
+			o_MaterialMap[crrMaterialName].TextureArray.push_back(texData);
+		}
+		else if (strcmp(lineHeader, "map_Ks") == 0) // material specular texture map
+		{
+			char map_Ks[128];
+			fscanf(pMtlFile, "%s\n", map_Ks);
+
+			std::string texPath(i_Directory + "/" + std::string(map_Ks));
+
+			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_SPECULAR, loadedTextureVector);
+
+			o_MaterialMap[crrMaterialName].TextureArray.push_back(texData);
+		}
+		else if (strcmp(lineHeader, "map_Bump") == 0) // material normal texture map
+		{
+			char map_Bump[128];
+			fscanf(pMtlFile, "%s\n", map_Bump);
+
+			std::string texPath(i_Directory + "/" + std::string(map_Bump));
+
+			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_NORMAL, loadedTextureVector);
+
+			o_MaterialMap[crrMaterialName].TextureArray.push_back(texData);
+		}
+	}
+
+	return true;
+}
+
+Material::TextureData Model::ProcessTexture(const std::string& i_TexPath, const Material::TEXTURE_MAP_TYPE& i_TexType, const std::vector<Model::LoadedTextureData>& i_LoadedTextureVector)
+{
+	Material::TextureData texData;
+
+	bool skip = false;
+	for (unsigned int i = 0; i < i_LoadedTextureVector.size(); ++i)
+	{
+		if (i_TexPath == i_LoadedTextureVector[i].Path)
+		{
+			skip = true;
+
+			texData.Id = i_LoadedTextureVector[i].Id;
+			texData.Type = i_LoadedTextureVector[i].Type;
+
+			break;
+		}
+	}
+
+	if (!skip)
+	{
+		unsigned int texId = m_TM.Load2DTexture(i_TexPath.c_str(), GL_REPEAT, GL_LINEAR, true);
+
+		texData.Id = texId;
+		texData.Type = i_TexType;
+	}
+
+	return texData;
 }
 
 void Model::Render ( const ShaderManager& i_SM, unsigned short i_StartTexUnitId, bool i_IsWireframeMode)

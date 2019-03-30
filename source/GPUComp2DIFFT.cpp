@@ -2,9 +2,8 @@
 
 #include "GPUComp2DIFFT.h"
 #include <sstream> // std::stringstream
-#include "Common.h"
-#include "ErrorHandler.h"
-#include "GL/glew.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 #include "glm/exponential.hpp" //log2(), pow()
 #include "glm/trigonometric.hpp" //cos(), sin() 
 #include "glm/gtc/constants.hpp" //two_pi()
@@ -13,7 +12,9 @@
 
 GPUComp2DIFFT::GPUComp2DIFFT ( void )
   : m_IndicesTexId(0), m_WeightsTexId(0), m_NumButterflies(0)
-{}
+{
+	LOG("GPUComp2DFFT successfully created!");
+}
 
 GPUComp2DIFFT::GPUComp2DIFFT ( const GlobalConfig& i_Config )
   : m_IndicesTexId(0), m_WeightsTexId(0), m_NumButterflies(0)
@@ -30,7 +31,7 @@ void GPUComp2DIFFT::Destroy ( void )
 {
 	// should free resources
 
-	LOG("GPUComp2DFFT has been destroyed successfully!");
+	LOG("GPUComp2DFFT successfully destroyed!");
 }
 
 void GPUComp2DIFFT::Initialize ( const GlobalConfig& i_Config )
@@ -55,7 +56,7 @@ void GPUComp2DIFFT::Initialize ( const GlobalConfig& i_Config )
 	We work with complex numbers hence the 4d vectors: which hold 2 complex numbers: [r1, i1], [r2, i2]
 	*/
 
-	m_TM.Initialize("GPUComp2DFFT");
+	m_TM.Initialize("GPUComp2DFFT", i_Config);
 
 	///////// 
 	// Create the pingpong textures first, so that they ids don't change in case we need to create other textures !!!
@@ -116,7 +117,7 @@ void GPUComp2DIFFT::Initialize ( const GlobalConfig& i_Config )
 
 	m_VerticalSM.UnUseProgram();
 
-	LOG("GPUComp2DFFT has been created successfully!");
+	LOG("GPUComp2DFFT successfully created!");
 }
 
 ///////////////////////////////////

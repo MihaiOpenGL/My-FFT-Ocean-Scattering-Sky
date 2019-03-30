@@ -10,13 +10,13 @@
 #ifndef FFT_OCEAN_PATCH_BASE_H
 #define FFT_OCEAN_PATCH_BASE_H
 
-#include <string>
-#include <map>
 #include "CustomTypes.h"
 #include "ShaderManager.h"
 //#define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
 #include "glm/vec2.hpp" 
 #include "glm/vec3.hpp"
+#include <string>
+#include <map>
 
 class FFTNormalGradientFoldingBase;
 class GlobalConfig;

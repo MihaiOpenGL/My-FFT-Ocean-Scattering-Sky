@@ -1,17 +1,28 @@
+////////////////////////////////
+////////////////////////////////
+/*
+TEXTURE UNIT ALLOCATION
+
+5 : [0 - 4] = global usage
+5 : [5 - 9] = sky usage
+20 : [10 - 29] = ocean usage
+5 : [30 - 34] = boat usage
+*/
+////////////////////////////////
+////////////////////////////////
+
 #include "Application.h"
-#include "Common.h"
+#include "CommonHeaders.h"
 #include "CustomTypes.h"
 #include "HelperFunctions.h"
-//#define GLEW_STATIC // when linking to glew32s.lib instead of glew32.lib !
-#include "GL/glew.h" //glew include must be set before glfw
+#include "GLConfig.h"
+#include "GlobalConfig.h"
 #define GLM_MESSAGES //info about GLM
 // glm::vec3 comes from the header
 #include "glm/common.hpp" //clamp()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
 #include "glm/gtc/matrix_transform.hpp" //scale()
 #include "glm/gtc/constants.hpp" //epsilon
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
 #include "PhysicsConstants.h"
 #include "FrameBufferManager.h"
 #include "PostProcessingManager.h"
@@ -20,6 +31,11 @@
 #include "Ocean.h"
 #include "MotorBoat.h"
 
+
+Application::Application()
+{
+	LOG("Application successfully created!");
+}
 
 Application::Application(const GlobalConfig& i_Config, int i_WindowWidth, int i_WindowHeight)
 	: m_WindowWidth(0), m_WindowHeight(0),
@@ -30,7 +46,7 @@ Application::Application(const GlobalConfig& i_Config, int i_WindowWidth, int i_
 	  m_IsGUIVisible(false), m_IsCameraViewChanged(false), m_IsCameraControlChanged(false),
 	  m_IsRenderWireframe(false), m_IsRenderPoints(false), m_IsCursorReleased(false),
       m_IsFrustumVisible(false), m_IsUnderWater(false), m_IsInBoatMode(false),
-	  m_MouseOldXPos(0.0f), m_MouseOldYPos(0.0f), m_IsInDraggingMode(false),
+	  m_MouseOldXPos(0), m_MouseOldYPos(0), m_IsInDraggingMode(false),
 	  m_KeySpeed(0.0f), m_MouseSpeed(0.0f), m_SunPhi(0.0f), m_SunTheta(0.0f)
 {
 	SetWindowSize(i_WindowWidth, i_WindowHeight);
@@ -40,12 +56,16 @@ Application::Application(const GlobalConfig& i_Config, int i_WindowWidth, int i_
 	SetupGlobals(i_Config);
 
 	InitScene(i_Config);
+
+	LOG("Application successfully created!");
 }
 
 
 Application::~Application()
 {
 	TerminateScene();
+
+	LOG("Application successfully destroyed!");
 }
 
 
@@ -262,7 +282,7 @@ void Application::InitScene(const GlobalConfig& i_Config)
 
 	if (!ret)
 	{
-		std::cout << "Failed to initialize AntTweakBar!" << std::endl;
+		ERR("Failed to initialize AntTweakBar!");
 	}
 
 	/// set the windows size
@@ -325,12 +345,12 @@ void Application::InitScene(const GlobalConfig& i_Config)
 
 	m_pPostProcessingManager = new PostProcessingManager(i_Config);
 	assert(m_pPostProcessingManager != nullptr);
-	std::cout << "PostProcessingManager is: " << sizeof(*m_pPostProcessingManager) << " bytes in size" << std::endl;
+	LOG("PostProcessingManager is: %d bytes in size", sizeof(*m_pPostProcessingManager));
 
 	//////// SKY ////////
 	m_pSky = new Sky(i_Config);
 	assert(m_pSky != nullptr);
-	std::cout << "Sky is: " << sizeof(*m_pSky) << " bytes in size" << std::endl;
+	LOG("Sky is: %d bytes in size", sizeof(*m_pSky));
 
 	if (m_pSky && m_pSky->GetModelType() != CustomTypes::Sky::ModelType::MT_CUBE_MAP)
 	{
@@ -358,7 +378,7 @@ void Application::InitScene(const GlobalConfig& i_Config)
 	///////// OCEAN ///////////
 	m_pOcean = new Ocean(i_Config);
 	assert(m_pOcean != nullptr);
-	std::cout << "Ocean is: " << sizeof(*m_pOcean) << " bytes in size" << std::endl;
+	LOG("Ocean is: %d bytes in size", sizeof(*m_pSky));
 
 	// add params to GUI
 	ret = TwAddVarCB(m_pGUIBar, "Amplitude", TW_TYPE_FLOAT, SetOceanAmplitude, GetOceanAmplitude, m_pOcean, "min=0.01; max=1.0; step=0.01 group=Waves");
@@ -389,7 +409,7 @@ void Application::InitScene(const GlobalConfig& i_Config)
 	//////// MOTOR BOAT ////////
 	m_pMotorBoat = new MotorBoat(i_Config);
 	assert(m_pMotorBoat != nullptr);
-	std::cout << "MotorBoat is: " << sizeof(*m_pMotorBoat) << " bytes in size" << std::endl;
+	LOG("Motor is: %d bytes in size", sizeof(*m_pSky));
 }
 
 void Application::Update(float i_CrrTime, float i_DeltaTime, const GlobalConfig& i_Config)
@@ -759,16 +779,16 @@ void Application::TerminateScene(void)
 }
 
 
-void Application::SetupDefaultFrameBuffer(void)
+void Application::SetupDefaultFrameBuffer(const GlobalConfig& i_Config)
 {
 
 }
 
-void Application::SetupAuxiliaryFrameBuffer(unsigned short i_TexUnitID)
+void Application::SetupAuxiliaryFrameBuffer(const GlobalConfig& i_Config)
 {
-	m_pFBM = new FrameBufferManager("Main Auxiliary FrameBuffer");
+	m_pFBM = new FrameBufferManager("Main Auxiliary FrameBuffer", i_Config);
 	assert(m_pFBM != nullptr);
-	m_pFBM->CreateSimple(2, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, m_WindowWidth, m_WindowHeight, GL_CLAMP_TO_EDGE, GL_LINEAR, i_TexUnitID, 5, false, FrameBufferManager::DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH_STENCIL);
+	m_pFBM->CreateSimple(2, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, m_WindowWidth, m_WindowHeight, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Global.ReflectionMap, 5, false, FrameBufferManager::DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH_STENCIL);
 }
 
 void Application::SetupGL(const GlobalConfig& i_Config)
@@ -800,9 +820,9 @@ void Application::SetupGL(const GlobalConfig& i_Config)
 	glEnable(GL_MULTISAMPLE); //anti-aliasing
 
 	////////////////////////////////////////////////
-	SetupDefaultFrameBuffer();
+	SetupDefaultFrameBuffer(i_Config);
 
-	SetupAuxiliaryFrameBuffer(i_Config.TexUnit.Global.ReflectionMap);
+	SetupAuxiliaryFrameBuffer(i_Config);
 
 	// Viewport
 	glViewport(0, 0, m_WindowWidth, m_WindowHeight);
@@ -880,12 +900,17 @@ void Application::OnWindowResize(int i_Width, int i_Height)
 	}
 }
 
-bool Application::OnGUIMouseEventGLFW(int i_Button, int i_Action)
+bool Application::OnGUIMouseEventSDL(const SDL_Event& sdlEvent, unsigned char sdlMajorVersion, unsigned char sdlMinorVersion)
 {
-	return TwEventMouseButtonGLFW(i_Button, i_Action);
+	if (m_IsGUIVisible)
+	{
+		return TwEventSDL(&sdlEvent, sdlMajorVersion, sdlMinorVersion);
+	}
+
+	return false;
 }
 
-void Application::OnCursorPosition(double i_XPos, double i_YPos)
+void Application::OnMouseMotion(int i_XPos, int i_YPos)
 {
 	if (m_IsInDraggingMode)
 	{
@@ -897,58 +922,59 @@ void Application::OnCursorPosition(double i_XPos, double i_YPos)
 			if (m_pSky->GetModelType() == CustomTypes::Sky::ModelType::MT_PRECOMPUTED_SCATTERING)
 			{
 				// precomputed scattering model
-				m_SunPhi += (m_MouseOldXPos - static_cast<float>(i_XPos)) / 800.0f; //azimuth - dX
-				m_SunTheta += (m_MouseOldYPos - static_cast<float>(i_YPos)) / 800.0f; //zenith - dY
+				m_SunPhi += (m_MouseOldXPos - i_XPos) / 800.0f; //azimuth - dX
+				m_SunTheta += (m_MouseOldYPos - i_YPos) / 800.0f; //zenith - dY
 			}
 			else
 			{
 				// scattering and cubemap models
-				m_SunPhi += (m_MouseOldYPos - static_cast<float>(i_YPos)) / 800.0f; //zenith - dY
-				m_SunTheta += (m_MouseOldXPos - static_cast<float>(i_XPos)) / 800.0f; //azimuth - dX
+				m_SunPhi += (m_MouseOldYPos - i_YPos) / 800.0f; //zenith - dY
+				m_SunTheta += (m_MouseOldXPos - i_XPos) / 800.0f; //azimuth - dX
 			}
 
 			m_pSky->SetSunDirection(m_SunPhi, m_SunTheta);
 
-			m_MouseOldXPos = static_cast<float>(i_XPos);
-			m_MouseOldYPos = static_cast<float>(i_YPos);
+			m_MouseOldXPos = i_XPos;
+			m_MouseOldYPos = i_YPos;
 		}
 	}
 	else
 	{
-		m_MouseOldXPos = static_cast<float>(i_XPos);
-		m_MouseOldYPos = static_cast<float>(i_YPos);
+		m_MouseOldXPos = i_XPos;
+		m_MouseOldYPos = i_YPos;
 
-		if (m_IsGUIVisible)
+		if (m_IsGUIVisible && m_IsCursorReleased)
 		{
-			int ret = TwMouseMotion(static_cast<int>(i_XPos), static_cast<int>(i_YPos));
+			int ret = TwMouseMotion(i_XPos, i_YPos);
 			//assert(ret != 0);
 		}
 	}
 }
 
-void Application::OnMouseScroll(double i_XOffset, double i_YOffset)
+void Application::OnMouseScroll(int i_XOffset, int i_YOffset)
 {
 	if (m_pCurrentControllingCamera)
 	{
-		float fov = m_pCurrentControllingCamera->GetFOV();
+		// NOTE! For now we use only the y offset to update the FOVy
 
-		if (fov >= 5.0f && fov <= 129.0f)
-			fov -= static_cast<float>(i_YOffset);
-		if (fov <= 5.0f)
-			fov = 5.0f;
-		if (fov >= 129.0f)
-			fov = 129.0f;
+		int fov = m_pCurrentControllingCamera->GetFOV();
+
+		if (fov >= 5 && fov <= 129)
+			fov -= i_YOffset;
+		if (fov <= 5)
+			fov = 5;
+		if (fov >= 129)
+			fov = 129;
 
 		m_pCurrentControllingCamera->SetFOV(fov);
 	}
 }
 
-void Application::UpdateCameraMouseOrientation(double i_XPos, double i_YPos)
+void Application::UpdateCameraMouseOrientation(int i_DX, int i_DY)
 {
-	float halfWidth = m_WindowWidth * 0.5f, halfHeight = m_WindowHeight * 0.5f;
-
-	float dX = (halfWidth - static_cast<float>(i_XPos)) * m_MouseSpeed * m_DeltaTime;
-	float dY = (halfHeight - static_cast<float>(i_YPos)) * m_MouseSpeed * m_DeltaTime;
+	// we negate the received deltas for each axis as we want to move the camera in the opposite direction
+	float dX = - i_DX * m_MouseSpeed * m_DeltaTime;
+	float dY = - i_DY * m_MouseSpeed * m_DeltaTime;
 
 	if (m_pCurrentControllingCamera)
 	{
@@ -1101,22 +1127,6 @@ float Application::GetCrrTime() const
 float Application::GetDeltaTime() const
 {
 	return m_DeltaTime;
-}
-
-
-
-bool Application::IsKeyPressed(int i_Key)
-{
-	assert(i_Key >= 0 && i_Key < 1024);
-
-	return m_Keys[i_Key];
-}
-
-void Application::SetKeyPresed(int i_Key, bool i_Value)
-{
-	assert(i_Key >= 0 && i_Key < 1024);
-
-	m_Keys[i_Key] = i_Value;
 }
 
 float Application::GetKeySpeed() const

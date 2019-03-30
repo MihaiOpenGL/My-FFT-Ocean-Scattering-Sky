@@ -1,9 +1,8 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Ocean.h"
-#include <sstream> // std::stringstream
-#include <time.h>
-#include "GL/glew.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 // glm::vec2, glm::vec3, glm::mat4 come from the header
 #include "glm/vec4.hpp"
 #include "glm/common.hpp" //ceil()
@@ -12,10 +11,7 @@
 #include "glm/gtc/constants.hpp" //pi()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
 #include "glm/vector_relational.hpp" //any(), notEqual()
-#include "Common.h"
 #include "HelperFunctions.h"
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
 #include "FileUtils.h"
 #include "PhysicsConstants.h"
 #include "GlobalConfig.h"
@@ -24,6 +20,8 @@
 #include "FFTOceanPatchGPUComp.h"
 #include "FFTOceanPatchCPUFFTW.h"
 #include "MotorBoat.h"
+#include <sstream> // std::stringstream
+#include <time.h>
 
 
 Ocean::Ocean ( void )
@@ -35,7 +33,9 @@ Ocean::Ocean ( void )
 	  m_EnableBoatKelvinWake(false), m_EnableBoatPropellerWash(false), m_EnableUnderWaterGodRays(false),
 	  m_GodRaysMapWidth(0), m_GodRaysMapHeight(0), m_CausticsMapSize(0),
 	  m_PerlinNoiseSpeed(0.0f), m_SunDirY(0.0f)
-	{}
+{
+	LOG("Ocean successfully created!");
+}
 
 Ocean::Ocean ( const GlobalConfig& i_Config )
 	: m_pFFTOceanPatch(nullptr), m_pCurrentCamera(nullptr),
@@ -58,7 +58,7 @@ Ocean::~Ocean ( void )
 void Ocean::Destroy ( void )
 {
 	SAFE_DELETE(m_pFFTOceanPatch);
-	LOG("Ocean has been destroyed successfully!");
+	LOG("Ocean successfully destroyed!");
 }
 
 void Ocean::Initialize ( const GlobalConfig& i_Config )
@@ -86,9 +86,9 @@ void Ocean::Initialize ( const GlobalConfig& i_Config )
 
 	///////////////////////////
 
-	m_WaveProjector.Initialize(i_Config, false);
+	m_WaveProjector.Initialize(i_Config, Projector::PROJ_TYPE::PT_SURFACE);
 
-	m_BottomProjector.Initialize(i_Config, true);
+	m_BottomProjector.Initialize(i_Config, Projector::PROJ_TYPE::PT_UNDERWATER);
 
 	//////////////////////////////
 
@@ -119,7 +119,7 @@ void Ocean::Initialize ( const GlobalConfig& i_Config )
 
 	SetupTextures(i_Config);
 
-	LOG("Ocean has been created successfully!");
+	LOG("Ocean successfully created!");
 }
 
 void Ocean::SetupGrid ( const GlobalConfig& i_Config )
@@ -653,7 +653,7 @@ void Ocean::SetupOceanBottomCaustics ( const GlobalConfig& i_Config )
 		m_OceanCausticsMBM.Initialize("Ocean Caustics");
 		m_OceanCausticsMBM.CreateModelContext(oceanCausticsAttributes, m_GridMBM.GetVBOID(), m_GridMBM.GetIBOID(), m_GridMBM.GetAccessType());
 
-		m_OceanCausticsFBM.Initialize("Ocean Caustics");
+		m_OceanCausticsFBM.Initialize("Ocean Caustics", i_Config);
 		m_OceanCausticsFBM.CreateSimple(1, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, m_CausticsMapSize, m_CausticsMapSize, GL_REPEAT, GL_LINEAR, i_Config.TexUnit.Ocean.Bottom.CausticsMap, 5);
 	}
 }
@@ -770,7 +770,7 @@ void Ocean::SetupOceanBottomGodRays ( const GlobalConfig& i_Config )
 
 		m_OceanCausticsSM.UnUseProgram();
 
-		m_OceanGodRaysFBM.Initialize("Ocean God Rays");
+		m_OceanGodRaysFBM.Initialize("Ocean God Rays", i_Config);
 		/////////
 		glm::ivec4 viewport;
 		glGetIntegerv(GL_VIEWPORT, &viewport[0]);
@@ -918,7 +918,7 @@ void Ocean::SetupDebugFrustum ( const GlobalConfig& i_Config )
 
 void Ocean::SetupTextures ( const GlobalConfig& i_Config )
 {
-	m_OceanTM.Initialize("Ocean");
+	m_OceanTM.Initialize("Ocean", i_Config);
 	// perlin noise is used beginning with middle far to very far away, so we don't need to many levels of mipmaps. 5 levels suffice!
 	m_OceanTM.Load2DTexture("../resources/textures/perlin_noise.dds", GL_REPEAT, GL_LINEAR, false, i_Config.TexUnit.Ocean.Surface.PerlinDisplacementMap, 5);// 0);
 																																							// foam should be available only near to middle range from camera position, so 7 levels of mipmaps will suffice

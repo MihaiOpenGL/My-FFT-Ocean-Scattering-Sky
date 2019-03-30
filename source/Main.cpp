@@ -4,13 +4,13 @@
 
  The project uses the following libs:
 
- For OpenGL API
- GLEW: http://glew.sourceforge.net/
- License: https://github.com/nigels-com/glew#copyright-and-licensing
+ For OpenGL/ES Loading
+ GLAD: https://github.com/Dav1dde/glad
+ License: 
 
- For Window and Input Management
- GLFW: http://www.glfw.org/
- License: http://www.glfw.org/license.html
+ For GL Context, Window and Input Management
+ SDL2: https://www.libsdl.org/
+ License: https://www.libsdl.org/license.php
 
  For Mathematics
  GLM: https://glm.g-truc.net/0.9.8/index.html
@@ -31,60 +31,17 @@
 */
 
 
-
-
-////////////////////////////////
-////////////////////////////////
-/*
-TEXTURE UNIT ALLOCATION
-
-5 : [0 - 4] = global usage
-5 : [5 - 9] = sky usage
-20 : [10 - 29] = ocean usage
-5 : [30 - 34] = boat usage
-*/
-////////////////////////////////
-////////////////////////////////
-
-
 #ifdef _DEBUG
 //#include "vld.h" //// Visual Leak Detector - really helps !!!
 #endif // DEBUG
 
-//#define GLEW_STATIC // when linking to glew32s.lib instead of glew32.lib !
-#include "GL/glew.h" //glew include must be set before glfw
-
-#include "GL/glfw3.h"
-
+#include "SDLConfig.h"
+#include "SDL/SDL.h"
+#include "GLConfig.h"
+#include "CommonHeaders.h"
 #include <new>
 #include <iostream> //test
 #include <sstream>  //fps
-#include <ctime>
-
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
-#include "Common.h"
-
-///////// Timer - check elapsed time
-/** Use to init the clock */
-#define TIMER_INIT \
-    LARGE_INTEGER frequency; \
-    LARGE_INTEGER t1,t2; \
-    double elapsedTime; \
-    QueryPerformanceFrequency(&frequency);
-
-
-/** Use to start the performance timer */
-#define TIMER_START QueryPerformanceCounter(&t1);
-
-/** Use to stop the performance timer and output the result to the standard stream. Less verbose than \c TIMER_STOP_VERBOSE */
-#define TIMER_STOP \
-    QueryPerformanceCounter(&t2); \
-    elapsedTime=(float)(t2.QuadPart-t1.QuadPart)/frequency.QuadPart; \
-    std::wcout<<elapsedTime<<L" sec"<< std::endl;
-/////////
-
-
 
 #include "GlobalConfig.h"
 GlobalConfig g_Config;
@@ -92,137 +49,121 @@ GlobalConfig g_Config;
 #include "Application.h"
 Application* g_pApplication = nullptr;
 
+// Quit app
+bool g_quit = false;
 
 
-void UpdateInput ( GLFWwindow* i_pWindow )
+
+void UpdateContinuousInput(SDL_Window* i_pWindow )
 {
-	if (g_pApplication)
+	////////// Keyboard Update
+	// we use the state, because we want to support multiple pressed keys at the same time
+	const Uint8 *state = SDL_GetKeyboardState(NULL);
+
+	if (!state)
 	{
-		if (g_pApplication->IsKeyPressed(GLFW_KEY_W))
+		ERR("Invalid keyboard state: %s!", state);
+		return;
+	}
+
+	if (state && g_pApplication)
+	{
+		if (state[SDL_SCANCODE_W])
 		{
 			g_pApplication->CameraMoveForward();
 			g_pApplication->BoatAccelerate();
 		}
 
-		if (g_pApplication->IsKeyPressed(GLFW_KEY_S))
+		if (state[SDL_SCANCODE_S])
 		{
 			g_pApplication->CameraMoveBackward();
 			g_pApplication->BoatDecelerate();
 		}
 
-		if (g_pApplication->IsKeyPressed(GLFW_KEY_D))
+		if (state[SDL_SCANCODE_D])
 		{
 			g_pApplication->CameraMoveRight();
 			g_pApplication->BoatTurnRight();
 		}
 
-		if (g_pApplication->IsKeyPressed(GLFW_KEY_A))
+		if (state[SDL_SCANCODE_A])
 		{
 			g_pApplication->CameraMoveLeft();
 			g_pApplication->BoatTurnLeft();
 		}
 
-		if (g_pApplication->IsKeyPressed(GLFW_KEY_U))
+		if (state[SDL_SCANCODE_U])
 		{
 			g_pApplication->CameraMoveUp();
 		}
 
-		if (g_pApplication->IsKeyPressed(GLFW_KEY_B))
+		if (state[SDL_SCANCODE_B])
 		{
 			g_pApplication->CameraMoveDown();
 		}
 
+		//////// Mouse Update
 		if (!g_pApplication->GetIsCursorReleased())
 		{
-			// update mouse data
-			double xPos = 0.0, yPos = 0.0;
-			glfwGetCursorPos(i_pWindow, &xPos, &yPos);
-					
-			// reset the cursor position for next frame
-			float halfWidth = g_pApplication->GetWindowWidth() * 0.5f, halfHeight = g_pApplication->GetWindowHeight() * 0.5f;
-			glfwSetCursorPos(i_pWindow, halfWidth, halfHeight);
+			// the SDL_GetRelativeMouseState returns the delta values for each axis based on the difference between
+			// the center of the screen and the current value in the direction of the respective axis be it OX or OY
+			int dX, dY;
+			SDL_GetRelativeMouseState(&dX, &dY);
 
-			g_pApplication->UpdateCameraMouseOrientation(xPos, yPos);
+			g_pApplication->UpdateCameraMouseOrientation(dX, dY);
 		}
 	}
 }
 
 //////////////////////////////////////////////
 
-// GLFW callbacks
-static void ErrorCB ( int i_Error, const char* i_pDescription )
+void ProcessKeyEvents (const SDL_Event& event)
 {
-	fputs(i_pDescription, stderr);
-}
-
-static void KeyCB ( GLFWwindow* i_pWindow, int i_Key, int i_ScanCode, int i_Action, int i_Mods )
-{
-	// window control
-	if (i_Key == GLFW_KEY_ESCAPE && i_Action == GLFW_PRESS)
+	if (event.type == SDL_KEYDOWN)
 	{
-		glfwSetWindowShouldClose(i_pWindow, true);
-	}
-
-	if (i_Key == GLFW_KEY_LEFT_SHIFT)
-	{
-		if (i_Action == GLFW_PRESS)
+		switch (event.key.keysym.sym)
 		{
+		case SDLK_ESCAPE:
+			g_quit = true;
+			break;
+		case SDLK_LSHIFT:
 			if (g_pApplication)
 			{
 				g_pApplication->SetKeySpeed(g_pApplication->GetKeySpeed() * 10.0f);
 			}
+			break;
 		}
-		else if(i_Action == GLFW_RELEASE)
+	}
+	else if (event.type == SDL_KEYUP)
+	{
+		switch (event.key.keysym.sym)
 		{
+		case SDLK_LSHIFT:
 			if (g_pApplication)
 			{
 				g_pApplication->SetKeySpeed(g_pApplication->GetKeySpeed() / 10.0f);
 			}
-		}
-	}
-
-	// this setup allows us to use multiple camera keys simultaneously!
-	if (i_Action == GLFW_PRESS)
-	{
-		if (g_pApplication)
-		{
-			g_pApplication->SetKeyPresed(i_Key, true);
-		}
-
-	}
-	else if (i_Action == GLFW_RELEASE)
-	{
-		if (g_pApplication)
-		{
-			g_pApplication->SetKeyPresed(i_Key, false);
-		}
-	}
-
-	//// OTHER INPUTS - I treat these here, because I need this to happen once(when the event is triggered), not in update
-	if (i_Action == GLFW_RELEASE)
-	{
-		// other controls
-		switch (i_Key)
-		{
-		case GLFW_KEY_GRAVE_ACCENT: //"`"		
+			break;
+			//// OTHER INPUTS - I treat these here, because I need this to happen once(when the event is triggered), not in update
+		case SDLK_BACKQUOTE: //"`"
 			if (g_pApplication)
 			{
-				g_pApplication->SetIsCursorReleased(! g_pApplication->GetIsCursorReleased());
+				g_pApplication->SetIsCursorReleased(!g_pApplication->GetIsCursorReleased());
 				if (g_pApplication->GetIsCursorReleased())
 				{
 					// show the cursor
-					glfwSetInputMode(i_pWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+					SDL_SetRelativeMouseMode(SDL_FALSE);
 				}
 				else
 				{
 					g_pApplication->SetIsInDraggingMode(false);
 
 					// hide the cursor + grabs it providing unlimited 360 cursor movement (usefull for camera)
-					glfwSetInputMode(i_pWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+					SDL_SetRelativeMouseMode(SDL_TRUE);
 				}
 			}
 			break;
-		case GLFW_KEY_1:
+		case SDLK_1:
 			if (g_pApplication)
 			{
 				g_pApplication->SetIsRenderWireframe(!g_pApplication->GetIsRenderWireframe());
@@ -236,10 +177,10 @@ static void KeyCB ( GLFWwindow* i_pWindow, int i_Key, int i_ScanCode, int i_Acti
 				}
 			}
 			break;
-		case GLFW_KEY_2:
+		case SDLK_2:
 			if (g_pApplication)
 			{
-				g_pApplication->SetIsRenderPoints(! g_pApplication->GetIsRenderPoints());
+				g_pApplication->SetIsRenderPoints(!g_pApplication->GetIsRenderPoints());
 				if (g_pApplication->GetIsRenderPoints())
 				{
 					glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
@@ -250,37 +191,37 @@ static void KeyCB ( GLFWwindow* i_pWindow, int i_Key, int i_ScanCode, int i_Acti
 				}
 			}
 			break;
-		case GLFW_KEY_3:
+		case SDLK_3:
 			if (g_pApplication)
 			{
-				g_pApplication->SetIsInBoatMode(! g_pApplication->GetIsInBoatMode());
+				g_pApplication->SetIsInBoatMode(!g_pApplication->GetIsInBoatMode());
 			}
 			break;
-		case GLFW_KEY_4:
+		case SDLK_4:
 			if (g_pApplication)
 			{
 				g_pApplication->SetIsGUIVisible(!g_pApplication->GetIsGUIVisible());
 			}
 			break;
-		case GLFW_KEY_C:
+		case SDLK_c:
 			if (g_pApplication)
 			{
 				g_pApplication->SwitchViewBetweenCameras();
 			}
 			break;
-		case GLFW_KEY_V:
+		case SDLK_v:
 			if (g_pApplication)
 			{
 				g_pApplication->SwitchControlBetweenCameras();
 			}
 			break;
-		case GLFW_KEY_F:
+		case SDLK_f:
 			if (g_pApplication)
 			{
-				g_pApplication->SetIsFrustumVisible(! g_pApplication->GetIsFrustumVisible());
+				g_pApplication->SetIsFrustumVisible(!g_pApplication->GetIsFrustumVisible());
 			}
 			break;
-		case GLFW_KEY_R:
+		case SDLK_r:
 			if (g_pApplication)
 			{
 				g_pApplication->ResetFOV();
@@ -290,72 +231,83 @@ static void KeyCB ( GLFWwindow* i_pWindow, int i_Key, int i_ScanCode, int i_Acti
 	}
 }
 
-static void ButtonCB ( GLFWwindow* i_pWindow, int i_Button, int i_Action, int i_Mods )
+void ProcessMouseButtonEvents(const SDL_Event& event)
 {
-	if (g_pApplication)
+	if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP)
 	{
-		g_pApplication->SetIsInDraggingMode(false);
-
-		if (i_Button == GLFW_MOUSE_BUTTON_LEFT)
+		if (g_pApplication)
 		{
-			if (g_pApplication->GetIsGUIVisible())
+			g_pApplication->SetIsInDraggingMode(false);
+
+			if (event.button.button == SDL_BUTTON_LEFT)
 			{
-				if (! g_pApplication->OnGUIMouseEventGLFW(i_Button, i_Action))
+				if (g_pApplication->GetIsGUIVisible())
 				{
-					if (GLFW_PRESS == i_Action)
+					if (!g_pApplication->OnGUIMouseEventSDL(event, SDL_MAJOR_VERSION, SDL_MINOR_VERSION))
+					{
+						if (event.type == SDL_MOUSEBUTTONDOWN)
+						{
+							g_pApplication->SetIsInDraggingMode(true);
+						}
+					}
+				}
+				else
+				{
+					if (event.type == SDL_MOUSEBUTTONDOWN)
 					{
 						g_pApplication->SetIsInDraggingMode(true);
 					}
-				}
-			}
-			else
-			{
-				if (GLFW_PRESS == i_Action)
-				{
-					g_pApplication->SetIsInDraggingMode(true);
 				}
 			}
 		}
 	}
 }
 
-static void CursorPositionCB ( GLFWwindow* i_pWindow, double i_XPos, double i_YPos )
+void ProcessMouseMotionEvents ( const SDL_Event& event )
 {
-	if (g_pApplication)
+	if (event.type == SDL_MOUSEMOTION)
 	{
-		g_pApplication->OnCursorPosition(i_XPos, i_YPos);
+		if (g_pApplication)
+		{
+			g_pApplication->OnMouseMotion(event.motion.x, event.motion.y);
+		}
 	}
 }
 
-static void ScrollCB ( GLFWwindow* pWindow, double i_XOffset, double i_YOffset )
+void ProcessMouseScrollEvents (const SDL_Event& event)
 {
-	if (g_pApplication)
+	if (event.type == SDL_MOUSEWHEEL)
 	{
-		g_pApplication->OnMouseScroll(i_XOffset, i_YOffset);
+		if (g_pApplication)
+		{
+			g_pApplication->OnMouseScroll(event.wheel.x, event.wheel.y);
+		}
 	}
 }
 
-static void ResizeWindowCB ( GLFWwindow* i_pWindow, int i_Width, int i_Height )
+void ProcessResizeWindowEvents (const SDL_Event& event)
 {
-	if (g_pApplication)
+	if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
 	{
-		g_pApplication->OnWindowResize(i_Width, i_Height);
+		if (g_pApplication)
+		{
+			g_pApplication->OnWindowResize(event.window.data1, event.window.data2);
+		}
 	}
 }
 
 
-GLFWwindow* InitGLContext(void)
+SDL_Window* InitGLContext(void)
 {
 	//////////////// Init GLFW Context - one OpenGL context + one window /////////////////
 
 	// Set error callback - MUST be set before GLFW init
-	GLFWwindow* pWindow = nullptr;
-	glfwSetErrorCallback(ErrorCB);
+	SDL_Window* pWindow = nullptr;
 
 	// Init GLFW context
-	if (!glfwInit())
+	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
-		std::cout << "Failed to initialize GLFW!" << std::endl;
+		ERR("Failed to initialize SDL2!");
 		return nullptr;
 	}
 
@@ -364,9 +316,16 @@ GLFWwindow* InitGLContext(void)
 	if (g_Config.Window.UseWindowHints)
 	{
 		//// Window hints - these hints work only for OpenGL 3.2 and above !!!
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, g_Config.OpenGLContext.OpenGLVersion.major);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, g_Config.OpenGLContext.OpenGLVersion.minor);
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, g_Config.OpenGLContext.OpenGLVersion.major);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, g_Config.OpenGLContext.OpenGLVersion.minor);
 		////
 
 		//// OpenGL profiles only work for OpenGL 3.2 and above !!!
@@ -374,295 +333,253 @@ GLFWwindow* InitGLContext(void)
 		{	
 			if (g_Config.OpenGLContext.IsCoreProfile)
 			{
-				glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 			}
 			else
 			{
-				glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 			}
 		}
-		////
-
-			glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); /// MAC OS X fix !!!
-		//	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-
-		//	glfwWindowHint(GLFW_SAMPLES, 8); // big perfornace penalty!
-		//	glfwWindowHint(GLFW_STEREO, GL_FALSE);
-
-		glfwWindowHint(GLFW_RESIZABLE, g_Config.Window.IsWindowResizable);
 	}
-
-	GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
-
-	if (!pMonitor)
+	
+	SDL_DisplayMode currentDisplayMode;
+	if (SDL_GetCurrentDisplayMode(0, &currentDisplayMode) != 0)
 	{
-		glfwTerminate();
-		std::cout << "Failed to create GLFW Monitor" << std::endl;
+		ERR("Failed to initialize SDL2!");
+		SDL_Quit();
 		return nullptr;
 	}
 
-	if (pMonitor)
+	// Create a new window
+	if (g_Config.Window.IsWindowMode)
 	{
-		const GLFWvidmode* pMode = glfwGetVideoMode(pMonitor);
-
-		if (!pMode)
+		if (g_Config.Window.IsWindowResizable)
 		{
-			glfwTerminate();
-			std::cout << "Failed to obtain GLFW Video Mode" << std::endl;
-			return nullptr;
+			pWindow = SDL_CreateWindow("Mihai FFT Ocean", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentDisplayMode.w, currentDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 		}
-
-		if (pMode)
+		else
 		{
-			// Create a new window
-			if (g_Config.Window.IsWindowMode)
-			{
-				pWindow = glfwCreateWindow(pMode->width, pMode->height, "Mihai FFT Ocean", nullptr, nullptr); //Windowed																		 
-			}
-			else
-			{
-				pWindow = glfwCreateWindow(pMode->width, pMode->height, "Mihai FFT Ocean", pMonitor, nullptr); //Full Screen
-
-				g_Config.Window.IsWindowResizable = false; // NOTE! In FullScreen Mode one cannot resize the window!
-			}
+			pWindow = SDL_CreateWindow("Mihai FFT Ocean", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentDisplayMode.w, currentDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 		}
+	}
+	else
+	{
+		SDL_CreateWindow("Mihai FFT Ocean", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentDisplayMode.w, currentDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
+
+		g_Config.Window.IsWindowResizable = false; // NOTE! In FullScreen Mode one cannot resize the window!
 	}
 
 	if (!pWindow)
 	{
-		glfwTerminate();
-		std::cout << "Failed to create GLFW Window" << std::endl;
+		ERR("Failed to create SDL2 Window!");
+		SDL_Quit();
 		return nullptr;
 	}
 
+	SDL_SetWindowResizable(pWindow, (SDL_bool)g_Config.Window.IsWindowResizable);
+
+	SDL_GLContext glContext = SDL_GL_CreateContext(pWindow);
+
 	// Set the specified window
-	glfwMakeContextCurrent(pWindow);
+	SDL_GL_MakeCurrent(pWindow, glContext);
 
 	// Other setup
-	//glfwSetInputMode(pWindow, GLFW_STICKY_KEYS, GL_FALSE);
-
-	// hide the cursor
-	glfwSetInputMode(pWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// Get initial width and height of the specified window
 	int windowWidth = 0, windowHeight = 0;
-	glfwGetFramebufferSize(pWindow, &windowWidth, &windowHeight);
-	//set the cursor position to be the center of the screen
-	glfwSetCursorPos(pWindow, windowWidth * 0.5f, windowHeight * 0.5f);
+	SDL_GL_GetDrawableSize(pWindow, &windowWidth, &windowHeight);
 
-	/////////// GLFW callbacks /////////////
+	///// Input setup //////
 
-	if (/*g_Config.Window.UseWindowHints &&*/ g_Config.Window.IsWindowResizable)
+	// setting the mosue to relative mode we perform the following:
+	// 1) hide the cursor if the relative mode is true, show it otherwise
+	// 2) compute the mouse delta position on OX & OY based on
+	// the difference between the center of the screen and each coordinate value on its respective axis
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+
+	///////// INIT GL LOADER //////
+	// Load GL functions & extension via SDL proc
+	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
 	{
-		// Resize window callback
-		glfwSetFramebufferSizeCallback(pWindow, ResizeWindowCB);
-	}
-
-	// Set keyboard callbacks
-	glfwSetKeyCallback(pWindow, KeyCB);
-
-	// Set mouse callbacks
-	glfwSetMouseButtonCallback(pWindow, ButtonCB);
-	glfwSetCursorPosCallback(pWindow, CursorPositionCB);
-	glfwSetScrollCallback(pWindow, ScrollCB);
-
-	//////// Init GLEW Context - OpenGL loader ///////////
-	if (g_Config.OpenGLContext.IsCoreProfile)
-	{
-		glewExperimental = GL_TRUE; // Needed for core profile - is defined in GLEW, glew bug!
-	}
-	GLenum error = glewInit();
-	if (error != GLEW_OK)
-	{
-		std::cout << "Failed to initialize GLEW: " << glewGetErrorString(error) << std::endl;
+		ERR("Failed to initialize GLAD OpenGL Loader!");
 		return nullptr;
 	}
 
+	/////// Init extension info
+	g_Config.GLExtVars.Initialize();
+
 	///////////// GENERAL INFO ////////////
 
-	// Print GLEW context information
-	std::cout << "///////////////// OpenGL/GLEW context info ////////////////" << std::endl;
-	std::cout << "Vendor: " << glGetString(GL_VENDOR) << std::endl;
-	std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
-	std::cout << "Version: " << glGetString(GL_VERSION) << std::endl;
-	std::cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+	// Print OpenGL Renderer context information
+	LOG("///////////////// OpenGL Renderer context info ////////////////\n");
+	LOG("Vendor: %s", glGetString(GL_VENDOR));
+	LOG("Renderer: %s", glGetString(GL_RENDERER));
+	LOG("Version: %s", glGetString(GL_VERSION));
+	LOG("GLSL: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+	int numExtensions = 0;
+	glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+
+	std::stringstream extensionsStream;
+	extensionsStream << "\nSupported OpenGL Extensions:\n";
+	for (short i = 0; i < numExtensions; ++i)
+	{
+		const char* extension = (const char*)glGetStringi(GL_EXTENSIONS, i);
+		extensionsStream << extension << "\n";
+	}
+	std::string extensionsStr = extensionsStream.str();
+	LOG(extensionsStr.c_str());
+	LOG("\nRequired extensions: \n%s", g_Config.GLExtVars.RequiredGLExtensions);
+
+	/////////////////////////////
 	int maxTexUnits = 0;
 	//glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTexUnits);
 	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTexUnits);
-	std::cout << "Max Texture Units: " << maxTexUnits << std::endl;
+	LOG("Max Texture Units: %d", maxTexUnits);
 	
 	//// http://stackoverflow.com/questions/29707968/get-maximum-number-of-framebuffer-color-attachments
 	int maxColorAtts = 0;
 	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAtts);
-	std::cout << "Max Color Attachments: " << maxColorAtts << std::endl;
+	LOG("Max Color Attachments: %d", maxColorAtts);
 
 	int maxTextureArrayLayers = 0;
 	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxTextureArrayLayers);
-	std::cout << "Max Texture Array Layers: " << maxTextureArrayLayers << std::endl;
+	LOG("Max Texture Array Layers: %d", maxTextureArrayLayers);
 
 	int maxDrawBuf = 0;
 	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuf);
-	std::cout << "Max Draw Buffers: " << maxDrawBuf << std::endl;
+	LOG("Max Draw Buffers: %d", maxDrawBuf);
 
 	int maxVertexAttribs = 0;
 	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
-	std::cout << "Max Vertex Attributes: " << maxVertexAttribs << std::endl;
-
-	int maxTexCoords = 0;
-	glGetIntegerv(GL_MAX_TEXTURE_COORDS, &maxTexCoords);
-	std::cout << "Max Texture Coordinates: " << maxTexCoords << std::endl;
+	LOG("Max Vertex Attributes: %d", maxVertexAttribs);
 	
 	int maxVertexOutputs = 0;
 	glGetIntegerv(GL_MAX_VERTEX_OUTPUT_COMPONENTS, &maxVertexOutputs);
-	std::cout << "Max Vertex Outputs: " << maxVertexOutputs << std::endl;
+	LOG("Max Vertex Outputs: %d", maxVertexOutputs);
 
 	int maxVertexUniforms = 0;
 	glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &maxVertexUniforms);
-	std::cout << "Max Vertex Uniforms: " << maxVertexUniforms << std::endl;
+	LOG("Max Vertex Uniforms: %d", maxVertexUniforms);
 
 	int maxFragmentInputs = 0;
 	glGetIntegerv(GL_MAX_FRAGMENT_INPUT_COMPONENTS, &maxFragmentInputs);
-	std::cout << "Max Fragment Inputs: " << maxFragmentInputs << std::endl;
+	LOG("Max Fragment Inputs: %d", maxFragmentInputs);
 
 	int maxFragmentUniforms = 0;
 	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxFragmentUniforms);
-	std::cout << "Max Fragment Uniforms: " << maxFragmentUniforms << std::endl;
+	LOG("Max Fragment Uniforms: %d", maxFragmentUniforms);
 
 	int maxFloatVaryings = 0;
 	glGetIntegerv(GL_MAX_VARYING_FLOATS, &maxFloatVaryings);
-	std::cout << "Max Float Varyings: " << maxFloatVaryings << std::endl;
-
-
-	//////// TODO - ADD SUPPORT FOR EXTENSIONS AND ADD GUARDS FOR THOSE THAT ARE NEED FOR SOME FEATURES
-	int numExtensions = 0;
-	glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
-
-	std::vector<std::string> supportedExtensions;
-	supportedExtensions.resize(numExtensions);
-
-	std::cout << "Supported Extensions:\n";
-	for (short i = 0; i < numExtensions; ++i)
-	{
-		const char* extension = (const char*)glGetStringi(GL_EXTENSIONS, i);
-		supportedExtensions[i] = extension;
-	}
+	LOG("Max Float Varyings: %d", maxFloatVaryings);
 
 	//// NOTE! To diferentiate core feature support from extensions !
-	// E.g. GL_ARB_geometry_shader4 would mean that geoemtry shaders are supported,
+	// E.g. GL_ARB_geometry_shader4 would mean that geometry shaders are supported,
 	// but only in opengl 4.2 core, if opengl 3.3 is used then if 
 	// GL_EXT_geometry_shader4 is available geometry shaders can be used as an extension
 
 	////
-	if (glewGetExtension("GL_ARB_geometry_shader4"))
+	if (g_Config.GLExtVars.IsGeometryStageSupported)
 	{
-		std::cout << "YES to Geometry Shaders!" << std::endl;
+		LOG("YES to Geometry Shaders!");
 		
-			int maxGeometryOutputVertices = 0;
-			glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &maxGeometryOutputVertices);
-			std::cout << "Max Geometry Output Vertices: " << maxGeometryOutputVertices << std::endl;
+		int maxGeometryOutputVertices = 0;
+		glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES, &maxGeometryOutputVertices);
+		LOG("Max Geometry Output Vertices: %d", maxGeometryOutputVertices);
 
-			int maxGeometryInputComponents = 0;
-			glGetIntegerv(GL_MAX_GEOMETRY_INPUT_COMPONENTS, &maxGeometryInputComponents);
-			std::cout << "Max Geometry Input Components: " << maxGeometryInputComponents << std::endl;
+		int maxGeometryInputComponents = 0;
+		glGetIntegerv(GL_MAX_GEOMETRY_INPUT_COMPONENTS, &maxGeometryInputComponents);
+		LOG("Max Geometry Input Components: %d", maxGeometryInputComponents);
 
-			int maxGeometryOutputComponents = 0;
-			glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_COMPONENTS, &maxGeometryOutputComponents);
-			std::cout << "Max Geometry Output Components: " << maxGeometryOutputComponents << std::endl;
+		int maxGeometryOutputComponents = 0;
+		glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_COMPONENTS, &maxGeometryOutputComponents);
+		LOG("Max Geometry Output Components: %d", maxGeometryOutputComponents);
 
-			int maxGeometryTotalOutputComponents = 0;
-			glGetIntegerv(GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS, &maxGeometryTotalOutputComponents);
-			std::cout << "Max Geometry Total Output Components: " << maxGeometryTotalOutputComponents << std::endl;
+		int maxGeometryTotalOutputComponents = 0;
+		glGetIntegerv(GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS, &maxGeometryTotalOutputComponents);
+		LOG("Max Geometry Total Output Components: %d", maxGeometryTotalOutputComponents);
 			
-			int maxGeometryUniformComponents = 0;
-			glGetIntegerv(GL_MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS, &maxGeometryUniformComponents);
-			std::cout << "Max Geometry Uniform Components" << maxGeometryUniformComponents << std::endl;
+		int maxGeometryUniformComponents = 0;
+		glGetIntegerv(GL_MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS, &maxGeometryUniformComponents);
+		LOG("Max Geometry Uniform Components: %d", maxGeometryUniformComponents);
 	}
 	else
 	{
-		std::cout << "NO to Geometry Shaders!" << std::endl;
+		LOG("NO to Geometry Shaders!");
 
 		// Fallback to world_space grid
 		g_Config.Scene.Ocean.Grid.Type = CustomTypes::Ocean::GridType::GT_WORLD_SPACE;
 	}
 
-	if (glewGetExtension("GL_ARB_compute_shader"))
+	if (g_Config.GLExtVars.IsComputeStageSupported)
 	{
-		std::cout << "YES to Compute Shaders!" << std::endl;
+		LOG("YES to Compute Shaders!");
 		
 		int maxWorkGroupsCount[3];
 		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkGroupsCount[0]); //X
 		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkGroupsCount[1]); //Y
 		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkGroupsCount[2]); //Z
 
-		std::cout << "Max dispatchable Work Groups: X: " << maxWorkGroupsCount[0] << std::endl;
-		std::cout << "Max dispatchable Work Groups: Y: " << maxWorkGroupsCount[1] << std::endl;
-		std::cout << "Max dispatchable Work Groups: Z: " << maxWorkGroupsCount[2] << std::endl;
+		LOG("Max dispatchable Work Groups: X: %d", maxWorkGroupsCount[0]);
+		LOG("Max dispatchable Work Groups: Y: %d", maxWorkGroupsCount[1]);
+		LOG("Max dispatchable Work Groups: Z: %d", maxWorkGroupsCount[2]);
 
 		int maxWorkGroupsSize[3];
 		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxWorkGroupsSize[0]); //X
 		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxWorkGroupsSize[1]); //Y
 		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxWorkGroupsSize[2]); //Z
 
-		std::cout << "Max Work Groups Size: X: " << maxWorkGroupsSize[0] << std::endl;
-		std::cout << "Max Work Groups Size: Y: " << maxWorkGroupsSize[1] << std::endl;
-		std::cout << "Max Work Groups Size: Z: " << maxWorkGroupsSize[2] << std::endl;
+		LOG("Max Work Groups Size: X: %d", maxWorkGroupsSize[0]);
+		LOG("Max Work Groups Size: Y: %d", maxWorkGroupsSize[1]);
+		LOG("Max Work Groups Size: Z: %d", maxWorkGroupsSize[2]);
 
 		int maxInvocationsWithinWorkGroup = 0;
 		glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &maxInvocationsWithinWorkGroup);
-		std::cout << "Max Invocations with a work group: " << maxInvocationsWithinWorkGroup << std::endl;
+		LOG("Max Invocations with a work group: %d", maxInvocationsWithinWorkGroup);
 
 		int maxSharedMemorySize = 0;
 		glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, &maxSharedMemorySize);
-		std::cout << "Max Shared Storage Size: " << maxSharedMemorySize << std::endl;
+		LOG("Max Shared Storage Size: %d", maxSharedMemorySize);
 		
 		int maxImageUnits = 0;
 		glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
-		std::cout << "Max Image Units: " << maxImageUnits << std::endl;
+		LOG("Max Image Units: %d", maxImageUnits);
 	}
 	else
 	{
-		std::cout << "NO to Compute Shaders!" << std::endl;
+		LOG("NO to Compute Shaders!");
 	}
 
-	// See if we support the function DispatchComputeGroupSizeARB
-	if (glewGetExtension("GL_ARB_compute_variable_group_size"))
+	if (g_Config.GLExtVars.IsTexAnisoFilterSupported)
 	{
-		std::cout << "YES to compute_variable_group_size!" << std::endl;
+		LOG("YES to Anisotropic Filtering!");
 	}
 	else
 	{
-		std::cout << "NO to compute_variable_group_size!" << std::endl;
+		LOG("NO to Anisotropic Filtering!");
 	}
 
-	if (glewGetExtension("GL_EXT_texture_filter_anisotropic"))
+	if (g_Config.GLExtVars.IsTexDDSSupported)
 	{
-		std::cout << "YES to Anisotropic Filtering!" << std::endl;
+		LOG("YES to Compressed DDS textures!");
 	}
 	else
 	{
-		std::cout << "NO to Anisotropic Filtering!" << std::endl;
-	}
-
-	if (glewGetExtension("GL_EXT_texture_compression_s3tc"))
-	{
-		std::cout << "YES to Compressed DDS textures!" << std::endl;
-	}
-	else
-	{
-		std::cout << "NO to Compressed DDS textures!" << std::endl;
+		LOG("NO to Compressed DDS textures!");
 	}
 
 
-	std::cout << "//////////////////////////////////////////////////////" << std::endl;
+	LOG("//////////////////////////////////////////////////////\n");
 	///////////////////////////////
 
 	return pWindow;
 }
 
-float CalcFPS ( GLFWwindow* i_pWindow, float i_TimeInterval = 1.0f, std::string io_WindowTitle = "NONE" )
+float CalcFPS ( SDL_Window* i_pWindow, float i_TimeInterval = 1.0f, std::string io_WindowTitle = "NONE" )
 {
 	// Static values which only get initialised the first time the function runs
-	static float startTime = static_cast<float>(glfwGetTime()); // Set the initial time to now
+	static float startTime = static_cast<float>(SDL_GetTicks() / 1000.0f); // Set the initial time to now
 	static float fps = 0.0f;           // Set the initial FPS value to 0.0
 
 	// Set the initial frame count to -1.0 (it gets set to 0.0 on the next line). Because
@@ -685,7 +602,7 @@ float CalcFPS ( GLFWwindow* i_pWindow, float i_TimeInterval = 1.0f, std::string 
 
 	// Get the duration in seconds since the last FPS reporting interval elapsed
 	// as the current time minus the interval start time
-	float duration = static_cast<float>(glfwGetTime()) - startTime;
+	float duration = static_cast<float>(SDL_GetTicks() / 1000.0f) - startTime;
 
 	// If the time interval has elapsed...
 	if (duration > i_TimeInterval)
@@ -705,7 +622,7 @@ float CalcFPS ( GLFWwindow* i_pWindow, float i_TimeInterval = 1.0f, std::string 
 
 			// Convert the new window title to a c_str and set it
 			const char* pszConstString = io_WindowTitle.c_str();
-			glfwSetWindowTitle(i_pWindow, pszConstString);
+			SDL_SetWindowTitle(i_pWindow, pszConstString);
 		}
 		else // If the user didn't specify a window to append the FPS to then output the FPS to the console
 		{
@@ -714,38 +631,35 @@ float CalcFPS ( GLFWwindow* i_pWindow, float i_TimeInterval = 1.0f, std::string 
 
 		// Reset the frame count to zero and set the initial time to be now
 		frameCount = 0.0;
-		startTime = static_cast<float>(glfwGetTime());
+		startTime = static_cast<float>(SDL_GetTicks() / 1000.0f);
 	}
 
 	// Return the current FPS - doesn't have to be used if you don't want it!
 	return fps;
 }
 
-void Run ( GLFWwindow* i_pWindow )
+void Run ( SDL_Window* i_pWindow )
 {
 	int windowWidth = 0, windowHeight = 0;
-	glfwGetFramebufferSize(i_pWindow, &windowWidth, &windowHeight);
+	SDL_GL_GetDrawableSize(i_pWindow, &windowWidth, &windowHeight);
 
-ERROR_CHECK_START
+GL_ERROR_CHECK_START
 	g_pApplication = new Application(g_Config, windowWidth, windowHeight);
 	assert(g_pApplication != nullptr);
-ERROR_CHECK_END
-	while (!glfwWindowShouldClose(i_pWindow))
+GL_ERROR_CHECK_END
+
+	// TODO - fix SDL_GetTicks() division by 1000
+	while (!g_quit)
 	{
-
-#if defined(CHECK_TIME_IN_UPDATE)
-clock_t begin = clock();
-#endif // CHECK_TIME_IN_UPDATE
-
 		// Calculate deltatime of current frame
-		float crrTime = static_cast<float>(glfwGetTime());
+		float crrTime = static_cast<float>(SDL_GetTicks() / 1000.0f);
 		static float oldTime = 0.0f;
 		float deltaTime = crrTime - oldTime;
 		oldTime = crrTime;
 
 		crrTime *= g_Config.Simulation.TimeScale;
 
-ERROR_CHECK_START
+GL_ERROR_CHECK_START
 
 		////////////////////////////
 		if (g_pApplication)
@@ -754,44 +668,68 @@ ERROR_CHECK_START
 			g_pApplication->Render(g_Config);
 		}
 
-		UpdateInput(i_pWindow);
-
-ERROR_CHECK_END
+GL_ERROR_CHECK_END
 
 		CalcFPS(i_pWindow, 1.0f, "My FFT Ocean + Scattering Sky");
 
 		// Swap front buffer with back buffer of the specified window
-		glfwSwapBuffers(i_pWindow);
+		SDL_GL_SwapWindow(i_pWindow);
+
+		// split this function into key & mouse handling
+		UpdateContinuousInput(i_pWindow);
 
 		// Process all pending events
-		glfwPollEvents();
+		SDL_Event ev;
+		while (SDL_PollEvent(&ev) != 0)
+		{
+			//User requests quit
+			if (ev.type == SDL_QUIT)
+			{
+				g_quit = true;
+			}
 
-#if defined(CHECK_TIME_IN_UPDATE)
-clock_t end = clock();
-double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-std::cout << "time spent: " << time_spent << std::endl;
-#endif // CHECK_TIME_IN_UPDATE
+			if (g_Config.Window.IsWindowResizable)
+			{
+				ProcessResizeWindowEvents(ev);
+			}
+
+			if (SDL_GetKeyboardState(nullptr)) // keyboard is supported
+			{
+				ProcessKeyEvents(ev);
+			}
+
+			// TODO - fix
+		//	if (SDL_GetMouseState(nullptr, nullptr)) // mouse is supported
+			{
+				ProcessMouseButtonEvents(ev);
+				ProcessMouseMotionEvents(ev);
+				ProcessMouseScrollEvents(ev);
+			}
+		}
 	}
 	
 	SAFE_DELETE(g_pApplication);
 }
 
-void TerminateGLContext ( GLFWwindow* i_pWindow )
+void TerminateGLContext ( SDL_Window* i_pWindow )
 {
 	// Destroy specified window
-	glfwDestroyWindow(i_pWindow);
+	SDL_DestroyWindow(i_pWindow);
 	i_pWindow = nullptr;
 
 	// Terminate GLFW context
-	glfwTerminate();
+	SDL_Quit();
 }
 
 int main ( int argc, char **argv )
 {
-	g_Config.Initialize("../resources/GlobalConfig.xml");
+	if (!g_Config.Initialize("../resources/GlobalConfig.xml"))
+	{
+		return -1;
+	}
 
 	///////////
-	GLFWwindow* pWindow = nullptr;
+	SDL_Window* pWindow = nullptr;
 
 	pWindow = InitGLContext();
 	if (!pWindow)

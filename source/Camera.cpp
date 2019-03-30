@@ -1,8 +1,7 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Camera.h"
-#include "ErrorHandler.h"
-#include "GL/glew.h"
+#include "CommonHeaders.h"
 // glm::vec3, glm::mat4 come from the header
 #include "glm/gtc/matrix_transform.hpp" //perspective(), ortho(), lookAt(), transpose(), inerse()
 #include "glm/geometric.hpp" //dot(), normalize(), cross()
@@ -13,18 +12,22 @@
 
 
 Camera::Camera ( void )
-	: m_Name("Camera"), m_Position(glm::vec3(0.0f)), m_Forward(glm::vec3(0.0f, 0.0f, -1.0f)),
+	: m_Name("Default"), m_Position(glm::vec3(0.0f)), m_Forward(glm::vec3(0.0f, 0.0f, -1.0f)),
 	  m_Right(glm::vec3(+1.0f, 0.0f, 0.0f)), m_Up(glm::vec3(0.0f, +1.0f, 0.0f)),
 	  m_Pitch(0.0f), m_Yaw(0.0f), m_FOVy(0.0f), m_InitialFOVy(0.0f), m_ZNear(0.0f), m_ZFar(0.0f),
 	  m_UseConstraints(false)
-{}
+{
+	LOG("Camera %s successfully created!", m_Name.c_str());
+}
 
 Camera::Camera ( const std::string& i_Name )
 	: m_Name(i_Name), m_Position(glm::vec3(0.0f)), m_Forward(glm::vec3(0.0f, 0.0f, -1.0f)),
 	  m_Right(glm::vec3(+1.0f, 0.0f, 0.0f)), m_Up(glm::vec3(0.0f, +1.0f, 0.0f)),
 	  m_Pitch(0.0f), m_Yaw(0.0f), m_FOVy(0.0f), m_InitialFOVy(0.0f), m_ZNear(0.0f), m_ZFar(0.0f),
 	  m_UseConstraints(false)
-{}
+{
+	LOG("Camera %s successfully created!", m_Name.c_str());
+}
 
 Camera::Camera ( const std::string& i_Name, const GlobalConfig& i_Config )
 	: m_Name(i_Name), m_Forward(glm::vec3(0.0f, 0.0f, -1.0f)),
@@ -37,6 +40,8 @@ Camera::Camera ( const std::string& i_Name, const GlobalConfig& i_Config )
 		m_ZNear = i_Config.Camera.InitialZNear;
 		m_ZFar = i_Config.Camera.InitialZFar;
 		m_UseConstraints = i_Config.Camera.UseConstraints;
+
+		LOG("Camera %s successfully created!", m_Name.c_str());
 	}
 
 Camera::Camera ( Camera* i_pCamera )
@@ -50,6 +55,8 @@ Camera::Camera ( Camera* i_pCamera )
 	SetProjectionMatrix(i_pCamera->GetProjectionMatrix());
 
 	UpdateViewMatrix();
+
+	LOG("Camera %s successfully created!", m_Name.c_str());
 }
 
 Camera::Camera ( const Camera& i_Camera )
@@ -61,6 +68,8 @@ Camera::Camera ( const Camera& i_Camera )
 	SetProjectionMatrix(i_Camera.GetProjectionMatrix());
 
 	UpdateViewMatrix();
+
+	LOG("Camera %s successfully created!", m_Name.c_str());
 }
 
 Camera& Camera::operator= ( const Camera& i_Camera )
@@ -73,12 +82,14 @@ Camera& Camera::operator= ( const Camera& i_Camera )
 
 	UpdateViewMatrix();
 
+	//LOG("Camera %s successfully copied!", m_Name.c_str());
+
 	return *this;
 }
 
 Camera::~Camera ( void )
 {
-//	LOG("[" + m_Name + "] Camera has been destroyed successfully!");
+	LOG("Camera %s successfully destroyed!", m_Name.c_str());
 }
 
 void Camera::Copy ( Camera* i_pCamera )
@@ -92,6 +103,8 @@ void Camera::Copy ( Camera* i_pCamera )
 	SetProjectionMatrix(i_pCamera->GetProjectionMatrix());
 
 	UpdateViewMatrix();
+
+	//LOG("Camera %s successfully copied!", m_Name);
 }
 
 
@@ -104,6 +117,8 @@ void Camera::Copy ( const Camera& i_Camera )
 	SetProjectionMatrix(i_Camera.GetProjectionMatrix());
 
 	UpdateViewMatrix();
+
+	//LOG("Camera %s successfully copied!", m_Name);
 }
 
 void Camera::UpdateViewMatrix ( void )
@@ -244,6 +259,11 @@ void Camera::UpdatePositionWithKeyboard ( float i_Value, Camera::CAMERA_DIRECTIO
 	if (i_Dir == CAMERA_DIRECTIONS::CD_DOWN) deltaMove = m_Up * -i_Value;
 
 	m_Position += deltaMove;
+}
+
+const std::string& Camera::GetName() const
+{
+	return m_Name;
 }
 
 const glm::vec3& Camera::GetPosition ( void ) const

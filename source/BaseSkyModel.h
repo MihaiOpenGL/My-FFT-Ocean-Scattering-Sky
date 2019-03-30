@@ -3,13 +3,13 @@
 #ifndef BASE_SKY_MODEL_H
 #define BASE_SKY_MODEL_H
 
-#include <string>
-#include <vector>
-#include <map>
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
 #include "ShaderManager.h"
 #include "MeshBufferManager.h"
+#include <string>
+#include <vector>
+#include <map>
 
 class GlobalConfig;
 class Camera;

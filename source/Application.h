@@ -2,11 +2,12 @@
 #define APPLICATION_H
 
 #include "GUI/AntTweakBar.h"
-#include "GlobalConfig.h"
-
+#include "SDL/SDL_events.h"
 #define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
 #include "glm/vec3.hpp"
 
+
+class GlobalConfig;
 class Camera;
 class FrameBufferManager;
 class PostProcessingManager;
@@ -20,6 +21,7 @@ class MotorBoat;
 class Application
 {
 public:
+	Application();
 	Application(const GlobalConfig& i_Config, int i_WindowWidth, int i_WindowHeight);
 	~Application();
 
@@ -34,12 +36,12 @@ public:
 
 	void OnWindowResize(int i_Width, int i_Height);
 
-	bool OnGUIMouseEventGLFW(int i_Button, int i_Action);
+	bool OnGUIMouseEventSDL(const SDL_Event& sdlEvent, unsigned char sdlMajorVersion, unsigned char sdlMinorVersion);
 
-	void OnCursorPosition(double i_XPos, double i_YPos);
-	void OnMouseScroll(double i_XOffset, double i_YOffset);
+	void OnMouseMotion(int i_DX, int i_DY);
+	void OnMouseScroll(int i_XOffset, int i_YOffset);
 
-	void UpdateCameraMouseOrientation(double i_XPos, double i_YPos);
+	void UpdateCameraMouseOrientation(int i_XPos, int i_YPos);
 
 	void CameraMoveForward();
 	void CameraMoveBackward();
@@ -58,9 +60,6 @@ public:
 
 	float GetCrrTime() const;
 	float GetDeltaTime() const;
-
-	bool IsKeyPressed(int i_Key);
-	void SetKeyPresed(int i_Key, bool i_Value);
 
 	float GetKeySpeed() const;
 	void SetKeySpeed(float i_Value);
@@ -139,8 +138,8 @@ private:
 
 	void SetWindowSize(int i_WindowWidth, int i_WindowHeight);
 
-	void SetupDefaultFrameBuffer(void);
-	void SetupAuxiliaryFrameBuffer(unsigned short i_TexUnitID);
+	void SetupDefaultFrameBuffer(const GlobalConfig& i_Config);
+	void SetupAuxiliaryFrameBuffer(const GlobalConfig& i_Config);
 
 	glm::vec3 HDR(glm::vec3 i_L, float i_E);
 
@@ -190,10 +189,9 @@ private:
 	bool m_IsInBoatMode;
 
 	//// should be put inside InputManager
-	float m_MouseOldXPos, m_MouseOldYPos;
+	int m_MouseOldXPos, m_MouseOldYPos;
 	bool m_IsInDraggingMode;
 
-	bool m_Keys[1024] = {false}; //we use bool vector to hald each ey state to allow multiple ky-use at the same time
 	float m_KeySpeed;
 	float m_MouseSpeed;
 	////

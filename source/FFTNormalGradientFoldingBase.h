@@ -8,9 +8,9 @@
 #ifndef FFT_NORMAL_GRADIENT_FOLDING_BASE_H
 #define FFT_NORMAL_GRADIENT_FOLDING_BASE_H
 
+#include "ShaderManager.h"
 #include <string>
 #include <map>
-#include "ShaderManager.h"
 
 class GlobalConfig;
 

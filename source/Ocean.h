@@ -3,9 +3,6 @@
 #ifndef OCEAN_H
 #define OCEAN_H
 
-#include <string>
-#include <vector>
-#include <map>
 #include "CustomTypes.h"
 #include "ShaderManager.h"
 #include "MeshBufferManager.h"
@@ -16,6 +13,9 @@
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
+#include <string>
+#include <vector>
+#include <map>
 
 class Camera;
 class MotorBoat;

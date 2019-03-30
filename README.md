@@ -1,4 +1,6 @@
-This is a demo project which basically presents an outdoor scene created in OpenGL 3.3 for Windows OS.
+This is a demo project which basically presents an outdoor scene created in OpenGL 3.3 for Windows, Linux & MacOSX.
+For the used GL extensions check: GLUsedExtensionList.txt or just run the app and check the logs.
+
 The scene consists of:
 * Cloudy Sky
 * Ocean
@@ -192,8 +194,9 @@ This project was built using Visual Studio 2015 Community Edition. Its project f
 In case you use VS 2017 you can retarget the project. In case you use an older version of VS you can change the toolset yourself.
 Both Debug and Release modes work.
 
-NOTE! The dependecy libs - glfw, glew, fftw and AntweakBar which needed to be built depend on the os they are compiled for!
-For Windows I used the pre-built libs offered by the developers of those libs.
+NOTE! The dependecy libs - SDL2, fftw and AntweakBar which needed to be built depend on the os!
+NOTE! For Windows I used the pre-built libs offered by the developers of those libs.
+NOTE! I dropped GLEW and switched to GLAD as it can generate the source files according to your exact needs. Check the source code for more details.
 
 TOOLS: Visual Studio 2017
 Other requirements: N/A
@@ -206,8 +209,9 @@ For debug run: make CFG=debug.
 To cleanup run: make clean CFG=release or just make clean for release.
 To cleanup for debug run: make clean CFG=debug.
 
-NOTE! The dependecy libs - glfw, glew, fftw and AntweakBar which needed to be built depend on the os they are compiled for!
-For Linux(Ubuntu) I compiled them myself.
+NOTE! The dependecy libs - SDL2, fftw and AntweakBar which needed to be built depend on the os!
+NOTE! For Linux(Ubuntu) I compiled them myself.
+NOTE! I dropped GLEW and switched to GLAD as it can generate the source files according to your exact needs. Check the source code for more details.
 
 TOOLS: g++, make
 Other requirements: install the package libglu10mesa-dev to solve the glu.h header issues while compiling
@@ -220,10 +224,11 @@ For debug run: make -f Makefile_osx CFG=debug.
 To cleanup run: make -f Makefile_osx clean CFG=release or just make -f Makefile_osx clean for release.
 To cleanup for debug run: make -f Makefile_osx clean CFG=debug.
 
-NOTE! The dependecy libs - glfw, glew, fftw and AntweakBar which needed to be built depend on the os they are compiled for!
-For MacOSX(Mojave) I compiled them myself.
+NOTE! The dependecy libs - SDL2, fftw and AntweakBar which needed to be built depend on the os!
+NOTE! For MacOSX(HighSierra, Mojave) I compiled them myself.
+NOTE! I dropped GLEW and switched to GLAD as it can generate the source files according to your exact needs. Check the source code for more details.
 
-NOTE! If the built libs are used on an older version of MAc OS X there may be linking warnings!
+NOTE! If the built libs are used on an older version of Mac OS X there may be linking warnings!
 
 TOOLS: XCode (it includes g++, make)
 Other requirements: N/A
@@ -233,6 +238,7 @@ Other requirements: N/A
 I have no automatic tests. A couple of manual tests were performed on each platform.
 
 ** On Windows 10 I used this setup:
+
 - nvidia drivers directly.
 - supported opengl version = 4.60
 - tests went smooth, no issues.
@@ -240,18 +246,20 @@ I have no automatic tests. A couple of manual tests were performed on each platf
 
 ** On Ubuntu I used this setup:
 
-a) native hardware using the a Ubuntu live stick
+a) native hardware using installed Ubuntu or Ubuntu live stick
 - nvidia drivers directly
 - supported opengl version = 4.60
 - tests went smooth, no issues.
 - config - some issues if using the core profile.
 It may be better if window hints are not used
 
+NOTE! It is better to install Ubuntu than use the live stick as with the live stick there may be issues regarding the drivers installation.
+
 b) vmware machine with Ubuntu as guest
 - Mesa 18.3.3 version of the driver for SVGA vmware configuration
 - supported opengl version = 3.30 (max at this point)
 - vmware offers hardware acceleration
-- encountered rendering issues like no correct waves displacement when using FFTGpuFrag type
+- encountered rendering issues like no correct waves displacement when using FFTGpuFrag type,
 because of the driver no supporting fragment shader multiple output streas properly.
 The sahders compiled and linked correctly, but the issue was there at runtime.
 Another issue was the controls: keybord all good, but the mouse dx and dy were totally off,

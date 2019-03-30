@@ -1,8 +1,8 @@
 ﻿/* Author: BAIRAC MIHAI */
 
 #include "MeshBufferManager.h"
-#include "GL/glew.h"
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 #include <new> //new, delete
 #include <vector>
 // glm::vec2, glm::vec3 come from the header
@@ -11,14 +11,18 @@
 
 
 MeshBufferManager::MeshBufferManager ( void )
-	: m_Name(), m_VAOID(0), m_VBOID(0), m_IBOID(0),
+	: m_Name("Default"), m_VAOID(0), m_VBOID(0), m_IBOID(0),
 	  m_DrawingType(DRAWING_TYPE::DT_COUNT), m_AccessType(ACCESS_TYPE::AT_COUNT)
-{}
+{
+	LOG("Buffer Manager [%s] successfully created!", m_Name.c_str());
+}
 
 MeshBufferManager::MeshBufferManager ( const std::string& i_Name )
-	: m_Name(i_Name), m_VAOID(0), m_VBOID(0), m_IBOID(0),
+	: m_VAOID(0), m_VBOID(0), m_IBOID(0),
 	  m_DrawingType(DRAWING_TYPE::DT_COUNT), m_AccessType(ACCESS_TYPE::AT_COUNT)
-{}
+{
+	Initialize(i_Name);
+}
 
 MeshBufferManager::~MeshBufferManager ( void )
 {
@@ -29,6 +33,8 @@ void MeshBufferManager::Initialize ( const std::string& i_Name )
 {
 	m_Name = i_Name;
 	m_DrawingType = DRAWING_TYPE::DT_COUNT;
+
+	LOG("Buffer Manager [%s] successfully created!", m_Name.c_str());
 }
 
 void MeshBufferManager::Destroy ( void )
@@ -57,7 +63,7 @@ void MeshBufferManager::Destroy ( void )
 		}
 	}
 
-	LOG("[" + m_Name + "] Buffer Manager has been destroyed successfully!");
+	LOG("Buffer Manager [%s] successfully destroyed!", m_Name.c_str());
 }
 
 void MeshBufferManager::CreateModel ( const std::vector<MeshBufferManager::VertexData>& i_ModelVertexData, MeshBufferManager::ACCESS_TYPE i_AccessType )
@@ -133,7 +139,7 @@ void MeshBufferManager::CreateModelContext ( const std::map<MeshBufferManager::V
 
 	if (!glIsBuffer(i_VBOID))
 	{
-		ERR("Invalid i_VBOID!");
+		ERR("Invalid vertex buffer id: %d!", i_VBOID);
 		return;
 	}
 
@@ -177,7 +183,7 @@ void MeshBufferManager::CreateModelContext ( const std::map<MeshBufferManager::V
 
 	if (!glIsBuffer(i_VBOID))
 	{
-		ERR("Invalid i_VBOID!");
+		ERR("Invalid vertex buffer id: %d!", i_VBOID);
 		return;
 	}
 

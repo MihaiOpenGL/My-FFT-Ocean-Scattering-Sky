@@ -3,9 +3,6 @@
 #ifndef MOTOR_BOAT_H
 #define MOTOR_BOAT_H
 
-#include <string>
-#include <vector>
-#include <map>
 #define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
@@ -15,6 +12,9 @@
 #include "FrameBufferManager.h"
 #include "Model.h"
 #include "Ocean.h"
+#include <string>
+#include <vector>
+#include <map>
 
 class GlobalConfig;
 

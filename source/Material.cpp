@@ -1,19 +1,21 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Material.h"
+#include "CommonHeaders.h"
 
-
-Material::Material ( void )
+Material::Material(void)
+	: Name("Default")
 {
-
+	LOG("Material [%s] successfully created!", Name.c_str());
 }
 
-Material::Material ( const Material::MaterialDetails& i_MaterialDetails )
+Material::Material(const std::string& i_Name)
+	: Name(i_Name)
 {
-	m_Details = i_MaterialDetails;
+	LOG("Material [%s] successfully created!", Name.c_str());
 }
-
 
 Material::~Material ( void )
 {
+	LOG("Material [%s] successfully destroyed!", Name.c_str());
 }

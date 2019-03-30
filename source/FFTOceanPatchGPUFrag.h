@@ -3,9 +3,6 @@
 #ifndef FFT_OCEAN_PATCH_GPU_FRAG_H
 #define FFT_OCEAN_PATCH_GPU_FRAG_H
 
-#include <string>
-#include <vector>
-#include <map>
 #include "FFTOceanPatchBase.h"
 #include "ShaderManager.h"
 #include "TextureManager.h"
@@ -14,6 +11,9 @@
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "GPUFrag2DIFFT.h"
+#include <string>
+#include <vector>
+#include <map>
 
 class GlobalConfig;
 

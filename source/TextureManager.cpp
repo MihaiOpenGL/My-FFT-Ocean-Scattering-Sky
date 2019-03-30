@@ -11,9 +11,9 @@
 */
 
 #include "TextureManager.h"
-#include "GL/glew.h"
-#include "Common.h"
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
+#include "GlobalConfig.h"
 #include "gli/texture.hpp"
 #include "gli/load.hpp"
 #include "gli/gl.hpp"
@@ -27,13 +27,15 @@ int TextureManager::m_MaxTextureArrayLayers = 0;
 float TextureManager::m_MaxAnisotropy = 0.0f;
 
 TextureManager::TextureManager ( void )
-	: m_Name()
-{}
-
-TextureManager::TextureManager ( const std::string& i_Name )
-	: m_Name(i_Name)
+	: m_Name("Default"), m_IsTexDDSSupported(false), m_IsTexAnisoFilterSupported(false)
 {
-	Init();
+	LOG("Texture Manager [%s] successfully created!", m_Name.c_str());
+}
+
+TextureManager::TextureManager ( const std::string& i_Name, const GlobalConfig& i_Config)
+	: m_Name(i_Name), m_IsTexDDSSupported(false), m_IsTexAnisoFilterSupported(false)
+{
+	Init(i_Config);
 }
 
 TextureManager::~TextureManager ( void )
@@ -41,18 +43,27 @@ TextureManager::~TextureManager ( void )
 	Destroy();
 }
 
-void TextureManager::Init ( void )
-{
-	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &m_MaxTexUnits);
-	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &m_MaxTextureArrayLayers);
-	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &m_MaxAnisotropy);
-}
-
-void TextureManager::Initialize ( const std::string& i_Name )
+void TextureManager::Initialize(const std::string& i_Name, const GlobalConfig& i_Config)
 {
 	m_Name = i_Name;
 
-	Init();
+	Init(i_Config);
+
+	LOG("Texture Manager [%s] successfully created!", m_Name.c_str());
+}
+
+void TextureManager::Init (const GlobalConfig& i_Config)
+{
+	m_IsTexDDSSupported = i_Config.GLExtVars.IsTexDDSSupported;
+	m_IsTexAnisoFilterSupported = i_Config.GLExtVars.IsTexAnisoFilterSupported;
+
+	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &m_MaxTexUnits);
+	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &m_MaxTextureArrayLayers);
+
+	if (m_IsTexAnisoFilterSupported)
+	{
+		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &m_MaxAnisotropy);
+	}
 }
 
 void TextureManager::Destroy ( void )
@@ -70,7 +81,7 @@ void TextureManager::Destroy ( void )
 		glDeleteTextures(1, &m_TextureDataArray[i].texId);
 	}
 
-	LOG("[" + m_Name + "] Texture Manager has been destroyed successfully!");
+	LOG("Texture Manager [%s] successfully destroyed!", m_Name.c_str());
 }
 
 unsigned int TextureManager::Load1DTexture ( const std::string& i_ImageFileName, unsigned int i_WrapType, unsigned int i_FilterType, bool i_IsGammaCorrected, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering )
@@ -78,7 +89,7 @@ unsigned int TextureManager::Load1DTexture ( const std::string& i_ImageFileName,
 	gli::texture texture = gli::load(i_ImageFileName);
 	if (texture.empty())
 	{
-		ERR("Image file " + i_ImageFileName + " failed to load!");
+		ERR("Image file %s failed to load!", i_ImageFileName.c_str());
 		return 0;
 	}
 
@@ -87,6 +98,12 @@ unsigned int TextureManager::Load1DTexture ( const std::string& i_ImageFileName,
 	if (target != GL_TEXTURE_1D)
 	{
 		ERR("Texture target must be GL_TEXTURE_1D!");
+		return 0;
+	}
+
+	if (! m_IsTexDDSSupported)
+	{
+		ERR("GL_EXT_texture_compression_s3tc is required!");
 		return 0;
 	}
 
@@ -140,7 +157,7 @@ unsigned int TextureManager::Load1DArrayTexture ( const std::vector<std::string>
 		gli::texture texture = gli::load(i_ImageFileNameArray[i]);
 		if (texture.empty())
 		{
-			ERR("Image file " + i_ImageFileNameArray[i] + " failed to load!");
+			ERR("Image file %s faild to load", i_ImageFileNameArray[i].c_str());
 			return 0;
 		}
 
@@ -149,6 +166,12 @@ unsigned int TextureManager::Load1DArrayTexture ( const std::vector<std::string>
 		if (target != GL_TEXTURE_1D_ARRAY)
 		{
 			ERR("Texture target must be GL_TEXTURE_1D_ARRAY!");
+			return 0;
+		}
+
+		if (! m_IsTexDDSSupported)
+		{
+			ERR("GL_EXT_texture_compression_s3tc is required!");
 			return 0;
 		}
 
@@ -209,7 +232,7 @@ unsigned int TextureManager::Load2DTexture ( const std::string& i_ImageFileName,
 	gli::texture texture = gli::load(i_ImageFileName);
 	if (texture.empty())
 	{
-		ERR("Image file " + i_ImageFileName + " failed to load!");
+		ERR("Image file %s failed to load!", i_ImageFileName.c_str());
 		return 0;
 	}
 
@@ -218,6 +241,12 @@ unsigned int TextureManager::Load2DTexture ( const std::string& i_ImageFileName,
 	if (target != GL_TEXTURE_2D)
 	{
 		ERR("Texture target must be GL_TEXTURE_2D!");
+		return 0;
+	}
+
+	if (! m_IsTexDDSSupported)
+	{
+		ERR("GL_EXT_texture_compression_s3tc is required!");
 		return 0;
 	}
 
@@ -271,7 +300,7 @@ unsigned int TextureManager::Load2DArrayTexture ( const std::vector<std::string>
 		gli::texture texture = gli::load(i_ImageFileNameArray[i]);
 		if (texture.empty())
 		{
-			ERR("Image file " + i_ImageFileNameArray[i] + " failed to load!");
+			ERR("Image file %s failed to load!", i_ImageFileNameArray[i].c_str());
 			return 0;
 		}
 
@@ -280,6 +309,12 @@ unsigned int TextureManager::Load2DArrayTexture ( const std::vector<std::string>
 		if (target != GL_TEXTURE_2D_ARRAY)
 		{
 			ERR("Texture target must be GL_TEXTURE_2D_ARRAY!");
+			return 0;
+		}
+
+		if (! m_IsTexDDSSupported)
+		{
+			ERR("GL_EXT_texture_compression_s3tc is required!");
 			return 0;
 		}
 
@@ -340,7 +375,7 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::string& i_ImageFile
 	gli::texture texture = gli::load(i_ImageFileName);
 	if (texture.empty())
 	{
-		ERR("Image file " + i_ImageFileName + " failed to load!");
+		ERR("Image file %s failed to load!", i_ImageFileName.c_str());
 		return 0;
 	}
 
@@ -349,6 +384,12 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::string& i_ImageFile
 	if (target != GL_TEXTURE_CUBE_MAP)
 	{
 		ERR("Texture target must be GL_TEXTURE_CUBE_MAP!");
+		return 0;
+	}
+
+	if (! m_IsTexDDSSupported)
+	{
+		ERR("GL_EXT_texture_compression_s3tc is required!");
 		return 0;
 	}
 
@@ -411,7 +452,7 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::vector<std::string>
 		gli::texture texture = gli::load(i_ImageFileArray[i]);
 		if (texture.empty())
 		{
-			ERR("Image file " + std::string(i_ImageFileArray[i]) + " failed to load!");
+			ERR("Image file %s failed to load!", i_ImageFileArray[i].c_str());
 			return 0;
 		}
 
@@ -420,6 +461,12 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::vector<std::string>
 		if (target != GL_TEXTURE_2D)
 		{
 			ERR("Texture target must be GL_TEXTURE_2D!");
+			return 0;
+		}
+
+		if (! m_IsTexDDSSupported)
+		{
+			ERR("GL_EXT_texture_compression_s3tc is required!");
 			return 0;
 		}
 
@@ -534,7 +581,7 @@ unsigned int TextureManager::Create2DRawTexture ( const std::string& i_ImageFile
 
 	if (!pF)
 	{
-		ERR("Failed to open " + i_ImageFileName + " image file name!");
+		ERR("Failed to open %s image file name!", i_ImageFileName.c_str());
 		return 0;
 	}
 
@@ -564,7 +611,7 @@ unsigned int TextureManager::Create2DRawTexture ( const std::string& i_ImageFile
 
 	if (i_DataOffset >= size)
 	{
-		ERR("Data offset " << i_DataOffset << " is bigger than the size of the image!");
+		ERR("Data offset %d is bigger than the size of the image!", i_DataOffset);
 		return 0;
 	}
 
@@ -651,7 +698,7 @@ unsigned int TextureManager::Create3DRawTexture ( const std::string& i_ImageFile
 
 	if (!pF)
 	{
-		ERR("Failed to open " + i_ImageFileName + " image file name!");
+		ERR("Failed to open %s image file name!", i_ImageFileName.c_str());
 		return 0;
 	}
 
@@ -681,7 +728,7 @@ unsigned int TextureManager::Create3DRawTexture ( const std::string& i_ImageFile
 
 	if (i_DataOffset >= size)
 	{
-		ERR("Data offset " << i_DataOffset << " is bigger than the size of the image!");
+		ERR("Data offset %d is bigger than the size of the image!", i_DataOffset);
 		return 0;
 	}
 
@@ -815,9 +862,12 @@ unsigned int TextureManager::SetupTextureParameteres(unsigned int i_Target, unsi
 	glTexParameteri(i_Target, GL_TEXTURE_MAG_FILTER, i_FilterType);
 	glTexParameteri(i_Target, GL_TEXTURE_MIN_FILTER, i_FilterType);
 
-	if (i_AnisoFiltering)
+	if (m_IsTexAnisoFilterSupported)
 	{
-		glTexParameterf(i_Target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
+		if (i_AnisoFiltering)
+		{
+			glTexParameterf(i_Target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
+		}
 	}
 
 	glTexParameteri(i_Target, GL_TEXTURE_BASE_LEVEL, 0);

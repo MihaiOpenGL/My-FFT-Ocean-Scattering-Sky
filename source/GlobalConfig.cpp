@@ -1,8 +1,7 @@
 /* Author: BAIRAC MIHAI */
 
 #include "GlobalConfig.h"
-#include "Common.h"
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
 // glm::vec2, glm::vec3 come from the header
 #include "glm/trigonometric.hpp" //radians()
 #include <sstream>
@@ -11,7 +10,9 @@
 
 GlobalConfig::GlobalConfig ( void )
 	: m_pConfigParser(nullptr)
-{}
+{
+	LOG("GlobalConfig successfully created!");
+}
 
 GlobalConfig::GlobalConfig ( const std::string& i_FileName )
 {
@@ -28,23 +29,27 @@ void GlobalConfig::Destroy ( void )
 	// free resources
 	SAFE_DELETE(m_pConfigParser);
 
-	LOG("GlobalConfig has been destroyed successfully!");
+	LOG("GlobalConfig successfully destroyed!");
 }
 
-void GlobalConfig::Initialize ( const std::string& i_FileName )
+bool GlobalConfig::Initialize ( const std::string& i_FileName )
 {
 	// Parse the config file
 	m_pConfigParser = new XMLParser(i_FileName);
 	assert(m_pConfigParser != nullptr);
-	std::cout << "ConfigParser is: " << sizeof(*m_pConfigParser) << " bytes in size" << std::endl;
+	LOG("ConfigParser is: %d bytes in size", sizeof(*m_pConfigParser));
 
-	Setup();
+	if (!Setup())
+	{
+		return false;
+	}
 
-	LOG("GlobalConfig has been created successfully!");
+	LOG("GlobalConfig successfully created!");
+	return true;
 }
 
 
-void GlobalConfig::Setup ( void )
+bool GlobalConfig::Setup ( void )
 {
 	std::map<std::string, XMLGenericType> keyMap;
 	m_pConfigParser->PopulateKeyMap(keyMap);
@@ -323,18 +328,41 @@ void GlobalConfig::Setup ( void )
 	std::string openglProfile = OpenGLContext.IsCoreProfile ? " core" : "";
 	ShaderDefines.Header = "#version " + glslVer + openglProfile + "\n\n\n";
 
-	LOG("Selected OpenGL version:" + openglVer);
-	LOG("Selected OpenGL profile: " + openglProfile);
-	LOG("Selected GLSL shader version: " + ShaderDefines.Header);
+	LOG("Selected OpenGL version: %s", openglVer.c_str());
+	LOG("Selected OpenGL profile: %s", openglProfile.c_str());
+	LOG("Selected GLSL shader version: %s", ShaderDefines.Header.c_str());
+
+	// checks
+	if (OpenGLContext.OpenGLVersion.major < 3)
+	{
+		ERR("This app shall not run under OpenGL 3.0 !!!");
+		return false;
+	}
+
+	if (OpenGLContext.OpenGLVersion.minor < 2)
+	{
+		ERR("This app shall not run properly under OpenGL 3.2 !!!");
+		return false;
+	}
+
+	/*if (Scene.Ocean.Grid.Type == CustomTypes::Ocean::GridType::GT_SCREEN_SPACE)
+	{
+		if (OpenGLContext.OpenGLVersion.major != 4 &&
+			OpenGLContext.OpenGLVersion.minor < 1)
+		{
+			ERR("To support geometry shaders Opengl 4.1 minimum is needed !!!");
+			return false;
+		}
+	}*/
 
 	if (Scene.Ocean.Surface.OceanPatch.ComputeFFT.Type == CustomTypes::Ocean::ComputeFFTType::CFT_GPU_COMP ||
 		Scene.Ocean.Surface.OceanPatch.NormalGradientFolding.Type == CustomTypes::Ocean::NormalGradientFoldingType::NGF_GPU_COMP)
 	{
-		//NOTE! We need ver. 440 to support compute shaders and constant expresion in compute shader layout definition !!!
 		if (OpenGLContext.OpenGLVersion.major != 4 &&
-			OpenGLContext.OpenGLVersion.minor < 3 )
+			OpenGLContext.OpenGLVersion.minor < 4 )
 			{
-				ERR("To support compute shaders Opengl 4.3 minimum is needed !!!!");
+				ERR("To support compute shaders Opengl 4.4 minimum is needed ! We need 4.3 for compute shader support, but we also use constant expressions in our compute shader so we can't go below 4.4 !!!");
+				return false;
 			}
 	}
 
@@ -355,4 +383,6 @@ void GlobalConfig::Setup ( void )
 	ShaderDefines.Ocean.Bottom.GridCorners = Scene.Ocean.Bottom.Projector.UseGridCorners ? "#define USE_GRID_CORNERS_BOTTOM\n" : "#define NO_USE_GRID_CORNERS_BOTTOM\n";
 	ShaderDefines.Ocean.Bottom.UnderWaterFog = Scene.Ocean.Bottom.Fog.Enabled ? "#define UNDERWATER_FOG_BOTTOM\n" : "#define NO_UNDERWATER_FOG_BOTTOM\n";
 	ShaderDefines.Ocean.Bottom.Caustics = Scene.Ocean.Bottom.Caustics.Enabled ? "#define UNDERWATER_CAUSTICS\n" : "#define NO_UNDERWATER_CAUSTICS\n";
+
+	return true;
 }

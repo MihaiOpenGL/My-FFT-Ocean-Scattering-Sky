@@ -1,13 +1,18 @@
 /* Author: BAIRAC MIHAI */
 
 #include "PostProcessingManager.h"
-#include "GL/glew.h"
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 #include "GlobalConfig.h"
 #include "glm/vec4.hpp"
 #include "glm/exponential.hpp" //sqrt()
 #include "glm/gtc/type_ptr.hpp" //value_ptr()
 
+
+PostProcessingManager::PostProcessingManager()
+{
+	LOG("PostProcessingManager successfully created!");
+}
 
 PostProcessingManager::PostProcessingManager ( const GlobalConfig& i_Config )
 	: m_EffectType(CustomTypes::PostProcessing::EffectType::PPET_COUNT)
@@ -22,7 +27,7 @@ PostProcessingManager::~PostProcessingManager ( void )
 
 void PostProcessingManager::Destroy ( void )
 {
-	LOG("PostProcessingManager has been destroyed successfully!");
+	LOG("PostProcessingManager successfully destroyed!");
 }
 
 void PostProcessingManager::Initialize ( const GlobalConfig& i_Config )
@@ -78,7 +83,7 @@ void PostProcessingManager::Initialize ( const GlobalConfig& i_Config )
 	unsigned short windowWidth = viewport.z;
 	unsigned short windowHeight = viewport.w;
 
-	m_FBM.Initialize("PPE");
+	m_FBM.Initialize("PPE", i_Config);
 	m_FBM.CreateSimple(attributes, 1, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, windowWidth, windowHeight, GL_REPEAT, GL_LINEAR, i_Config.TexUnit.Global.PostProcessingMap, -1, false, FrameBufferManager::DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH_STENCIL);
 	m_FBM.Bind();
 	m_FBM.SetupDrawBuffers(1, 0);
@@ -107,6 +112,8 @@ void PostProcessingManager::Initialize ( const GlobalConfig& i_Config )
 	}
 
 	m_SM.UnUseProgram();
+
+	LOG("PostProcessingManager successfully created!");
 }
 
 void PostProcessingManager::UpdateSize(unsigned short i_Width, unsigned short i_Height)

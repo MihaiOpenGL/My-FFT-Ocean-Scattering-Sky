@@ -1,27 +1,28 @@
 ﻿/* Author: BAIRAC MIHAI */
 
 #include "FrameBufferManager.h"
-#include <assert.h>
-#include "GL/glew.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
+#include "GlobalConfig.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
-#include "ErrorHandler.h"
+#include <assert.h>
 
 
 int FrameBufferManager::m_MaxColorAttachments = 0;
 
 FrameBufferManager::FrameBufferManager ( void )
-	: m_FBOID(0), m_RBOID(0), m_DepthBufferType(DEPTH_BUFFER_TYPE::DBT_NO_DEPTH),
+	: m_Name("Default"), m_FBOID(0), m_RBOID(0), m_DepthBufferType(DEPTH_BUFFER_TYPE::DBT_NO_DEPTH),
 	  m_DepthTexID(0), m_CubeMapTexId(0)
 {
-	Init();
+	LOG("FrameBufferManager [%s] successfully created!", m_Name.c_str());
 }
 
-FrameBufferManager::FrameBufferManager ( const std::string& i_Name )
+FrameBufferManager::FrameBufferManager ( const std::string& i_Name, const GlobalConfig& i_Config)
 	: m_Name(i_Name), m_FBOID(0), m_RBOID(0), m_DepthBufferType(DEPTH_BUFFER_TYPE::DBT_NO_DEPTH), 
 	  m_DepthTexID(0), m_CubeMapTexId(0)
 {
-	Init();
+	Init(i_Config);
 }
 
 FrameBufferManager::~FrameBufferManager ( void )
@@ -29,19 +30,22 @@ FrameBufferManager::~FrameBufferManager ( void )
 	Destroy();
 }
 
-void FrameBufferManager::Init ( void )
-{
-	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &m_MaxColorAttachments);
-
-	m_TM.Initialize(m_Name);
-}
-
-void FrameBufferManager::Initialize ( const std::string& i_Name )
+void FrameBufferManager::Initialize ( const std::string& i_Name, const GlobalConfig& i_Config)
 {
 	m_Name = i_Name;
 
-	Init();
+	Init(i_Config);
 }
+
+void FrameBufferManager::Init(const GlobalConfig& i_Config)
+{
+	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &m_MaxColorAttachments);
+
+	m_TM.Initialize(m_Name, i_Config);
+
+	LOG("FrameBufferManager [%s] successfully created!", m_Name.c_str());
+}
+
 
 void FrameBufferManager::Destroy ( void )
 {
@@ -52,11 +56,6 @@ void FrameBufferManager::Destroy ( void )
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		glDeleteRenderbuffers(1, &m_RBOID);
 	}
-	else if (m_DepthBufferType == DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH ||
-			 m_DepthBufferType == DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH_STENCIL)
-	{
-		m_TM.Destroy();
-	}
 
 	if (m_FBOID)
 	{
@@ -65,7 +64,7 @@ void FrameBufferManager::Destroy ( void )
 		m_FBOID = 0;
 	}
 
-	LOG("[" + m_Name + "] FrameBufferManager has been destroyed successfully!");
+	LOG("FrameBufferManager [%s] successfully destroyed!", m_Name.c_str());
 }
 
 void FrameBufferManager::CreateSimple(unsigned short i_ColorAttachmentCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, unsigned short i_StartTexUnitID, short i_MipMapCount, bool i_AnisoFiltering, FrameBufferManager::DEPTH_BUFFER_TYPE i_DepthBufferType)
@@ -396,7 +395,7 @@ void FrameBufferManager::CheckCompletenessStatus(void)
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glDeleteFramebuffers(1, &m_FBOID);
 		m_FBOID = 0;
-		ERR("The Auxiliary Framebuffer is incomplete! " + error);
+		ERR("The Auxiliary Framebuffer is incomplete! err: %d", error);
 		return;
 	}
 }

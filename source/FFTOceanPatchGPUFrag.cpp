@@ -1,25 +1,23 @@
 /* Author: BAIRAC MIHAI */
 
 #include "FFTOceanPatchGPUFrag.h"
-#include <sstream> // std::stringstream
-#include <time.h>
-#include "GL/glew.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 // glm::vec2, glm::vec3 come from the header
 #include "glm/common.hpp" //abs()
 #include "glm/exponential.hpp" //sqrt()
 #include "glm/gtc/constants.hpp" //pi(), two_pi()
 #include "glm/vector_relational.hpp" //any(), notEqual()
-#include "Common.h"
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
 #include "FileUtils.h"
 #include "GlobalConfig.h"
 #include "FFTNormalGradientFoldingBase.h"
+#include <time.h>
 
 
 FFTOceanPatchGPUFrag::FFTOceanPatchGPUFrag ( void )
 	: m_FFTInitDataTexId(0), m_pFFTDisplaymentData(nullptr)
 {
+	LOG("FFTOceanPatchGPUFrag successfully created!");
 }
 
 FFTOceanPatchGPUFrag::FFTOceanPatchGPUFrag ( const GlobalConfig& i_Config )
@@ -38,7 +36,7 @@ void FFTOceanPatchGPUFrag::Destroy ( void )
 	// should free resources
 	SAFE_ARRAY_DELETE(m_pFFTDisplaymentData);
 
-	LOG("FFTOceanPatchGPUFrag has been destroyed successfully!");
+	LOG("FFTOceanPatchGPUFrag successfully destroyed!");
 }
 
 void FFTOceanPatchGPUFrag::Initialize ( const GlobalConfig& i_Config )
@@ -54,7 +52,7 @@ void FFTOceanPatchGPUFrag::Initialize ( const GlobalConfig& i_Config )
 
 	InitFFTData();
 	//// Create H0Omega texture
-	m_FFTTM.Initialize("FFTOceanPatchGPUFrag");
+	m_FFTTM.Initialize("FFTOceanPatchGPUFrag", i_Config);
 	m_FFTInitDataTexId = m_FFTTM.Create2DTexture(GL_RGB16F, GL_RGB, GL_FLOAT, m_FFTSize, m_FFTSize, GL_REPEAT, GL_NEAREST, &m_FFTInitData[0], i_Config.TexUnit.Ocean.FFTOceanPatchGPUFrag.FFTInitDataMap);
 
 	m_pFFTDisplaymentData = new float[m_FFTSize * m_FFTSize * 4 * sizeof(float)];
@@ -94,7 +92,7 @@ void FFTOceanPatchGPUFrag::Initialize ( const GlobalConfig& i_Config )
 	m_FFTHtSM.UnUseProgram();
 
 	////////
-	m_FFTHtFBM.Initialize("FFTHt FrameBuffer");
+	m_FFTHtFBM.Initialize("FFTHt FrameBuffer", i_Config);
 	m_FFTHtFBM.CreateLayered(fftHtAttributes, m_2DIFFT.GetSourceTexId(), m_2DIFFT.GetFFTLayerCount());
 	m_FFTHtFBM.Bind();
 	m_FFTHtFBM.SetupDrawBuffers(m_2DIFFT.GetFFTLayerCount(), 0);
@@ -116,7 +114,7 @@ void FFTOceanPatchGPUFrag::Initialize ( const GlobalConfig& i_Config )
 		}
 	}
 
-	LOG("FFTOceanPatchGPUFrag has been created successfully!");
+	LOG("FFTOceanPatchGPUFrag successfully created!");
 }
 
 void FFTOceanPatchGPUFrag::SetFFTData ( void )

@@ -1,8 +1,8 @@
 /* Author: BAIRAC MIHAI */
 
 #include "FileUtils.h"
+#include "CommonHeaders.h"
 #include <fstream>
-#include "ErrorHandler.h"
 
 
 namespace FileUtils
@@ -19,7 +19,7 @@ namespace FileUtils
 
 		if (!textFile.good())
 		{
-			ERR("Failed to open " + i_TextFileName + " text file name!");
+			ERR("Failed to open %s text file!", i_TextFileName.c_str());
 			return false;
 		}
 

@@ -1,10 +1,8 @@
 /* Author: BAIRAC MIHAI */
 
 #include "BaseSkyModel.h"
-#include "Common.h"
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
 #include "Camera.h"
-#include "GL/glew.h"
 // glm::vec3, glm::vec4 come from the header
 #include "glm/trigonometric.hpp" //sin(), cos()
 #include "glm/gtc/constants.hpp" //half_pi(), two_pi()
@@ -13,7 +11,9 @@
 
 BaseSkyModel::BaseSkyModel ( void )
 	: m_IndexCount(0), m_IsWireframeMode(false)
-{}
+{
+	LOG("BaseSkyModel successfully created!");
+}
 
 BaseSkyModel::BaseSkyModel (  const GlobalConfig& i_Config )
 	: m_IndexCount(0), m_IsWireframeMode(false)
@@ -30,12 +30,12 @@ void BaseSkyModel::Destroy ( void )
 {
 	// should free resources
 
-	LOG("BaseSkyModel has been destroyed successfully!");
+	LOG("BaseSkyModel successfully destroyed!");
 }
 
 void BaseSkyModel::Initialize ( const GlobalConfig& i_Config )
 {
-	LOG("BaseSkyModel has been created successfully!");
+	LOG("BaseSkyModel successfully created!");
 }
 
 

@@ -3,12 +3,12 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include <string>
-#include <vector>
 #include "Material.h"
 #include "MeshBufferManager.h"
 #include "TextureManager.h"
 #include "ShaderManager.h"
+#include <string>
+#include <vector>
 
 /*
  A simple Wavefront OBJ mesh class

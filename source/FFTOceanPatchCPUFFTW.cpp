@@ -1,25 +1,25 @@
 /* Author: BAIRAC MIHAI */
 
 #include "FFTOceanPatchCPUFFTW.h"
-#include <sstream> // std::stringstream
-#include <time.h>
-#include "GL/glew.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 // glm::vec2 comes from the header
 #include "glm/common.hpp" //abs()
 #include "glm/geometric.hpp" //length()
 #include "glm/exponential.hpp" //sqrt()
 #include "glm/trigonometric.hpp" //sin(), cos()
 #include "glm/gtc/constants.hpp" //pi(), two_pi()
-#include "Common.h"
-#include "ErrorHandler.h"
 #include "FileUtils.h"
 #include "GlobalConfig.h"
 #include "FFTNormalGradientFoldingBase.h"
+#include <sstream> // std::stringstream
+#include <time.h>
 
 
 FFTOceanPatchCPUFFTW::FFTOceanPatchCPUFFTW ( void )
 	: m_pFFTDisplaymentData(nullptr)
 {
+	LOG("FFTOceanPatchCPUFFTW successfully created!");
 }
 
 FFTOceanPatchCPUFFTW::FFTOceanPatchCPUFFTW ( const GlobalConfig& i_Config )
@@ -38,7 +38,7 @@ void FFTOceanPatchCPUFFTW::Destroy ( void )
 	// should free resources
 	SAFE_ARRAY_DELETE(m_pFFTDisplaymentData);
 
-	LOG("FFTOceanPatchCPUFFTW has been destroyed successfully!");
+	LOG("FFTOceanPatchCPUFFTW successfully destroyed!");
 }
 
 void FFTOceanPatchCPUFFTW::Initialize ( const GlobalConfig& i_Config )
@@ -72,7 +72,7 @@ void FFTOceanPatchCPUFFTW::Initialize ( const GlobalConfig& i_Config )
 		}
 	}
 
-	LOG("FFTOceanPatchCPUFFTW has been created successfully!");
+	LOG("FFTOceanPatchCPUFFTW successfully created!");
 }
 
 void FFTOceanPatchCPUFFTW::SetFFTData ( void )

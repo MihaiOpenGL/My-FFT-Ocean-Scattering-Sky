@@ -1,12 +1,9 @@
 /* Author: BAIRAC MIHAI */
 
 #include "MotorBoat.h"
-#include "GL/glew.h"
-#include "GL/glfw3.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 #include "Camera.h"
-#include "Common.h"
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
 // glm::vec3, glm::mat4 come from the header
 #include "glm/vec4.hpp"
 #include "glm/common.hpp" //min() max()
@@ -29,6 +26,7 @@ MotorBoat::MotorBoat ( void )
 	  m_IsWireframeMode(false), m_BoatArea(0.0f), m_BoatVolume(0.0f), m_BoatMass(0.0f),
 	  m_BoatDensity(0.0f), m_BoatDragCoefficient(0.0f), m_BoatYAccelerationFactor(0.0f)
 {
+	LOG("MotorBoat successfully created!");
 }
 
 MotorBoat::MotorBoat (const GlobalConfig& i_Config )
@@ -51,7 +49,7 @@ MotorBoat::~MotorBoat ( void )
 
 void MotorBoat::Destroy ( void )
 {
-	LOG("MotorBoat has been destroyed successfully!");
+	LOG("MotorBoat successfully destroyed!");
 }
 
 void MotorBoat::Initialize ( const GlobalConfig& i_Config )
@@ -116,14 +114,14 @@ void MotorBoat::Initialize ( const GlobalConfig& i_Config )
 	m_SM.UnUseProgram();
 
 	/////
-	m_TM.Initialize("Motor Boat");
+	m_TM.Initialize("Motor Boat", i_Config);
 	m_TM.Load2DTexture("../resources/models/motor_boat/boat_d.dds", GL_REPEAT, GL_LINEAR, true, i_Config.TexUnit.MotorBoat.BoatDiffMap, 3);
 	m_TM.Load2DTexture("../resources/models/motor_boat/boat_n.dds", GL_REPEAT, GL_LINEAR, false, i_Config.TexUnit.MotorBoat.BoatNormalMap, 3);
 	/////////
 
 
 	// NOTE! The model has CCW winding - default
-	m_M.LoadModel("Motor Boat", "../resources/models/motor_boat/boat.obj", false, attributes, i_Config.Scene.Boat.UseFlattenedModel);
+	m_M.Initialize("Motor Boat", "../resources/models/motor_boat/boat.obj", false, attributes, i_Config.Scene.Boat.UseFlattenedModel, i_Config);
 
 	//////////////////////////
 	m_BoatArea = m_M.GetWidth() * m_M.GetDepth() * 0.7f;
@@ -182,7 +180,7 @@ void MotorBoat::Initialize ( const GlobalConfig& i_Config )
 		m_TrailMBM.CreateModelContext(m_TrailVertexData, TrailAttributes, MeshBufferManager::ACCESS_TYPE::AT_DYNAMIC);
 
 		/////
-		m_TrailFBM.Initialize("Motor Boat Trail");
+		m_TrailFBM.Initialize("Motor Boat Trail", i_Config);
 
 		glm::ivec4 viewport;
 		glGetIntegerv(GL_VIEWPORT, &viewport[0]);
@@ -193,7 +191,7 @@ void MotorBoat::Initialize ( const GlobalConfig& i_Config )
 		m_TrailFBM.CreateSimple(1, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, trailMapWidth, trailMapHeight, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Ocean.Surface.PropellerWashMap, 5, false, FrameBufferManager::DEPTH_BUFFER_TYPE::DBT_NO_DEPTH);
 	}
 
-	LOG("MotorBoat has been created successfully!");
+	LOG("MotorBoat successfully created!");
 }
 
 void MotorBoat::Update ( const Camera& i_Camera, const glm::vec3& i_SunDirection, bool i_IsWireframeMode, float i_CrrTime )
@@ -227,6 +225,9 @@ void MotorBoat::Update ( const Camera& i_Camera, const glm::vec3& i_SunDirection
 		if (m_CrrPropellerPosIdx == m_kBoatTrailVertexCount)
 		{
 			m_CrrPropellerPosIdx = 0;
+
+			assert(m_CrrPropellerPosIdx >= 0 && m_CrrPropellerPosIdx < m_TrailVertexData.size());
+
 			// reseting the counter, the first 2 positions are the last 2, to have continuty across the triangle strip !!!
 			m_TrailVertexData[m_CrrPropellerPosIdx++].position = m_TrailVertexData[m_kBoatTrailVertexCount - 2].position;
 			m_TrailVertexData[m_CrrPropellerPosIdx++].position = m_TrailVertexData[m_kBoatTrailVertexCount - 1].position;
@@ -244,6 +245,8 @@ void MotorBoat::Update ( const Camera& i_Camera, const glm::vec3& i_SunDirection
 		
 		// save last propeller pos
 		m_PrevPropellerPos = propellerPos;
+
+		assert(m_CrrPropellerPosIdx >= 0 && m_CrrPropellerPosIdx < m_TrailVertexData.size());
 
 		/////////// Update mesh buffer with vertex data
 		m_TrailVertexData[m_CrrPropellerPosIdx ++].position = rightOffsetPropellerPos;

@@ -1,26 +1,22 @@
 /* Author: BAIRAC MIHAI */
 
 #include "GPUFrag2DIFFT.h"
-
-#include <sstream> // std::stringstream
-
-#include "Common.h"
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
-
-#include "GL/glew.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 #include "glm/vec4.hpp"
 #include "glm/exponential.hpp" //pow()
 #include "glm/trigonometric.hpp" // sin(). cos()
 #include "glm/gtc/constants.hpp" //pi()
 #include "glm/vector_relational.hpp" //any(), notEqual()
-
 #include "GlobalConfig.h"
+#include <sstream> // std::stringstream
 
 
 GPUFrag2DIFFT::GPUFrag2DIFFT ( void )
   : m_pFFTFBM(nullptr), m_IsPongTarget(false), m_Use2FBOs(false)
-{}
+{
+	LOG("GPUFrag2DIFFT successfully created!");
+}
 
 GPUFrag2DIFFT::GPUFrag2DIFFT ( const GlobalConfig& i_Config )
   : m_pFFTFBM(nullptr), m_IsPongTarget(false), m_Use2FBOs(false)
@@ -46,7 +42,7 @@ void GPUFrag2DIFFT::Destroy ( void )
 		SAFE_DELETE(m_pFFTFBM);
 	}
 
-	LOG("GPUFrag2DIFFT has been destroyed successfully!");
+	LOG("GPUFrag2DIFFT successfully destroyed!");
 }
 
 void GPUFrag2DIFFT::Initialize ( const GlobalConfig& i_Config )
@@ -73,7 +69,7 @@ void GPUFrag2DIFFT::Initialize ( const GlobalConfig& i_Config )
 	assert(pButterFlyData != nullptr);
 	ComputeButterflyLookupTexture(pButterFlyData);
 
-	m_TM.Initialize("GPUFrag2DIFFT - Butterfly Lookup Texture");
+	m_TM.Initialize("GPUFrag2DIFFT - Butterfly Lookup Texture", i_Config);
 	m_TM.Create2DTexture(GL_RGBA16F, GL_RGBA, GL_FLOAT, m_FFTSize, m_NumButterflies, GL_CLAMP_TO_EDGE, GL_NEAREST, pButterFlyData, i_Config.TexUnit.Ocean.GPU2DIFFT.ButterflyMap);
 
 	SAFE_ARRAY_DELETE(pButterFlyData);
@@ -90,7 +86,7 @@ void GPUFrag2DIFFT::Initialize ( const GlobalConfig& i_Config )
 		{
 			if (&m_pFFTFBM[i])
 			{
-				m_pFFTFBM[i].Initialize("GPUFrag2DIFFT - FrameBuffer");
+				m_pFFTFBM[i].Initialize("GPUFrag2DIFFT - FrameBuffer", i_Config);
 				// NOTE! the fft details are localized only pretty near the camera position, so we don't need more than 3 levels of mipmaps .. ftt data doesn't get to far away from the camera!
 				m_pFFTFBM[i].CreateLayered(1, m_FFTLayerCount, GL_RGBA16F, GL_RGBA, GL_FLOAT, m_FFTSize, m_FFTSize, GL_REPEAT, GL_LINEAR, i_Config.TexUnit.Ocean.GPU2DIFFT.PingArrayMap + i, m_kMipmapCount);
 				m_pFFTFBM[i].Bind();
@@ -102,7 +98,7 @@ void GPUFrag2DIFFT::Initialize ( const GlobalConfig& i_Config )
 	else
 	{
 		// use only one FBO for both textures
-		m_pFFTFBM = new FrameBufferManager("GPUFrag2DIFFT - FrameBuffer");
+		m_pFFTFBM = new FrameBufferManager("GPUFrag2DIFFT - FrameBuffer", i_Config);
 		assert(m_pFFTFBM != nullptr);
 
 		// NOTE! the fft details are localized only pretty near the camera position, so we don't need more than 3 levels of mipmaps .. ftt data doesn't get to far away from the camera!
@@ -212,7 +208,7 @@ void GPUFrag2DIFFT::Initialize ( const GlobalConfig& i_Config )
 		}
 	}
 
-	LOG("GPUFrag2DIFFT has been created successfully!");
+	LOG("GPUFrag2DIFFT successfully created!");
 }
 
 ///////////////////////////////////

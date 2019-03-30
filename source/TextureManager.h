@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+class GlobalConfig;
+
 /*
  Manager for textures: loads and creates: 2D, 2D arrays and cubemaps textures
 
@@ -28,10 +30,10 @@ class TextureManager
 {
 public:
 	TextureManager(void);
-	TextureManager(const std::string& i_Name);
+	TextureManager(const std::string& i_Name, const GlobalConfig& i_Config);
 	~TextureManager(void);
 
-	void Initialize(const std::string& i_Name);
+	void Initialize(const std::string& i_Name, const GlobalConfig& i_Config);
 	void Destroy(void);
 
 	// i_MipMapCount can have the values: 
@@ -97,7 +99,7 @@ private:
 	};
 
 	//// Methods ////
-	void Init(void);
+	void Init(const GlobalConfig& i_Config);
 
 	//// Variables ////
 	// self init
@@ -109,6 +111,8 @@ private:
 	static float m_MaxAnisotropy;
 
 	std::vector<TextureInfo> m_TextureDataArray;
+
+	bool m_IsTexDDSSupported, m_IsTexAnisoFilterSupported;
 };
 
 #endif /* TEXTURE_MANAGER_H */

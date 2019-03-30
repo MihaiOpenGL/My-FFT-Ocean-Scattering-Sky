@@ -15,6 +15,7 @@ LD				= g++
 OS				= linux
 INCDIR			= include
 SRCDIR		= source
+SRCDIREXT   = glad
 
 LIBDIR			= libs/$(OS)
 BUILDDIR		= build/$(OS)/$(CFGDIR)
@@ -22,21 +23,27 @@ TARGETDIR	= bin/$(OS)/$(CFGDIR)
 OBJDIR		= $(BUILDDIR)
 
 INC				= -I$(INCDIR) 
-LDFLAGS		=  -L$(LIBDIR) -L/usr/lib -L/usr/local/lib -lGLEW -lglfw3 -lfftw3f -lAntTweakBar -lGL -lX11 -lpthread -ldl
+LDFLAGS		=  -L$(LIBDIR) -L/usr/lib -L/usr/local/lib -lSDL2 -lSDL2main -lfftw3f -lAntTweakBar -lGL -lX11 -lpthread -ldl
 
 EXE				= MyFFTOcean
 TARGET		= $(TARGETDIR)/$(EXE)
 
 SRCS			= $(wildcard $(SRCDIR)/*.cpp)
 OBJS			= $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCS))
+SRCSEXT            = $(wildcard $(SRCDIREXT)/*.cpp)
+OBJSEXT            = $(patsubst $(SRCDIREXT)/%.cpp, $(OBJDIR)/%.o, $(SRCSEXT))
 
-
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) $(OBJSEXT)
 	@mkdir -p $(TARGETDIR)
 	@echo $(OBJS)
-	@echo " Linking $(TARGET)"; $(LD) $^ -o $(TARGET) $(LDFLAGS)
+	@echo $(OBJSEXT)
+	@echo " Linking $@"; $(LD) $^ -o $@ $(LDFLAGS)
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
+	@mkdir -p $(BUILDDIR)
+	@echo "Compiling $<..."; $(CXX) -c $(CXXFLAGS) $(INC) $< -o $@
+
+$(OBJDIR)/%.o : $(SRCDIREXT)/%.cpp
 	@mkdir -p $(BUILDDIR)
 	@echo "Compiling $<..."; $(CXX) -c $(CXXFLAGS) $(INC) $< -o $@
 

@@ -69,7 +69,6 @@ public:
 	void SetUniform(int i_UniformLocation, int i_ValueCount, const float* i_pUniformValue, ShaderManager::UNIFORM_TYPE i_UniformType) const;
 
 	void SetupFragmentOutputStreams(unsigned short i_LayerCount, unsigned short i_Stride) const;
-	void SetupGeometryShader(GEOMETRY_INPUT_TYPE i_InputType, GEOMETRY_OUTPUT_TYPE i_OutputType);
 
 private:
 	//// Methods ////
@@ -81,6 +80,8 @@ private:
 
 	bool CreateShader(const std::string& i_ShaderFileName, unsigned int i_ShaderType, const GlobalConfig& i_Config);
 	bool LinkProgram(void);
+
+	void SetupGeometryShader(GEOMETRY_INPUT_TYPE i_InputType, GEOMETRY_OUTPUT_TYPE i_OutputType, const GlobalConfig& i_Config);
 
 	void Destroy(void);
 

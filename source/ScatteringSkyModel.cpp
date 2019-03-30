@@ -1,8 +1,8 @@
 /* Author: BAIRAC MIHAI */
 
 #include "ScatteringSkyModel.h"
-#include "GL/glew.h"
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 // glm::mat4 comes from the header
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
@@ -18,7 +18,9 @@
 
 ScatteringSkyModel::ScatteringSkyModel ( void )
 	: m_AtmosphereInnerRadius(0.0f), m_AreCloudsEnabled(false)
-{}
+{
+	LOG("ScatteringSkyModel successfully created!");
+}
 
 ScatteringSkyModel::ScatteringSkyModel ( const GlobalConfig& i_Config )
 	: m_AtmosphereInnerRadius(0.0f), m_AreCloudsEnabled(false)
@@ -33,7 +35,7 @@ ScatteringSkyModel::~ScatteringSkyModel ( void )
 
 void ScatteringSkyModel::Destroy ( void )
 {
-	LOG("ScatteringSkyModel has been destroyed successfully!");
+	LOG("ScatteringSkyModel successfully destroyed!");
 }
 
 void ScatteringSkyModel::Initialize ( const GlobalConfig& i_Config )
@@ -63,7 +65,7 @@ void ScatteringSkyModel::Initialize ( const GlobalConfig& i_Config )
 	SetupCloudsShaders(i_Config, cloudsAttributes);
 	SetupCloudsGeometry(i_Config, cloudsAttributes);
 
-	LOG("ScatteringSkyModel has been created successfully!");
+	LOG("ScatteringSkyModel successfully created!");
 }
 
 void ScatteringSkyModel::SetupSkyShaders ( const GlobalConfig& i_Config, std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& o_Attributes )

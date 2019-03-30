@@ -1,17 +1,16 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Base2DIFFT.h"
-#include <sstream> // std::stringstream
-#include "Common.h"
-#include "ErrorHandler.h"
-#include "GL/glew.h"
+#include "CommonHeaders.h"
 #include "glm/exponential.hpp" //log2()
 #include "GlobalConfig.h"
 
 
 Base2DIFFT::Base2DIFFT( void )
 	: m_NumButterflies(0), m_FFTSize(0), m_FFTLayerCount(0), m_UseFFTSlopes(false)
-{}
+{
+	LOG("Base2DIFFT successfully created!");
+}
 
 Base2DIFFT::Base2DIFFT(const GlobalConfig& i_Config )
   : m_NumButterflies(0), m_FFTSize(0), m_FFTLayerCount(0), m_UseFFTSlopes(false)
@@ -28,7 +27,7 @@ void Base2DIFFT::Destroy ( void )
 {
 	// should free resources
 
-	LOG("Base2DIFFT has been destroyed successfully!");
+	LOG("Base2DIFFT successfully destroyed!");
 }
 
 void Base2DIFFT::Initialize(const GlobalConfig& i_Config)
@@ -39,7 +38,7 @@ void Base2DIFFT::Initialize(const GlobalConfig& i_Config)
 	// the FFT algorithm need log(n) base 2 steps
 	m_NumButterflies = static_cast<unsigned short>(glm::log2(static_cast<float>(m_FFTSize)));
 
-	LOG("Base2DIFFT has been created successfully!");
+	LOG("Base2DIFFT successfully created!");
 }
 
 void Base2DIFFT::Perform2DIFFT ( void )

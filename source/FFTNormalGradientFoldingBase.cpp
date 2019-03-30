@@ -2,14 +2,14 @@
 /* Author: BAIRAC MIHAI */
 
 #include "FFTNormalGradientFoldingBase.h"
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
 #include "GlobalConfig.h"
 
 
 FFTNormalGradientFoldingBase::FFTNormalGradientFoldingBase ( void )
 	: m_FFTSize(0)
 {
+	LOG("FFTNormalGradientFoldingBase successfully created!");
 }
 
 FFTNormalGradientFoldingBase::FFTNormalGradientFoldingBase ( const GlobalConfig& i_Config )
@@ -27,12 +27,12 @@ void FFTNormalGradientFoldingBase::Destroy ( void )
 {
 	// should free resources
 
-	LOG("FFTNormalGradientFoldingBase has been destroyed successfully!");
+	LOG("FFTNormalGradientFoldingBase successfully destroyed!");
 }
 
 void FFTNormalGradientFoldingBase::Initialize ( const GlobalConfig& i_Config )
 {
-	LOG("FFTNormalGradientFoldingBase has been created successfully!");
+	LOG("FFTNormalGradientFoldingBase successfully created!");
 }
 
 void FFTNormalGradientFoldingBase::ComputeNormalGradientFolding ( void )

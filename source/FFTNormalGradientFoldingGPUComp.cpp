@@ -3,15 +3,15 @@
 
 
 #include "FFTNormalGradientFoldingGPUComp.h"
-#include "GL/glew.h"
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 #include "GlobalConfig.h"
 
 
 FFTNormalGradientFoldingGPUComp::FFTNormalGradientFoldingGPUComp ( void )
 	: m_TexId(0), m_SourceTexId(0)
 {
+	LOG("FFTNormalGradientFoldingGPUComp successfully created!");
 }
 
 FFTNormalGradientFoldingGPUComp::FFTNormalGradientFoldingGPUComp ( const GlobalConfig& i_Config )
@@ -29,7 +29,7 @@ void FFTNormalGradientFoldingGPUComp::Destroy ( void )
 {
 	// should free resources
 
-	LOG("FFTNormalGradientFoldingGPUComp has been destroyed successfully!");
+	LOG("FFTNormalGradientFoldingGPUComp successfully destroyed!");
 }
 
 void FFTNormalGradientFoldingGPUComp::Initialize ( const GlobalConfig& i_Config )
@@ -59,10 +59,10 @@ void FFTNormalGradientFoldingGPUComp::Initialize ( const GlobalConfig& i_Config 
 	//////////
 	// the normal map also contains the folding factor, so for it to be spread also farther away from the camera position we need mipmaps!
 	// 3 levels of mipmaps will suffice, because foam is needed more where fft waves are localized, and those are only near camera!
-	m_TM.Initialize("FFTNormalGradientFoldingGPUComp");
+	m_TM.Initialize("FFTNormalGradientFoldingGPUComp", i_Config);
 	m_TexId = m_TM.Create2DTexture(GL_RGBA16F, GL_RGBA, GL_FLOAT, m_FFTSize, m_FFTSize, GL_REPEAT, GL_LINEAR, nullptr, i_Config.TexUnit.Ocean.FFTNormalGradientFoldingBase.NormalGradientFoldingMap, 3);
 
-	LOG("FFTNormalGradientFoldingGPUComp has been created successfully!");
+	LOG("FFTNormalGradientFoldingGPUComp successfully created!");
 }
 
 void FFTNormalGradientFoldingGPUComp::ComputeNormalGradientFolding (void)

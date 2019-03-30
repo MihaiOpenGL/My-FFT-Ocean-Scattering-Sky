@@ -1,26 +1,29 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Projector.h"
-#include <iostream>
-#include "Common.h"
+#include "CommonHeaders.h"
 #include "HelperFunctions.h"
-#include "ErrorHandler.h"
 // glm::vec2, glm::vec3, glm::mat4 come from the header
 #include "glm/common.hpp" //mix(), abs()
 #include "glm/geometric.hpp" //normalize()
 #include "GlobalConfig.h"
+#include <iostream>
 
 
 Projector::Projector ( void )
 	: m_IsPlaneWithinFrustum(false), m_IsFrustumVisible(false),
-	  m_MaxWaveAmplitude(0.0f), m_StrengthElevation(0.0f), m_AimPointCorrection(0.0f), m_IsUnderMainPlane(false)
-{}
-
-Projector::Projector (const GlobalConfig& i_Config, bool i_IsUnderwater)
-	: m_IsPlaneWithinFrustum(false), m_IsFrustumVisible(false),
-	  m_MaxWaveAmplitude(0.0f), m_StrengthElevation(0.0f), m_AimPointCorrection(0.0f), m_IsUnderMainPlane(false)
+	  m_MaxWaveAmplitude(0.0f), m_StrengthElevation(0.0f), m_AimPointCorrection(0.0f), 
+	  m_Type(Projector::PROJ_TYPE::PT_COUNT), m_IsUnderMainPlane(false)
 {
-	Initialize(i_Config, i_IsUnderwater);
+	LOG(" Projector successfully created!");
+}
+
+Projector::Projector (const GlobalConfig& i_Config, Projector::PROJ_TYPE i_Type)
+	: m_IsPlaneWithinFrustum(false), m_IsFrustumVisible(false),
+	  m_MaxWaveAmplitude(0.0f), m_StrengthElevation(0.0f), m_AimPointCorrection(0.0f),
+	  m_Type(Projector::PROJ_TYPE::PT_COUNT), m_IsUnderMainPlane(false)
+{
+	Initialize(i_Config, i_Type);
 }
 
 Projector::~Projector ( void )
@@ -28,9 +31,11 @@ Projector::~Projector ( void )
 	Destroy();
 }
 
-void Projector::Initialize ( const GlobalConfig& i_Config, bool i_IsUnderwater )
+void Projector::Initialize ( const GlobalConfig& i_Config, Projector::PROJ_TYPE i_Type)
 {
-	if (i_IsUnderwater)
+	m_Type = i_Type;
+
+	if (m_Type == Projector::PROJ_TYPE::PT_UNDERWATER)
 	{
 		m_Position = i_Config.Scene.Ocean.Bottom.Projector.Position;
 		m_Normal = glm::normalize(i_Config.Scene.Ocean.Bottom.Projector.Normal);
@@ -56,10 +61,13 @@ void Projector::Initialize ( const GlobalConfig& i_Config, bool i_IsUnderwater )
 
 	//create upper & lower planes
 	SetDisplacementWaveAmplitude();
+
+	LOG("%s Projector successfully created!", m_Type == Projector::PROJ_TYPE::PT_UNDERWATER ? "Underwater" : "Surface");
 }
 
 void Projector::Destroy ( void )
 {
+	LOG("%s Projector successfully destroyed!", m_Type == Projector::PROJ_TYPE::PT_UNDERWATER ? "Underwater" : "Surface");
 }
 
 void Projector::Update ( const Camera& i_RenderingCamera )

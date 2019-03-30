@@ -9,11 +9,11 @@
 #ifndef GPU_COMP_2D_IFFT_H
 #define GPU_COMP_2D_IFFT_H
 
+#include "Base2DIFFT.h"
+#include "ShaderManager.h"
 #include <string>
 #include <vector>
 #include <map>
-#include "Base2DIFFT.h"
-#include "ShaderManager.h"
 
 class GlobalConfig;
 

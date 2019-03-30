@@ -1,9 +1,9 @@
 /* Author: BAIRAC MIHAI */
 
 #include "CubeMapSkyModel.h"
-#include "GL/glew.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 #include "Camera.h"
-#include "ErrorHandler.h"
 // glm::mat4 comes from the header
 #include "glm/mat3x3.hpp"
 #include "glm/gtc/matrix_transform.hpp" //translate()
@@ -12,7 +12,9 @@
 
 
 CubeMapSkyModel::CubeMapSkyModel ( void )
-{}
+{
+	LOG("CubeMapSkyModel successfully created!");
+}
 
 CubeMapSkyModel::CubeMapSkyModel ( const GlobalConfig& i_Config )
 {
@@ -26,7 +28,7 @@ CubeMapSkyModel::~CubeMapSkyModel ( void )
 
 void CubeMapSkyModel::Destroy ( void )
 {
-	LOG("CubeMapSkyModel has been destroyed successfully!");
+	LOG("CubeMapSkyModel successfully destroyed!");
 }
 
 void CubeMapSkyModel::Initialize ( const GlobalConfig& i_Config )
@@ -42,7 +44,7 @@ void CubeMapSkyModel::Initialize ( const GlobalConfig& i_Config )
 	SetupGeometry(attributes);
 	SetupTextures(i_Config);
 
-	LOG("CubeMapSkyModel has been created successfully!");
+	LOG("CubeMapSkyModel successfully created!");
 }
 
 void CubeMapSkyModel::SetupShaders ( const GlobalConfig& i_Config, std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& o_Attributes )
@@ -149,7 +151,7 @@ void CubeMapSkyModel::SetupGeometry ( const std::map<MeshBufferManager::VERTEX_A
 
 void CubeMapSkyModel::SetupTextures ( const GlobalConfig& i_Config )
 {
-	m_TM.Initialize("CubeMapSkyModel");
+	m_TM.Initialize("CubeMapSkyModel", i_Config);
 
 	std::vector<std::string> cubeMapFaces;
 	cubeMapFaces.resize(6);

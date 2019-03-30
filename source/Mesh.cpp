@@ -1,15 +1,17 @@
 /* Author: BAIRAC MIHAI */
 
 #include "Mesh.h"
-#include <limits>
+#include "CommonHeaders.h"
 #include "Material.h"
-#include "GL/glew.h"
-#include "ErrorHandler.h"
+#include "GLConfig.h"
+#include <limits>
 
 
 Mesh::Mesh ( void )
-	: m_Name(), m_VertexCount(0), m_UseMaterial(false), m_UseFlattenedModel(false)
-{}
+	: m_Name("Default"), m_VertexCount(0), m_UseMaterial(false), m_UseFlattenedModel(false)
+{
+	LOG("Mesh [%s] successfully created!", m_Name.c_str());
+}
 
 Mesh::Mesh ( const std::string& i_Name, const std::vector<MeshBufferManager::VertexData>& i_VertexData, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, const Material::TextureDataArray& i_TextureArray, bool i_UseMaterial, bool i_UseFlattenedModel )
 {
@@ -57,11 +59,12 @@ Mesh::Mesh ( const std::string& i_Name, const std::vector<MeshBufferManager::Ver
 		m_FlattenedMBM.CreateModelContext(flattenedVertexData, i_ModelVertexAttributes, MeshBufferManager::ACCESS_TYPE::AT_STATIC);
 	}
 
+	LOG("Mesh [%s] successfully created!", m_Name.c_str());
 }
 
 Mesh::~Mesh ( void )
 {
-	LOG(m_Name + " has been destroyed successfully!");
+	LOG("Mesh [%s] successfully destroyed!", m_Name.c_str());
 }
 
 void Mesh::Render ( const ShaderManager& i_SM, const TextureManager& i_TM, unsigned short i_StartTexUnitId, bool i_IsWireframeMode )

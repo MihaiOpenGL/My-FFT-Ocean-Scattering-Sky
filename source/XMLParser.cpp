@@ -1,10 +1,10 @@
 /* Author: BAIRAC MIHAI */
 
 #include "XMLParser.h"
-#include <fstream>
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
 // glm::vec2, glm::vec3, come from the header
 #include "glm/gtc/constants.hpp" //pi()
+#include <fstream>
 
 #define ELEMENT_START 0
 #define ELEMENT_VALUE 1
@@ -12,7 +12,9 @@
 
 
 XMLParser::XMLParser ( void )
-{}
+{
+	LOG("XMLParser successfully created!");
+}
 
 XMLParser::XMLParser ( const std::string& i_FileName )
 {
@@ -28,7 +30,7 @@ void XMLParser::Destroy ( void )
 {
 	// free resources
 
-	LOG("XMLParser has been destroyed successfully!");
+	LOG("XMLParser successfully destroyed!");
 }
 
 void XMLParser::Initialize ( const std::string& i_FileName )
@@ -38,7 +40,7 @@ void XMLParser::Initialize ( const std::string& i_FileName )
 
 	if (!fileStream.good())
 	{
-		ERR("Failed to open " + i_FileName + " text file name!");
+		ERR("Failed to open %s text file name!", i_FileName.c_str());
 		return;
 	}
 
@@ -49,7 +51,7 @@ void XMLParser::Initialize ( const std::string& i_FileName )
 
 	if (fileContent.empty())
 	{
-		ERR("File is empty!");
+		ERR("File %s is empty!", i_FileName.c_str());
 		return;
 	}
 
@@ -66,7 +68,7 @@ void XMLParser::Initialize ( const std::string& i_FileName )
 	m_Tree.pParent = nullptr;
 	AddNode(m_Tree, 0, lines);
 
-	LOG("XMLParser has been created successfully!");
+	LOG("XMLParser successfully created!");
 }
 
 void XMLParser::AddNode ( XMLNode& io_Parent, unsigned short i_LineIndex, const std::vector<std::string>& i_Lines )
@@ -105,7 +107,7 @@ void XMLParser::AddNode ( XMLNode& io_Parent, unsigned short i_LineIndex, const 
 			if (io_Parent.name != lineElements[ELEMENT_START].substr(1, lineElements[ELEMENT_START].length()))
 			{
 				ERR("Parent start and end elements don't match!");
-				ERR("Start: " + io_Parent.name + "\nEnd: " + lineElements[ELEMENT_START]);
+				ERR("Start: %s \nEnd: %s", io_Parent.name.c_str(), lineElements[ELEMENT_START].c_str());
 				return;
 			}
 
@@ -125,14 +127,14 @@ void XMLParser::AddNode ( XMLNode& io_Parent, unsigned short i_LineIndex, const 
 		if (lineElements[ELEMENT_END][0] != '/' || lineElements[ELEMENT_END].size() == 1)
 		{
 			ERR("Invalid end element!");
-			ERR("End: " + lineElements[ELEMENT_END]);
+			ERR("End: ", lineElements[ELEMENT_END].c_str());
 			return;
 		}
 
 		if (lineElements[ELEMENT_START] != lineElements[ELEMENT_END].substr(1, lineElements[ELEMENT_END].length()))
 		{
 			ERR("Start and end elements don't match!");
-			ERR("Start: " + lineElements[ELEMENT_START] + "\nEnd: " + lineElements[ELEMENT_END]);
+			ERR("Start: %s \nEnd: %s", lineElements[ELEMENT_START].c_str(), lineElements[ELEMENT_END].c_str());
 			return;
 		}
 
@@ -143,7 +145,7 @@ void XMLParser::AddNode ( XMLNode& io_Parent, unsigned short i_LineIndex, const 
 	
 	if (lineElements.size() != 1 && lineElements.size() != 3)
 	{
-		ERR("Invalid element! Element: " + i_Lines[i_LineIndex]);
+		ERR("Invalid element! Element: %s", i_Lines[i_LineIndex].c_str());
 		ERR("Element must be composed of 1 or 3 tokens!");
 		return;
 	}
@@ -233,15 +235,15 @@ bool XMLParser::FindKey ( const XMLNode& i_Node, const std::string& i_Key, const
 		else
 		{
 			LOG("Key path is incorrect!");
-			LOG("Actual key path: " + o_ActualKeyPath);
-			LOG("Expected key path: " + i_ExpectedKeyPath);
+			LOG("Actual key path: %s", o_ActualKeyPath.c_str());
+			LOG("Expected key path: %s", i_ExpectedKeyPath.c_str());
 			return false;
 		}
 
 		o_Value = i_Node.value;
 
 		LOG("A match key has been found!");
-		LOG("Key path: " + i_ExpectedKeyPath);
+		LOG("Key path: %s", i_ExpectedKeyPath.c_str());
 		return true;
 	}
 
@@ -268,7 +270,7 @@ XMLGenericType XMLParser::ExtractValue ( const std::string& i_Key )
 	bool ret = FindComplexKey(i_Key, value);
 	if (!ret)
 	{
-		ERR("Invalid key: " + i_Key);
+		ERR("Invalid key: %s", i_Key.c_str());
 	}
 
 	return value;
@@ -373,7 +375,7 @@ int XMLGenericType::ToInt ( void )
 	}
 	catch (const std::invalid_argument& ia)
 	{
-		ERR("Invalid token: " << token << '\n');
+		ERR("Invalid token: %s'", token.c_str());
 		return -1;
 	}
 
@@ -492,7 +494,7 @@ CustomTypes::Sky::ModelType XMLGenericType::ToSkyModelType ( void )
 			return CustomTypes::Sky::ModelType::MT_PRECOMPUTED_SCATTERING;
 	}
 
-	ERR("Invalid token: " << m_Value << "\n");
+	ERR("Invalid token: %s", m_Value.c_str());
 	return CustomTypes::Sky::ModelType::MT_COUNT;
 }
 
@@ -510,7 +512,7 @@ CustomTypes::Ocean::ComputeFFTType XMLGenericType::ToOceanComputeFFTType ( void 
 			return CustomTypes::Ocean::ComputeFFTType::CFT_CPU_FFTW;
 	}
 
-	ERR("Invalid token: " << m_Value << "\n");
+	ERR("Invalid token: %s", m_Value.c_str());
 	return CustomTypes::Ocean::ComputeFFTType::CFT_COUNT;
 }
 
@@ -525,7 +527,7 @@ CustomTypes::Ocean::NormalGradientFoldingType XMLGenericType::ToOceanNormalGradi
 			return 	CustomTypes::Ocean::NormalGradientFoldingType::NGF_GPU_COMP;
 	}
 
-	ERR("Invalid token: " << m_Value << "\n");
+	ERR("Invalid token: %s", m_Value.c_str());
 	return 	CustomTypes::Ocean::NormalGradientFoldingType::NGF_COUNT;
 }
 
@@ -541,7 +543,7 @@ CustomTypes::Ocean::SpectrumType XMLGenericType::ToOceanSpectrumType ( void )
 			return CustomTypes::Ocean::SpectrumType::ST_UNIFIED;
 	}
 
-	ERR("Invalid token: " << m_Value << "\n");
+	ERR("Invalid token: %s", m_Value.c_str());
 	return CustomTypes::Ocean::SpectrumType::ST_COUNT;
 }
 
@@ -556,7 +558,7 @@ CustomTypes::Ocean::GridType XMLGenericType::ToOceanGridType ( void )
 			return CustomTypes::Ocean::GridType::GT_SCREEN_SPACE;
 	}
 
-	ERR("Invalid token: " << m_Value << "\n");
+	ERR("Invalid token: %s", m_Value.c_str());
 	return CustomTypes::Ocean::GridType::GT_COUNT;
 }
 
@@ -592,7 +594,7 @@ CustomTypes::PostProcessing::EffectType XMLGenericType::ToPostProcessingEffectTy
 			return CustomTypes::PostProcessing::EffectType::PPET_NoEffect;
 	}
 
-	ERR("Invalid token: " << m_Value << "\n");
+	ERR("Invalid token: %s", m_Value.c_str());
 	return CustomTypes::PostProcessing::EffectType::PPET_COUNT;
 }
 
@@ -605,7 +607,7 @@ float XMLGenericType::ConvertToFloat ( const std::string& i_Token )
 	}
 	catch (const std::invalid_argument& ia)
 	{
-		ERR("Invalid token: " << i_Token << '\n');
+		ERR("Invalid token: %s", i_Token.c_str());
 		return -1.0f;
 	}
 

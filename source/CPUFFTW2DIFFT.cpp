@@ -1,16 +1,17 @@
 /* Author: BAIRAC MIHAI */
 
 #include "CPUFFTW2DIFFT.h"
-#include "ErrorHandler.h"
-#include "GL/glew.h"
-#include <assert.h>
+#include "CommonHeaders.h"
 #include "GlobalConfig.h"
+#include <assert.h>
 
 
 CPUFFTW2DIFFT::CPUFFTW2DIFFT ( void )
 	: m_pDY(nullptr), m_pDX(nullptr), m_pDZ(nullptr), m_pSX(nullptr), m_pSZ(nullptr),
 	  m_FFTDataTexId(0)
-{}
+{
+	LOG("CPUFFTW2DIFFT successfully created!");
+}
 
 CPUFFTW2DIFFT::CPUFFTW2DIFFT ( const GlobalConfig& i_Config )
 	: m_pDY(nullptr), m_pDX(nullptr), m_pDZ(nullptr), m_pSX(nullptr), m_pSZ(nullptr),
@@ -74,7 +75,7 @@ void CPUFFTW2DIFFT::Initialize ( const GlobalConfig& i_Config )
 	}
 
 	////////////
-	m_TM.Initialize("CPUFFTW2DIFFT");
+	m_TM.Initialize("CPUFFTW2DIFFT", i_Config);
 	// NOTE! no need for more than 3 levels of mipmaps
 	m_FFTDataTexId = m_TM.Create2DArrayTexture(m_FFTLayerCount, GL_RGBA16F, GL_RGBA, GL_FLOAT, m_FFTSize, m_FFTSize, GL_REPEAT, GL_LINEAR, nullptr, i_Config.TexUnit.Ocean.CPU2DIFFT.FFTMap, m_kMipmapCount);
 
@@ -87,7 +88,7 @@ void CPUFFTW2DIFFT::Initialize ( const GlobalConfig& i_Config )
 		m_FFTProcessedData.resize(m_FFTSize * m_FFTSize);
 	}
 
-	LOG("CPUFFTW2DIFFT has been created successfully!");
+	LOG("CPUFFTW2DIFFT successfully created!");
 }
 
 void CPUFFTW2DIFFT::Destroy ( void )
@@ -112,7 +113,7 @@ void CPUFFTW2DIFFT::Destroy ( void )
 		fftw_free(m_pSZ); m_pSZ = nullptr;
 	}
 
-	LOG("CPUFFTW2DIFFT has been destroyed successfully!");
+	LOG("CPUFFTW2DIFFT successfully destroyed!");
 }
 
 void CPUFFTW2DIFFT::Pre2DFFTSetup ( const std::complex<float>& i_DX, const std::complex<float>& i_DY, const std::complex<float>& i_DZ, const std::complex<float>& i_SX, const std::complex<float>& i_SZ, unsigned int i_Index )

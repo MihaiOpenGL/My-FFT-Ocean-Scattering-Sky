@@ -78,7 +78,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)..\bin\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\bin\win\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\build\win\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -87,7 +88,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)..\bin\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\bin\win\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\build\win\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -103,7 +105,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)..\libs\win;C:\Program Files (x86)\Visual Leak Detector\lib\Win32</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfftw3f-3.lib;glew32.lib;glfw3dll.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
+      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -112,15 +114,15 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\libs</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfftw3f-3.lib;glew32.lib;glfw3dll.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libs\win;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;AntTweakBar64.lib;opengl32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -143,7 +145,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)..\libs\win;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfftw3f-3.lib;glew32.lib;glfw3dll.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
+      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -154,7 +156,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -163,11 +165,12 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\libs</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfftw3f-3.lib;glew32.lib;glfw3dll.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libs\win;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;AntTweakBar64.lib;opengl32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\glad\glad.cpp" />
     <ClCompile Include="..\source\Base2DIFFT.cpp" />
     <ClCompile Include="..\source\BaseSkyModel.cpp" />
     <ClCompile Include="..\source\CubeMapSkyModel.cpp" />
@@ -225,6 +228,8 @@
     <ClCompile Include="..\source\Application.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\glad\glad.h" />
+    <ClInclude Include="..\glad\khrplatform.h" />
     <ClInclude Include="..\source\Base2DIFFT.h" />
     <ClInclude Include="..\source\BaseSkyModel.h" />
     <ClInclude Include="..\source\CubeMapSkyModel.h" />
@@ -244,6 +249,9 @@
       </ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\source\FFTOceanPatchGPUFrag.h" />
+    <ClInclude Include="..\source\GLConfig.h" />
+    <ClInclude Include="..\source\GLErrorHandler.h" />
+    <ClInclude Include="..\source\GLExtensionVars.h" />
     <ClInclude Include="..\source\GlobalConfig.h" />
     <ClInclude Include="..\source\GPUComp2DIFFT.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -251,6 +259,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\source\Logger.h" />
+    <ClInclude Include="..\source\AppConfig.h" />
     <ClInclude Include="..\source\Ocean.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ExcludedFromBuild>
@@ -261,9 +271,8 @@
     <ClInclude Include="..\source\Mesh.h" />
     <ClInclude Include="..\source\MeshBufferManager.h" />
     <ClInclude Include="..\source\Camera.h" />
-    <ClInclude Include="..\source\Common.h" />
+    <ClInclude Include="..\source\CommonHeaders.h" />
     <ClInclude Include="..\source\CPUFFTW2DIFFT.h" />
-    <ClInclude Include="..\source\ErrorHandler.h" />
     <ClInclude Include="..\source\FileUtils.h" />
     <ClInclude Include="..\source\FrameBufferManager.h" />
     <ClInclude Include="..\source\GPUFrag2DIFFT.h" />
@@ -275,6 +284,7 @@
     <ClInclude Include="..\source\PrecomputedScatteringSkyModel.h" />
     <ClInclude Include="..\source\Projector.h" />
     <ClInclude Include="..\source\ScatteringSkyModel.h" />
+    <ClInclude Include="..\source\SDLConfig.h" />
     <ClInclude Include="..\source\ShaderManager.h" />
     <ClInclude Include="..\source\Sky.h" />
     <ClInclude Include="..\source\TextureManager.h" />

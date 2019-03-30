@@ -2,17 +2,16 @@
 /* Author: BAIRAC MIHAI */
 
 #include "FFTNormalGradientFoldingGPUFrag.h"
-#include "GL/glew.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 #include "glm/vec4.hpp"
 #include "glm/vector_relational.hpp" //any(), notEqual()
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
 #include "GlobalConfig.h"
 
 
 FFTNormalGradientFoldingGPUFrag::FFTNormalGradientFoldingGPUFrag ( void )
 {
-	
+	LOG("FFTNormalGradientFoldingGPUFrag successfully created!");
 }
 
 FFTNormalGradientFoldingGPUFrag::FFTNormalGradientFoldingGPUFrag ( const GlobalConfig& i_Config )
@@ -29,7 +28,7 @@ void FFTNormalGradientFoldingGPUFrag::Destroy ( void )
 {
 	// should free resources
 
-	LOG("FFTNormalGradientFoldingGPUFrag has been destroyed successfully!");
+	LOG("FFTNormalGradientFoldingGPUFrag successfully destroyed!");
 }
 
 void FFTNormalGradientFoldingGPUFrag::Initialize ( const GlobalConfig& i_Config )
@@ -64,12 +63,12 @@ void FFTNormalGradientFoldingGPUFrag::Initialize ( const GlobalConfig& i_Config 
 	m_SM.UnUseProgram();
 
 	//////////
-	m_FBM.Initialize("FFTNormalGradientFoldingGPUFrag");
+	m_FBM.Initialize("FFTNormalGradientFoldingGPUFrag", i_Config);
 	// the normal map also contains the folding factor, so for it to be spread also farther away from the camera position we need mipmaps!
 	// 3 levels of mipmaps will suffice, because foam is needed more where fft waves are localized, and those are only near camera!
 	m_FBM.CreateSimple(attributes, 1, GL_RGBA16F, GL_RGBA, GL_FLOAT, m_FFTSize, m_FFTSize, GL_REPEAT, GL_LINEAR, i_Config.TexUnit.Ocean.FFTNormalGradientFoldingBase.NormalGradientFoldingMap, 3);
 
-	LOG("FFTNormalGradientFoldingGPUFrag has been created successfully!");
+	LOG("FFTNormalGradientFoldingGPUFrag successfully created!");
 }
 
 void FFTNormalGradientFoldingGPUFrag::ComputeNormalGradientFolding ( void )

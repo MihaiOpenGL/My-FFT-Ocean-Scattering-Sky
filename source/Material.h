@@ -10,9 +10,8 @@
  A simple Wavefront OBJ material class
 */
 
-class Material
+struct Material
 {
-public:
 	enum TEXTURE_MAP_TYPE 
 	{ 
 		TMT_AMBIENT = 0,
@@ -30,22 +29,13 @@ public:
 
 	typedef std::vector<TextureData> TextureDataArray;
 
-	struct MaterialDetails
-	{
-		unsigned short Id;
-		std::string Name;
-		
-		TextureDataArray TextureArray;
-	};
-
 	Material ( void );
-	Material ( const Material::MaterialDetails& i_MaterialDetails );
+	Material(const std::string& i_Name);
 	~Material ( void );
 
-private:
+	std::string Name;
 	// FOR NOW WE SUPPORT ONLY TEXTURE MAPS !!!
-
-	MaterialDetails m_Details;
+	TextureDataArray TextureArray;
 };
 
 #endif /* MATERIAL_H */

@@ -1,9 +1,8 @@
 /* Author: BAIRAC MIHAI */
 
 #include "PrecomputedScatteringSkyModel.h"
-#include "GL/glew.h"
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
+#include "CommonHeaders.h"
+#include "GLConfig.h"
 // glm::mat4 comes from the header
 #include "glm/vec3.hpp"
 #include "glm/mat3x3.hpp"
@@ -17,7 +16,9 @@
 
 PrecomputedScatteringSkyModel::PrecomputedScatteringSkyModel ( void )
 	: m_AreCloudsEnabled(false)
-{}
+{
+	LOG("PrecomputedScatteringSkyModel successfully created!");
+}
 
 PrecomputedScatteringSkyModel::PrecomputedScatteringSkyModel ( const GlobalConfig& i_Config )
 	: m_AreCloudsEnabled(false)
@@ -32,7 +33,7 @@ PrecomputedScatteringSkyModel::~PrecomputedScatteringSkyModel ( void )
 
 void PrecomputedScatteringSkyModel::Destroy ( void )
 {
-	LOG("PrecomputedScatteringSkyModel has been destroyed successfully!");
+	LOG("PrecomputedScatteringSkyModel successfully destroyed!");
 }
 
 void PrecomputedScatteringSkyModel::Initialize ( const GlobalConfig& i_Config )
@@ -63,7 +64,7 @@ void PrecomputedScatteringSkyModel::Initialize ( const GlobalConfig& i_Config )
 
 	SetupTextures(i_Config);
 
-	LOG("PrecomputedScatteringSkyModel has been created successfully!");
+	LOG("PrecomputedScatteringSkyModel successfully created!");
 }
 
 void PrecomputedScatteringSkyModel::SetupSkyShaders ( const GlobalConfig& i_Config, std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& o_Attributes )
@@ -215,7 +216,7 @@ void PrecomputedScatteringSkyModel::SetupCloudsGeometry ( const GlobalConfig& i_
 
 void PrecomputedScatteringSkyModel::SetupTextures ( const GlobalConfig& i_Config )
 {
-	m_TM.Initialize("PrecomputedScatteringSkyModel");
+	m_TM.Initialize("PrecomputedScatteringSkyModel", i_Config);
 
 	m_TM.Create2DRawTexture("../resources/textures/irradiance.raw", GL_RGB16F, GL_RGB, GL_FLOAT, 64, 16, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Sky.PrecomputedScatteringSkyModel.IrradianceMap);
 	m_TM.Create3DRawTexture("../resources/textures/inscatter.raw", GL_RGBA16F, GL_RGBA, GL_FLOAT, 256, 128, 32, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Sky.PrecomputedScatteringSkyModel.InscatterMap);

@@ -1,31 +1,32 @@
 /* Author: BAIRAC MIHAI */
 
 #include "ShaderManager.h"
-#include "GL/glew.h"
-#include <new>
+#include "CommonHeaders.h"
+#include "GLConfig.h"
+#include "FileUtils.h"
+#include "GlobalConfig.h"
 #include <sstream>
 #include <assert.h>
-#include "Common.h"
-#include "FileUtils.h"
-#include "ErrorHandler.h"
-#include "GlobalConfig.h"
-//#define ENABLE_ERROR_CHECK
-#include "ErrorHandler.h"
+#include <new>
 
 
 ShaderManager::ShaderManager ( void )
-	: m_Name(), m_ShaderProgramID(0), m_VertexShaderID(0),
+	: m_Name("Default"), m_ShaderProgramID(0), m_VertexShaderID(0),
 	  m_TesselationControlShaderID(0), m_TesselationEvaluationShaderID(0), 
 	  m_GeometryShaderID(0), m_FragmentShaderID(0), m_ComputeShaderID(0),
 	  m_UseStrictVerification(false)
-{}
+{
+	LOG("Shader Manager [%s] successfully created!", m_Name.c_str());
+}
 
 ShaderManager::ShaderManager ( const std::string &i_Name )
-	: m_Name(i_Name), m_ShaderProgramID(0), m_VertexShaderID(0),
+	: m_ShaderProgramID(0), m_VertexShaderID(0),
 	  m_TesselationControlShaderID(0), m_TesselationEvaluationShaderID(0), 
 	  m_GeometryShaderID(0), m_FragmentShaderID(0), m_ComputeShaderID(0),
 	  m_UseStrictVerification(false)
-{}
+{
+	Initialize(i_Name);
+}
 
 ShaderManager::~ShaderManager ( void )
 {
@@ -35,6 +36,8 @@ ShaderManager::~ShaderManager ( void )
 void ShaderManager::Initialize ( const std::string &i_Name )
 {
 	m_Name = i_Name;
+
+	LOG("Shader Manager [%s] successfully created!", m_Name.c_str());
 }
 
 void ShaderManager::Destroy ( void )
@@ -89,20 +92,20 @@ void ShaderManager::Destroy ( void )
 		m_ShaderProgramID = 0;
 	}
 
-	LOG("[" + m_Name + "] Shader Manager has been destroyed successfully!");
+	LOG("Shader Manager [%s] successfully destroyed!", m_Name.c_str());
 }
 
 void ShaderManager::BuildRenderingProgram ( const std::string& i_VertexFileName, const std::string& i_FragmentFileName, const GlobalConfig& i_Config )
 {
 	if (!CreateRenderingProgram(i_VertexFileName, i_FragmentFileName, i_Config))
 	{
-		ERR("[" + m_Name + "] Rendering program creation failed!");
+		ERR("Rendering program creation failed!");
 		return;
 	}
 
 	if (!LinkProgram())
 	{
-		ERR("[" + m_Name + "] Rendering program linking failed!");
+		ERR("Rendering program linking failed!");
 		return;
 	}
 }
@@ -164,13 +167,13 @@ bool ShaderManager::CreateRenderingProgram ( const std::string& i_VertexFileName
 
 	if (!CreateShader(i_VertexFileName, GL_VERTEX_SHADER, i_Config))
 	{
-		ERR("Vertex shader " + i_VertexFileName + " creation failed!");
+		ERR("Vertex shader %s creation failed!", i_VertexFileName.c_str());
 		return false;
 	}
 
 	if (!CreateShader(i_FragmentFileName, GL_FRAGMENT_SHADER, i_Config))
 	{
-		ERR("Fragment shader " + i_FragmentFileName + " creation failed!");
+		ERR("Fragment shader %s creation failed!", i_FragmentFileName.c_str());
 		return false;
 	}
 
@@ -191,19 +194,19 @@ bool ShaderManager::CreateRenderingProgram ( const std::string& i_VertexFileName
 
 	if (!CreateShader(i_VertexFileName, GL_VERTEX_SHADER, i_Config))
 	{
-		ERR("Vertex shader " + i_VertexFileName + " creation failed!");
+		ERR("Vertex shader %s creation failed!", i_VertexFileName.c_str());
 		return false;
 	}
 
 	if (!CreateShader(i_GeometryFileName, GL_GEOMETRY_SHADER, i_Config))
 	{
-		ERR("Geometry shader " + i_GeometryFileName + " creation failed!");
+		ERR("Geometry shader %s creation failed!", i_GeometryFileName.c_str());
 		return false;
 	}
 
 	if (!CreateShader(i_FragmentFileName, GL_FRAGMENT_SHADER, i_Config))
 	{
-		ERR("Fragment shader " + i_FragmentFileName + " creation failed!");
+		ERR("Fragment shader %s creation failed!", i_FragmentFileName.c_str());
 		return false;
 	}
 
@@ -214,7 +217,7 @@ bool ShaderManager::CreateRenderingProgram ( const std::string& i_VertexFileName
 
 	if (m_GeometryShaderID)
 	{
-		SetupGeometryShader(GEOMETRY_INPUT_TYPE::GIT_TRIANGLES, GEOMETRY_OUTPUT_TYPE::GOT_TRIANGLE_STRIP);
+		SetupGeometryShader(GEOMETRY_INPUT_TYPE::GIT_TRIANGLES, GEOMETRY_OUTPUT_TYPE::GOT_TRIANGLE_STRIP, i_Config);
 	}
 
 	return true;
@@ -230,31 +233,31 @@ bool ShaderManager::CreateRenderingProgram ( const std::string& i_VertexFileName
 
 	if (!CreateShader(i_VertexFileName, GL_VERTEX_SHADER, i_Config))
 	{
-		ERR("Vertex shader " + i_VertexFileName + " creation failed!");
+		ERR("Vertex shader %s creation failed!", i_VertexFileName.c_str());
 		return false;
 	}
 
 	if (!CreateShader(i_TesselationControlFileName, GL_TESS_CONTROL_SHADER, i_Config))
 	{
-		ERR("Tesselation Control shader " + i_TesselationControlFileName + " creation failed!");
+		ERR("Tesselation Control shader %s creation failed!", i_TesselationControlFileName.c_str());
 		return false;
 	}
 
 	if (!CreateShader(i_TesselationEvaluationFileName, GL_TESS_EVALUATION_SHADER, i_Config))
 	{
-		ERR("Tesselation Evaluation shader " + i_TesselationEvaluationFileName + " creation failed!");
+		ERR("Tesselation Evaluation shader %s creation failed!", i_TesselationEvaluationFileName.c_str());
 		return false;
 	}
 
 	if (!CreateShader(i_GeometryFileName, GL_GEOMETRY_SHADER, i_Config))
 	{
-		ERR("Geometry shader " + i_GeometryFileName + " creation failed!");
+		ERR("Geometry shader %s creation failed!", i_GeometryFileName.c_str());
 		return false;
 	}
 
 	if (!CreateShader(i_FragmentFileName, GL_FRAGMENT_SHADER, i_Config))
 	{
-		ERR("Fragment shader " + i_FragmentFileName + " creation failed!");
+		ERR("Fragment shader %s creation failed!", i_FragmentFileName.c_str());
 		return false;
 	}
 
@@ -267,7 +270,7 @@ bool ShaderManager::CreateRenderingProgram ( const std::string& i_VertexFileName
 
 	if (m_GeometryShaderID)
 	{
-		SetupGeometryShader(GEOMETRY_INPUT_TYPE::GIT_TRIANGLES, GEOMETRY_OUTPUT_TYPE::GOT_TRIANGLE_STRIP);
+		SetupGeometryShader(GEOMETRY_INPUT_TYPE::GIT_TRIANGLES, GEOMETRY_OUTPUT_TYPE::GOT_TRIANGLE_STRIP, i_Config);
 	}
 
 	return true;
@@ -283,7 +286,7 @@ bool ShaderManager::CreateComputeProgram ( const std::string& i_ComputeFileName,
 
 	if (!CreateShader(i_ComputeFileName, GL_COMPUTE_SHADER, i_Config))
 	{
-		ERR("Compute shader " + i_ComputeFileName + " creation failed!");
+		ERR("Compute shader %s creation failed!", i_ComputeFileName.c_str());
 		return false;
 	}
 
@@ -303,7 +306,7 @@ bool ShaderManager::CreateTransformFeedbackProgram ( const std::string& i_Vertex
 
 	if (!CreateShader(i_VertexFileName, GL_VERTEX_SHADER, i_Config))
 	{
-		ERR("Vertex shader " + i_VertexFileName + " creation failed!");
+		ERR("Vertex shader %s creation failed!", i_VertexFileName.c_str());
 		return false;
 	}
 
@@ -402,7 +405,7 @@ bool ShaderManager::CreateShader ( const std::string& i_ShaderFileName, unsigned
 		{
 			ERR("Compute shader compile error:");
 		}
-		ERR(i_ShaderFileName);
+		ERR(i_ShaderFileName.c_str());
 		ERR(pLog);
 
 		SAFE_ARRAY_DELETE(pLog);
@@ -449,7 +452,7 @@ bool ShaderManager::LinkProgram ( void )
 
 		int charsWritten = 0;
 		glGetProgramInfoLog(m_ShaderProgramID, logLength, &charsWritten, pLog);
-		ERR("[" + m_Name + "] Shader program link error:");
+		ERR("Shader program link error!");
 		ERR(pLog);
 
 		SAFE_ARRAY_DELETE(pLog);
@@ -482,7 +485,7 @@ bool ShaderManager::LinkProgram ( void )
 
 			int charsWritten = 0;
 			glGetProgramInfoLog(m_ShaderProgramID, logLength, &charsWritten, pLog);
-			ERR("[" + m_Name + "] Shader program is NOT valid!");
+			ERR("Shader program is NOT valid!");
 			ERR(pLog);
 
 			SAFE_ARRAY_DELETE(pLog);
@@ -647,7 +650,7 @@ void ShaderManager::SetupFragmentOutputStreams ( unsigned short i_LayerCount, un
 	}
 }
 
-void ShaderManager::SetupGeometryShader (GEOMETRY_INPUT_TYPE i_InputType, GEOMETRY_OUTPUT_TYPE i_OutputType)
+void ShaderManager::SetupGeometryShader (GEOMETRY_INPUT_TYPE i_InputType, GEOMETRY_OUTPUT_TYPE i_OutputType, const GlobalConfig& i_Config)
 {
 	int inputPrimitiveType = 0, outputPrimitiveType = 0;
 	unsigned short verticesOut = 0;
@@ -683,7 +686,10 @@ void ShaderManager::SetupGeometryShader (GEOMETRY_INPUT_TYPE i_InputType, GEOMET
 
 	// We must use glProgramParameteriEXT, because it goes under GL_EXT_geometry_shader4 (what we need)
 	// glProgramParameteri goes under GL_ARB_get_program_binary (not what we need)
-	glProgramParameteriEXT(m_ShaderProgramID, GL_GEOMETRY_INPUT_TYPE_EXT, inputPrimitiveType);
-	glProgramParameteriEXT(m_ShaderProgramID, GL_GEOMETRY_OUTPUT_TYPE_EXT, outputPrimitiveType);
-	glProgramParameteriEXT(m_ShaderProgramID, GL_GEOMETRY_VERTICES_OUT_EXT, verticesOut);
+	if (i_Config.GLExtVars.IsGeometryStageSupported)
+	{
+		glProgramParameteriEXT(m_ShaderProgramID, GL_GEOMETRY_INPUT_TYPE_EXT, inputPrimitiveType);
+		glProgramParameteriEXT(m_ShaderProgramID, GL_GEOMETRY_OUTPUT_TYPE_EXT, outputPrimitiveType);
+		glProgramParameteriEXT(m_ShaderProgramID, GL_GEOMETRY_VERTICES_OUT_EXT, verticesOut);
+	}
 }
