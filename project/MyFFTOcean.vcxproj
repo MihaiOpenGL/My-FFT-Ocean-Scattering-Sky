@@ -1,0 +1,384 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B28F92ED-F379-411D-9E50-24694D520CC1}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>MyFFTOcean</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>MyFFTOcean</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)..\bin\win\$(Configuration)\</OutDir>
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <IntDir>$(SolutionDir)..\build\win\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)..\bin\win\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\build\win\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)..\bin\win\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\build\win\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)..\bin\win\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\build\win\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\include;C:\Program Files (x86)\Visual Leak Detector\include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libs\win;C:\Program Files (x86)\Visual Leak Detector\lib\Win32</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libs\win;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;AntTweakBar64.lib;opengl32.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <MinimalRebuild>true</MinimalRebuild>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libs\win;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\include</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\libs\win;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;AntTweakBar64.lib;opengl32.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\glad\glad.cpp" />
+    <ClCompile Include="..\source\Base2DIFFT.cpp" />
+    <ClCompile Include="..\source\BaseSkyModel.cpp" />
+    <ClCompile Include="..\source\CubeMapSkyModel.cpp" />
+    <ClCompile Include="..\source\FFTNormalGradientFoldingBase.cpp" />
+    <ClCompile Include="..\source\FFTNormalGradientFoldingGPUComp.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\source\FFTNormalGradientFoldingGPUFrag.cpp" />
+    <ClCompile Include="..\source\FFTOceanPatchBase.cpp" />
+    <ClCompile Include="..\source\FFTOceanPatchCPUFFTW.cpp" />
+    <ClCompile Include="..\source\FFTOceanPatchGPUComp.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\source\FFTOceanPatchGPUFrag.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\source\GlobalConfig.cpp" />
+    <ClCompile Include="..\source\GPUComp2DIFFT.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\source\Ocean.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\source\Material.cpp" />
+    <ClCompile Include="..\source\Mesh.cpp" />
+    <ClCompile Include="..\source\MeshBufferManager.cpp" />
+    <ClCompile Include="..\source\Camera.cpp" />
+    <ClCompile Include="..\source\CPUFFTW2DIFFT.cpp" />
+    <ClCompile Include="..\source\FileUtils.cpp" />
+    <ClCompile Include="..\source\FrameBufferManager.cpp" />
+    <ClCompile Include="..\source\GPUFrag2DIFFT.cpp" />
+    <ClCompile Include="..\source\HelperFunctions.cpp" />
+    <ClCompile Include="..\source\Main.cpp" />
+    <ClCompile Include="..\source\Model.cpp" />
+    <ClCompile Include="..\source\MotorBoat.cpp" />
+    <ClCompile Include="..\source\PostProcessingManager.cpp" />
+    <ClCompile Include="..\source\PrecomputedScatteringSkyModel.cpp" />
+    <ClCompile Include="..\source\Projector.cpp" />
+    <ClCompile Include="..\source\ScatteringSkyModel.cpp" />
+    <ClCompile Include="..\source\ShaderManager.cpp" />
+    <ClCompile Include="..\source\Sky.cpp" />
+    <ClCompile Include="..\source\TextureManager.cpp" />
+    <ClCompile Include="..\source\XMLParser.cpp" />
+    <ClCompile Include="..\source\Application.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\glad\glad.h" />
+    <ClInclude Include="..\glad\khrplatform.h" />
+    <ClInclude Include="..\source\Base2DIFFT.h" />
+    <ClInclude Include="..\source\BaseSkyModel.h" />
+    <ClInclude Include="..\source\CubeMapSkyModel.h" />
+    <ClInclude Include="..\source\CustomTypes.h" />
+    <ClInclude Include="..\source\FFTNormalGradientFoldingBase.h" />
+    <ClInclude Include="..\source\FFTNormalGradientFoldingGPUComp.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\source\FFTNormalGradientFoldingGPUFrag.h" />
+    <ClInclude Include="..\source\FFTOceanPatchBase.h" />
+    <ClInclude Include="..\source\FFTOceanPatchCPUFFTW.h" />
+    <ClInclude Include="..\source\FFTOceanPatchGPUComp.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\source\FFTOceanPatchGPUFrag.h" />
+    <ClInclude Include="..\source\GLConfig.h" />
+    <ClInclude Include="..\source\GLErrorHandler.h" />
+    <ClInclude Include="..\source\GLExtensionVars.h" />
+    <ClInclude Include="..\source\GlobalConfig.h" />
+    <ClInclude Include="..\source\GPUComp2DIFFT.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\source\Logger.h" />
+    <ClInclude Include="..\source\AppConfig.h" />
+    <ClInclude Include="..\source\Ocean.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\source\Material.h" />
+    <ClInclude Include="..\source\Mesh.h" />
+    <ClInclude Include="..\source\MeshBufferManager.h" />
+    <ClInclude Include="..\source\Camera.h" />
+    <ClInclude Include="..\source\CommonHeaders.h" />
+    <ClInclude Include="..\source\CPUFFTW2DIFFT.h" />
+    <ClInclude Include="..\source\FileUtils.h" />
+    <ClInclude Include="..\source\FrameBufferManager.h" />
+    <ClInclude Include="..\source\GPUFrag2DIFFT.h" />
+    <ClInclude Include="..\source\HelperFunctions.h" />
+    <ClInclude Include="..\source\Model.h" />
+    <ClInclude Include="..\source\MotorBoat.h" />
+    <ClInclude Include="..\source\PhysicsConstants.h" />
+    <ClInclude Include="..\source\PostProcessingManager.h" />
+    <ClInclude Include="..\source\PrecomputedScatteringSkyModel.h" />
+    <ClInclude Include="..\source\Projector.h" />
+    <ClInclude Include="..\source\ScatteringSkyModel.h" />
+    <ClInclude Include="..\source\SDLConfig.h" />
+    <ClInclude Include="..\source\ShaderManager.h" />
+    <ClInclude Include="..\source\Sky.h" />
+    <ClInclude Include="..\source\TextureManager.h" />
+    <ClInclude Include="..\source\XMLParser.h" />
+    <ClInclude Include="..\source\Application.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resources\shaders\CubeMapSkyModel.frag.glsl" />
+    <None Include="..\resources\shaders\CubeMapSkyModel.vert.glsl" />
+    <None Include="..\resources\shaders\FFTHorizontal.comp.glsl" />
+    <None Include="..\resources\shaders\FFTHorizontal.frag.glsl" />
+    <None Include="..\resources\shaders\FFTHorizontal_NoFFTSlopes.comp.glsl" />
+    <None Include="..\resources\shaders\FFTHorizontal_NoFFTSlopes.frag.glsl" />
+    <None Include="..\resources\shaders\FFTHt.comp.glsl" />
+    <None Include="..\resources\shaders\FFTHt.frag.glsl" />
+    <None Include="..\resources\shaders\FFTHt_NoFFTSlopes.comp.glsl" />
+    <None Include="..\resources\shaders\FFTHt_NoFFTSlopes.frag.glsl" />
+    <None Include="..\resources\shaders\FFTNormalGradientFolding.comp.glsl" />
+    <None Include="..\resources\shaders\FFTNormalGradientFolding.frag.glsl" />
+    <None Include="..\resources\shaders\FFTVertical.comp.glsl" />
+    <None Include="..\resources\shaders\FFTVertical.frag.glsl" />
+    <None Include="..\resources\shaders\FFTVertical_NoFFTSlopes.comp.glsl" />
+    <None Include="..\resources\shaders\FFTVertical_NoFFTSlopes.frag.glsl" />
+    <None Include="..\resources\shaders\OceanBottomScreenGrid.geom.glsl" />
+    <None Include="..\resources\shaders\OceanCausticsScreenGrid.geom.glsl" />
+    <None Include="..\resources\shaders\OceanSurface.frag.glsl" />
+    <None Include="..\resources\shaders\OceanSurfaceWorldGrid.vert.glsl" />
+    <None Include="..\resources\shaders\OceanBottom.frag.glsl" />
+    <None Include="..\resources\shaders\OceanBottomWorldGrid.vert.glsl" />
+    <None Include="..\resources\shaders\OceanCaustics.frag.glsl" />
+    <None Include="..\resources\shaders\OceanCausticsWorldGrid.vert.glsl" />
+    <None Include="..\resources\shaders\OceanFrustum.frag.glsl" />
+    <None Include="..\resources\shaders\OceanFrustum.vert.glsl" />
+    <None Include="..\resources\shaders\OceanGodRays.frag.glsl" />
+    <None Include="..\resources\shaders\OceanOccluder.frag.glsl" />
+    <None Include="..\resources\shaders\OceanOccluder.vert.glsl" />
+    <None Include="..\resources\shaders\OceanSurfaceScreenGrid.geom.glsl" />
+    <None Include="..\resources\shaders\OceanScreenGrid.vert.glsl" />
+    <None Include="..\resources\shaders\OceanSurfacePrecomputedScattering.frag.glsl" />
+    <None Include="..\resources\shaders\MotorBoat.frag.glsl" />
+    <None Include="..\resources\shaders\MotorBoat.vert.glsl" />
+    <None Include="..\resources\shaders\MotorBoatTrail.frag.glsl" />
+    <None Include="..\resources\shaders\MotorBoatTrail.vert.glsl" />
+    <None Include="..\resources\shaders\PPE_BlackWhite.frag.glsl" />
+    <None Include="..\resources\shaders\PPE_Blur.frag.glsl" />
+    <None Include="..\resources\shaders\PPE_EdgeDetection.frag.glsl" />
+    <None Include="..\resources\shaders\PPE_Grey.frag.glsl" />
+    <None Include="..\resources\shaders\PPE_Invert.frag.glsl" />
+    <None Include="..\resources\shaders\PPE_NoEffect.frag.glsl" />
+    <None Include="..\resources\shaders\PPE_Sepia.frag.glsl" />
+    <None Include="..\resources\shaders\PPE_Wavy.frag.glsl" />
+    <None Include="..\resources\shaders\PrecomputedScatteringSkyModel.frag.glsl" />
+    <None Include="..\resources\shaders\PrecomputedScatteringSkyModel.vert.glsl" />
+    <None Include="..\resources\shaders\PrecomputedScatteringSkyModelClouds.frag.glsl" />
+    <None Include="..\resources\shaders\PrecomputedScatteringSkyModelClouds.vert.glsl" />
+    <None Include="..\resources\shaders\Quad.vert.glsl" />
+    <None Include="..\resources\shaders\ScatteringSkyModel.frag.glsl" />
+    <None Include="..\resources\shaders\ScatteringSkyModel.vert.glsl" />
+    <None Include="..\resources\shaders\ScatteringSkyModelClouds.frag.glsl" />
+    <None Include="..\resources\shaders\ScatteringSkyModelClouds.vert.glsl" />
+    <None Include="..\resources\textures\inscatter.raw" />
+    <None Include="..\resources\textures\irradiance.raw" />
+    <None Include="..\resources\textures\noise.pgm" />
+    <None Include="..\resources\textures\transmittance.raw" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\resources\models\motor_boat\boat_d.dds" />
+    <Image Include="..\resources\models\motor_boat\boat_n.dds" />
+    <Image Include="..\resources\textures\foam_highres.dds" />
+    <Image Include="..\resources\textures\perlin_noise.dds" />
+    <Image Include="..\resources\textures\sand_d.dds" />
+    <Image Include="..\resources\textures\wake_foam.dds" />
+    <Image Include="..\resources\textures\wake_normal_height.dds" />
+    <Image Include="..\resources\textures\xneg.dds" />
+    <Image Include="..\resources\textures\xpos.dds" />
+    <Image Include="..\resources\textures\yneg.dds" />
+    <Image Include="..\resources\textures\ypos.dds" />
+    <Image Include="..\resources\textures\zneg.dds" />
+    <Image Include="..\resources\textures\zpos.dds" />
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="..\resources\models\motor_boat\boat.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\resources\GlobalConfig.xml">
+      <SubType>Designer</SubType>
+    </Xml>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

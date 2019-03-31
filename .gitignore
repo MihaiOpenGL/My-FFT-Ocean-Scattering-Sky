@@ -1,0 +1,56 @@
+# Visual Studio user specific files
+*/.vs
+*/*.[oa]
+*/*.user
+
+# Visual Studio database files
+*/*.suo
+*/*.opensdf
+*/*.sdf
+*/*.VC.db
+*/*.VC.opendb
+*/*.pdb
+*/*.ipdb
+*/*.ncb
+
+*/*.asp
+
+# Visual Studio/XCode project files
+*/*.xcodeproj
+*/*.xcworkspace
+#*/*.vcxproj* # we use those
+#*/*.sln # we use this one
+
+# Executables
+*/*.exe 
+*/*.elf
+*/*.app
+*/*.ipa
+*/*.out
+
+# Compiled Object files
+*/*.slo
+*/*.lo
+*/*.o
+*/*.obj
+*/*.ilk
+*/*.iobj
+
+# Compiled Static libraries
+*/*.lai
+*/*.la
+#*/*.lib # we use those
+
+# Compiled Dynamic libraries
+*/*.so
+*/*.dylib
+#*/*.dll # we use those
+
+# Precompiled Headers
+*/*.gch
+*/*.pch
+*/ipch
+*/*.ipch
+
+# Specific folders/files
+build/

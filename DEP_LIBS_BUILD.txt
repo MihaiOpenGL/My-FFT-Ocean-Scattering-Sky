@@ -1,0 +1,79 @@
+﻿The required dependecy libs are already built for each supported platform:
+windows, linux and macosx.
+
+The libs are os dependent, so the developer may be forced to rebuilt them.
+
+Anyway, if the developer desires to rebuild any of the libs belowa are presented the steps.
+
+#PACKAGES TO INSTALL ON LINUX
+(tested on Ubuntu 18.04 LTS)
+g++
+make
+cmake
+notepad ++
+apt-file (for gettings package name for a specific file/header/etc.)
+mesa-utils (for glxinfo tool)
+libglu1-mesa-dev (for <GL/glu.h> header)
+nvidia linux drivers
+
+#PACKAGES TO INSTALL On MAC OS (tested on Mojave/High Sierra versions)
+xcode
+(installing xcode installes also: gcc/g++, make)
+cmake
+web nvidia drivers for mac os x
+
+Macosx system frameworks !!! (aka libs)
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks
+
+
+### BUILDING SDL2 ####
+
+1) download glfw source files from https://www.libsdl.org/download-2.0.php
+
+2) follow the steps https://wiki.libsdl.org/Installation
+(basically: ./configure, make)
+
+3) run make install to copy the libs to /usr/local/libs
+
+4) check for the libSDL2.a and libSDL2main.a libs in /usr/local/libs
+
+
+##### BUILDING FFTW ####
+
+1) download source from http://fftw.org/
+
+2) In terminal run: (to compile single precision fftw)
+./configure --enable-float
+make
+
+3) static lib path: (hidden folder)
+.libs/libfftw3f.a
+
+
+###### BUILDING ANTWEAKBAR ####
+
+1) download source from https://github.com/MihaiBairac/AntTweakBar_116_Improved
+I created a git repo with the old AntTweakBar code and improved it to my needs.
+
+2) cd src
+
+3) in Terminal run:
+make (for linux)
+make -f Makefile.osx (for mac os x)
+
+4) static lib path:
+lib/libAntTweakBar.a	
+	
+# Other useful links
+// Install last Mesa OpengL drivers in Ubuntu
+http://ubuntuhandbook.org/index.php/2018/05/install-mesa-18-0-4-ubuntu-18-04-lts/
+
+https://linuxconfig.org/how-to-install-the-nvidia-drivers-on-ubuntu-18-04-bionic-beaver-linux
+
+https://superuser.com/questions/779070/use-nvidia-gpu-from-virtualbox
+
+// MESA GL drivers for wmware
+https://www.mesa3d.org/vmware-guest.html
+
+Mesa status for OpenGL/OpenGL ES/Vulkan feature coverage
+https://mesamatrix.net/
