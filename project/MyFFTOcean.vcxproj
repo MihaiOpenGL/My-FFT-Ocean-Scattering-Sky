@@ -99,7 +99,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\include;C:\Program Files (x86)\Visual Leak Detector\include</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,7 +135,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\include</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <MinimalRebuild>true</MinimalRebuild>
     </ClCompile>
@@ -170,7 +170,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\glad\glad.cpp" />
+    <ClCompile Include="..\glad\glad_gl32.cpp" />
     <ClCompile Include="..\source\Base2DIFFT.cpp" />
     <ClCompile Include="..\source\BaseSkyModel.cpp" />
     <ClCompile Include="..\source\CubeMapSkyModel.cpp" />
@@ -228,7 +228,7 @@
     <ClCompile Include="..\source\Application.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\glad\glad.h" />
+    <ClInclude Include="..\glad\glad_gl32.h" />
     <ClInclude Include="..\glad\khrplatform.h" />
     <ClInclude Include="..\source\Base2DIFFT.h" />
     <ClInclude Include="..\source\BaseSkyModel.h" />

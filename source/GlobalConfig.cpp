@@ -333,38 +333,12 @@ bool GlobalConfig::Setup ( void )
 	LOG("Selected GLSL shader version: %s", ShaderDefines.Header.c_str());
 
 	// checks
-	if (OpenGLContext.OpenGLVersion.major < 3)
+	if (OpenGLContext.OpenGLVersion.major <= 3 && OpenGLContext.OpenGLVersion.minor < 2)
 	{
-		ERR("This app shall not run under OpenGL 3.0 !!!");
+		ERR("This app shall not run under OpenGL 3.2 !!!");
 		return false;
 	}
 
-	if (OpenGLContext.OpenGLVersion.minor < 2)
-	{
-		ERR("This app shall not run properly under OpenGL 3.2 !!!");
-		return false;
-	}
-
-	/*if (Scene.Ocean.Grid.Type == CustomTypes::Ocean::GridType::GT_SCREEN_SPACE)
-	{
-		if (OpenGLContext.OpenGLVersion.major != 4 &&
-			OpenGLContext.OpenGLVersion.minor < 1)
-		{
-			ERR("To support geometry shaders Opengl 4.1 minimum is needed !!!");
-			return false;
-		}
-	}*/
-
-	if (Scene.Ocean.Surface.OceanPatch.ComputeFFT.Type == CustomTypes::Ocean::ComputeFFTType::CFT_GPU_COMP ||
-		Scene.Ocean.Surface.OceanPatch.NormalGradientFolding.Type == CustomTypes::Ocean::NormalGradientFoldingType::NGF_GPU_COMP)
-	{
-		if (OpenGLContext.OpenGLVersion.major != 4 &&
-			OpenGLContext.OpenGLVersion.minor < 4 )
-			{
-				ERR("To support compute shaders Opengl 4.4 minimum is needed ! We need 4.3 for compute shader support, but we also use constant expressions in our compute shader so we can't go below 4.4 !!!");
-				return false;
-			}
-	}
 
 	std::stringstream ss;
 	ss << "#define FFT_SIZE " << Scene.Ocean.Surface.OceanPatch.FFTSize << "\n";

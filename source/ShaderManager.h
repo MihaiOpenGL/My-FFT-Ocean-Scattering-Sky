@@ -53,9 +53,7 @@ public:
 
 	void BuildRenderingProgram(const std::string& i_VertexFileName, const std::string& i_FragmentFileName, const GlobalConfig& i_Config);
 	void BuildRenderingProgram(const std::string& i_VertexFileName, const std::string& i_GeometryFileName, const std::string& i_FragmentFileName, const GlobalConfig& i_Config);
-	void BuildRenderingProgram(const std::string& i_VertexFileName, const std::string& i_TesselationControlFileName, const std::string& i_TesselationEvaluationFileName, const std::string& i_GeometryFileName, const std::string& i_FragmentFileName, const GlobalConfig& i_Config);
 	void BuildComputeProgram(const std::string& i_ComputeFileName, const GlobalConfig& i_Config);
-	void BuildTransformFeedbackProgram(const std::string& i_VertexFileName, const char** i_pVaryings, unsigned short i_VaryingsSize, unsigned int i_BufferMode, const GlobalConfig& i_Config);
 
 	void UseProgram(void) const;
 	void UnUseProgram(void) const;
@@ -74,14 +72,10 @@ private:
 	//// Methods ////
 	bool CreateRenderingProgram(const std::string& i_VertexFileName, const std::string& i_FragmentFileName, const GlobalConfig& i_Config);
 	bool CreateRenderingProgram(const std::string& i_VertexFileName, const std::string& i_GeometryFileName, const std::string& i_FragmentFileName, const GlobalConfig& i_Config);
-	bool CreateRenderingProgram(const std::string& i_VertexFileName, const std::string& i_TesselationControlFileName, const std::string& i_TesselationEvaluationFileName, const std::string& i_GeometryFileName, const std::string& i_FragmentFileName, const GlobalConfig& i_Config);
 	bool CreateComputeProgram(const std::string& i_ComputeFileName, const GlobalConfig& i_Config);
-	bool CreateTransformFeedbackProgram(const std::string& i_VertexFileName, const GlobalConfig& i_Config);
 
 	bool CreateShader(const std::string& i_ShaderFileName, unsigned int i_ShaderType, const GlobalConfig& i_Config);
 	bool LinkProgram(void);
-
-	void SetupGeometryShader(GEOMETRY_INPUT_TYPE i_InputType, GEOMETRY_OUTPUT_TYPE i_OutputType, const GlobalConfig& i_Config);
 
 	void Destroy(void);
 
@@ -90,8 +84,6 @@ private:
 
 	unsigned int m_ShaderProgramID;
 	unsigned int m_VertexShaderID;
-	unsigned int m_TesselationControlShaderID;
-	unsigned int m_TesselationEvaluationShaderID;
 	unsigned int m_GeometryShaderID; // since OpenGL 3.2, better in 4.1
 	unsigned int m_FragmentShaderID;
 	unsigned int m_ComputeShaderID; // since OpenGL 4.3

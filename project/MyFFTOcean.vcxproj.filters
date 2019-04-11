@@ -126,7 +126,7 @@
     <ClCompile Include="..\source\Application.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\glad\glad.cpp">
+    <ClCompile Include="..\glad\glad_gl32.cpp">
       <Filter>glad</Filter>
     </ClCompile>
   </ItemGroup>
@@ -257,11 +257,11 @@
     <ClInclude Include="..\glad\khrplatform.h">
       <Filter>glad</Filter>
     </ClInclude>
-    <ClInclude Include="..\glad\glad.h">
-      <Filter>glad</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\GLExtensionVars.h">
       <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\glad\glad_gl32.h">
+      <Filter>glad</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

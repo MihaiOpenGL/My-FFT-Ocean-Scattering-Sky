@@ -98,6 +98,12 @@ void Ocean::Initialize ( const GlobalConfig& i_Config )
 	}
 	else if (i_Config.Scene.Ocean.Surface.OceanPatch.ComputeFFT.Type == CustomTypes::Ocean::ComputeFFTType::CFT_GPU_COMP)
 	{
+		if (!i_Config.GLExtVars.IsComputeShaderSupported)
+		{
+			ERR("Compute shader extensions are required!");
+			return;
+		}
+
 		m_pFFTOceanPatch = new FFTOceanPatchGPUComp(i_Config);
 	}
 	else if (i_Config.Scene.Ocean.Surface.OceanPatch.ComputeFFT.Type == CustomTypes::Ocean::ComputeFFTType::CFT_CPU_FFTW)

@@ -1,5 +1,5 @@
-This is a demo project which basically presents an outdoor scene created in OpenGL 3.3 for Windows, Linux & MacOSX.
-For the used GL extensions check: GLUsedExtensionList.txt or just run the app and check the logs.
+This is a demo project which basically presents an outdoor scene created in OpenGL 3.2 for Windows, Linux & MacOSX.
+For the used GL extensions check: GLUsedExtensionList.txt.
 
 The scene consists of:
 * Cloudy Sky
@@ -242,7 +242,9 @@ I have no automatic tests. A couple of manual tests were performed on each platf
 - nvidia drivers directly.
 - supported opengl version = 4.60
 - tests went smooth, no issues.
-- config - ok
+- config - mostly ok
+if using AMD card the app works with window hints
+if using nVidia card the app doesn't work wih the window hints - driver issue I presume
 
 ** On Ubuntu I used this setup:
 

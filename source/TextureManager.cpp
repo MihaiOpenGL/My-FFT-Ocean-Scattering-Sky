@@ -62,7 +62,7 @@ void TextureManager::Init (const GlobalConfig& i_Config)
 
 	if (m_IsTexAnisoFilterSupported)
 	{
-		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &m_MaxAnisotropy);
+		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &m_MaxAnisotropy);
 	}
 }
 
@@ -866,7 +866,7 @@ unsigned int TextureManager::SetupTextureParameteres(unsigned int i_Target, unsi
 	{
 		if (i_AnisoFiltering)
 		{
-			glTexParameterf(i_Target, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_MaxAnisotropy);
+			glTexParameterf(i_Target, GL_TEXTURE_MAX_ANISOTROPY, m_MaxAnisotropy);
 		}
 	}
 
@@ -916,10 +916,10 @@ void TextureManager::Update1DTextureData ( unsigned int i_TexId, void* i_pNewDat
 
 			if (ti.target == GL_TEXTURE_1D)
 			{
-				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5
 					)
 				{
 					glCompressedTexImage1D(ti.target, 0, ti.formatInternal, ti.width, 0, ti.width * ti.formatType, i_pNewData);
@@ -951,10 +951,10 @@ void TextureManager::Update2DTextureData ( unsigned int i_TexId, void* i_pNewDat
 
 			if (ti.target == GL_TEXTURE_2D)
 			{
-				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5
 					)
 				{
 					glCompressedTexImage2D(ti.target, 0, ti.formatInternal, ti.width, ti.height, 0, ti.width * ti.height * ti.formatType, i_pNewData);
@@ -986,10 +986,10 @@ void TextureManager::Update2DArrayTextureData ( unsigned int i_TexId, void* i_pN
 
 			if (ti.target == GL_TEXTURE_2D_ARRAY)
 			{
-				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5
 					)
 				{
 					glCompressedTexImage3D(ti.target, 0, ti.formatInternal, ti.width, ti.height, ti.layerCount, 0, ti.width * ti.height * ti.formatType, i_pNewData);
@@ -1021,10 +1021,10 @@ void TextureManager::Update2DTextureSize ( unsigned int i_TexId, unsigned short 
 			// NOTE! Update the texture with NO DATA !!!!
 			if (ti.target == GL_TEXTURE_2D)
 			{
-				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3 ||
+					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5
 					)
 				{
 					glCompressedTexImage2D(ti.target, 0, ti.formatInternal, ti.width, ti.height, 0, ti.width * ti.height * ti.formatType, nullptr);

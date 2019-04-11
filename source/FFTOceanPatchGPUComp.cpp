@@ -15,13 +15,15 @@
 
 
 FFTOceanPatchGPUComp::FFTOceanPatchGPUComp ( void )
-	: m_FFTInitDataTexId(0), m_pFFTDisplaymentData(nullptr), m_IsComputedStageSupported(false)
+	: m_FFTInitDataTexId(0), m_pFFTDisplaymentData(nullptr),
+	  m_IsComputeShaderSupported(false)
 {
 	LOG("FFTOceanPatchGPUComp successfully created!");
 }
 
 FFTOceanPatchGPUComp::FFTOceanPatchGPUComp ( const GlobalConfig& i_Config )
-	: m_FFTInitDataTexId(0), m_pFFTDisplaymentData(nullptr), m_IsComputedStageSupported(false)
+	: m_FFTInitDataTexId(0), m_pFFTDisplaymentData(nullptr),
+	  m_IsComputeShaderSupported(false)
 {
 	Initialize(i_Config);
 }
@@ -41,7 +43,7 @@ void FFTOceanPatchGPUComp::Destroy ( void )
 
 void FFTOceanPatchGPUComp::Initialize ( const GlobalConfig& i_Config )
 {
-	m_IsComputedStageSupported = i_Config.GLExtVars.IsComputeStageSupported;
+	m_IsComputeShaderSupported = i_Config.GLExtVars.IsComputeShaderSupported;
 
 	FFTOceanPatchBase::Initialize(i_Config);
 	///////////////
@@ -163,28 +165,26 @@ void FFTOceanPatchGPUComp::EvaluateWaves ( float i_CrrTime )
 	m_FFTHtSM.SetUniform(m_FFTHtUniforms.find("u_Time")->second, i_CrrTime);
 
 	///////////
-
-	// input - H0
-	glBindImageTexture(0, m_FFTInitDataTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
-
-	// output - Ht
-	glBindImageTexture(1, m_2DIFFT.GetSourceTexId(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-	glBindImageTexture(1, m_2DIFFT.GetSourceTexId(), 0, GL_TRUE, 1, GL_WRITE_ONLY, GL_RGBA16F);
-	if (m_2DIFFT.GetUseFFTSlopes())
+	if (m_IsComputeShaderSupported)
 	{
-		glBindImageTexture(1, m_2DIFFT.GetSourceTexId(), 0, GL_TRUE, 2, GL_WRITE_ONLY, GL_RGBA16F);
-	}
+		// input - H0
+		glBindImageTexture(0, m_FFTInitDataTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
 
-	if (m_IsComputedStageSupported)
-	{
+		// output - Ht
+		glBindImageTexture(1, m_2DIFFT.GetSourceTexId(), 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+		glBindImageTexture(1, m_2DIFFT.GetSourceTexId(), 0, GL_TRUE, 1, GL_WRITE_ONLY, GL_RGBA16F);
+		if (m_2DIFFT.GetUseFFTSlopes())
+		{
+			glBindImageTexture(1, m_2DIFFT.GetSourceTexId(), 0, GL_TRUE, 2, GL_WRITE_ONLY, GL_RGBA16F);
+		}
+
 		// Process all vertices. No synchronization needed, so start NxN threads with local size of 1x1.
 		glDispatchCompute(m_FFTSize, m_FFTSize, 1);
+
+		// Make sure, all values are written.
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		/////////
 	}
-
-	// Make sure, all values are written.
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-	/////////
-
 	//// PERFORM 2D Inverse FFT
 	m_2DIFFT.Perform2DIFFT();
 

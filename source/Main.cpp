@@ -299,12 +299,9 @@ void ProcessResizeWindowEvents (const SDL_Event& event)
 
 SDL_Window* InitGLContext(void)
 {
-	//////////////// Init GLFW Context - one OpenGL context + one window /////////////////
+	//////////////// Init GL Context - one OpenGL context + one window /////////////////
 
-	// Set error callback - MUST be set before GLFW init
-	SDL_Window* pWindow = nullptr;
-
-	// Init GLFW context
+	// Init SDL2 video mode
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
 		ERR("Failed to initialize SDL2!");
@@ -318,7 +315,8 @@ SDL_Window* InitGLContext(void)
 		//// Window hints - these hints work only for OpenGL 3.2 and above !!!
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -326,45 +324,88 @@ SDL_Window* InitGLContext(void)
 
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, g_Config.OpenGLContext.OpenGLVersion.major);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, g_Config.OpenGLContext.OpenGLVersion.minor);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 		////
 
 		//// OpenGL profiles only work for OpenGL 3.2 and above !!!
-		if (g_Config.OpenGLContext.OpenGLVersion.minor >= 2)
+		if (g_Config.OpenGLContext.OpenGLVersion.major >= 3 && g_Config.OpenGLContext.OpenGLVersion.minor >= 2)
 		{	
 			if (g_Config.OpenGLContext.IsCoreProfile)
 			{
-				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,  SDL_GL_CONTEXT_PROFILE_CORE);
 			}
 			else
 			{
 				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 			}
 		}
+
+		SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 	}
-	
+
+	///////////////
+	LOG("/////// GL Context Specs ///////////");
+	int attrVal = 0;
+	SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &attrVal);
+	LOG("DoubleBuffering: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_ACCELERATED_VISUAL, &attrVal);
+	LOG("AcceleratedVisual: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_BUFFER_SIZE, &attrVal);
+	LOG("BufferSize: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &attrVal);
+	LOG("DepthSize: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &attrVal);
+	LOG("StencilSize: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, &attrVal);
+	LOG("FramebufferSRGBCapable: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &attrVal);
+	LOG("RedSize: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &attrVal);
+	LOG("GreenSize: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &attrVal);
+	LOG("BlueSize: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_ALPHA_SIZE, &attrVal);
+	LOG("AlphaSize: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, &attrVal);
+	LOG("MultisampleBuffers: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &attrVal);
+	LOG("MultisampleSamples: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &attrVal);
+	LOG("GLContextMajorVersion: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &attrVal);
+	LOG("GLContextMinorrVersion: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_FLAGS, &attrVal);
+	LOG("GLContextFlags: %d", attrVal);
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &attrVal);
+	LOG("GLContextProfileMask: %d", attrVal);
+
+	LOG("/////// GL Context Specs ///////////");
+
 	SDL_DisplayMode currentDisplayMode;
 	if (SDL_GetCurrentDisplayMode(0, &currentDisplayMode) != 0)
 	{
-		ERR("Failed to initialize SDL2!");
+		ERR("Failed get the current display mode!");
 		SDL_Quit();
 		return nullptr;
 	}
 
 	// Create a new window
+	SDL_Window* pWindow = nullptr;
+
 	if (g_Config.Window.IsWindowMode)
 	{
 		if (g_Config.Window.IsWindowResizable)
 		{
-			pWindow = SDL_CreateWindow("Mihai FFT Ocean", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentDisplayMode.w, currentDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+			pWindow = SDL_CreateWindow("Mihai FFT Ocean", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentDisplayMode.w, currentDisplayMode.h - 50, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 		}
 		else
 		{
-			pWindow = SDL_CreateWindow("Mihai FFT Ocean", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentDisplayMode.w, currentDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+			pWindow = SDL_CreateWindow("Mihai FFT Ocean", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentDisplayMode.w, currentDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 		}
 	}
 	else
 	{
-		SDL_CreateWindow("Mihai FFT Ocean", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentDisplayMode.w, currentDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
+		pWindow = SDL_CreateWindow("Mihai FFT Ocean", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, currentDisplayMode.w, currentDisplayMode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
 
 		g_Config.Window.IsWindowResizable = false; // NOTE! In FullScreen Mode one cannot resize the window!
 	}
@@ -379,8 +420,15 @@ SDL_Window* InitGLContext(void)
 	SDL_SetWindowResizable(pWindow, (SDL_bool)g_Config.Window.IsWindowResizable);
 
 	SDL_GLContext glContext = SDL_GL_CreateContext(pWindow);
+	if (!glContext)
+	{
+		ERR("Failed to create OpenGL context!");
+		SDL_Quit();
+		return nullptr;
+	}
 
-	// Set the specified window
+
+	// Set the specified gl contex associated with the window
 	SDL_GL_MakeCurrent(pWindow, glContext);
 
 	// Other setup
@@ -401,9 +449,13 @@ SDL_Window* InitGLContext(void)
 	// Load GL functions & extension via SDL proc
 	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
 	{
-		ERR("Failed to initialize GLAD OpenGL Loader!");
+		ERR("Failed to initialize GLAD OpenGL Loader !");
+		SDL_Quit();
 		return nullptr;
 	}
+
+	LOG("Loaded GL Version: %d %d", GLVersion.major, GLVersion.minor);
+
 
 	/////// Init extension info
 	g_Config.GLExtVars.Initialize();
@@ -411,7 +463,7 @@ SDL_Window* InitGLContext(void)
 	///////////// GENERAL INFO ////////////
 
 	// Print OpenGL Renderer context information
-	LOG("///////////////// OpenGL Renderer context info ////////////////\n");
+	LOG("///////////////// OpenGL Renderer Info ////////////////\n");
 	LOG("Vendor: %s", glGetString(GL_VENDOR));
 	LOG("Renderer: %s", glGetString(GL_RENDERER));
 	LOG("Version: %s", glGetString(GL_VERSION));
@@ -420,16 +472,13 @@ SDL_Window* InitGLContext(void)
 	int numExtensions = 0;
 	glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
 
-	std::stringstream extensionsStream;
-	extensionsStream << "\nSupported OpenGL Extensions:\n";
+	LOG("Supported OpenGL Extensions:");
 	for (short i = 0; i < numExtensions; ++i)
 	{
 		const char* extension = (const char*)glGetStringi(GL_EXTENSIONS, i);
-		extensionsStream << extension << "\n";
+		LOG(extension);
 	}
-	std::string extensionsStr = extensionsStream.str();
-	LOG(extensionsStr.c_str());
-	LOG("\nRequired extensions: \n%s", g_Config.GLExtVars.RequiredGLExtensions);
+	LOG("Required extensions: \n%s", g_Config.GLExtVars.RequiredGLExtensions);
 
 	/////////////////////////////
 	int maxTexUnits = 0;
@@ -474,13 +523,13 @@ SDL_Window* InitGLContext(void)
 	glGetIntegerv(GL_MAX_VARYING_FLOATS, &maxFloatVaryings);
 	LOG("Max Float Varyings: %d", maxFloatVaryings);
 
-	//// NOTE! To diferentiate core feature support from extensions !
+	//// NOTE! To differentiate core feature support from extensions !
 	// E.g. GL_ARB_geometry_shader4 would mean that geometry shaders are supported,
 	// but only in opengl 4.2 core, if opengl 3.3 is used then if 
 	// GL_EXT_geometry_shader4 is available geometry shaders can be used as an extension
 
 	////
-	if (g_Config.GLExtVars.IsGeometryStageSupported)
+	if (g_Config.GLExtVars.IsGeometryShaderSupported)
 	{
 		LOG("YES to Geometry Shaders!");
 		
@@ -512,7 +561,7 @@ SDL_Window* InitGLContext(void)
 		g_Config.Scene.Ocean.Grid.Type = CustomTypes::Ocean::GridType::GT_WORLD_SPACE;
 	}
 
-	if (g_Config.GLExtVars.IsComputeStageSupported)
+	if (g_Config.GLExtVars.IsComputeShaderSupported)
 	{
 		LOG("YES to Compute Shaders!");
 		

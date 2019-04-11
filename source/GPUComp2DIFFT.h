@@ -72,6 +72,8 @@ private:
 	// name, location
 	std::map<std::string, int> m_HorizontalUniforms;
 	std::map<std::string, int> m_VerticalUniforms;
+
+	bool m_IsComputeShaderSupported;
 };
 
 #endif /* GPU_COMP_2D_IFFT_H */

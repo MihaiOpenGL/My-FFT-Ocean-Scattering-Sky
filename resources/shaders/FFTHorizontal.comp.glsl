@@ -11,6 +11,8 @@ layout (binding = 1, rgba16f) uniform image2DArray u_imageFFTOut;
 layout (binding = 2, r16f) uniform image1D u_imageIndices; 
 layout (binding = 3, rg16f) uniform image2D u_imageWeights; 
 
+// FFT_SIZE is added from C++ - via a simulated preprocessor
+
 // Local size is FFT_SIZE/2. Processing two fields per invocation.
 layout (local_size_x = FFT_SIZE/2, local_size_y = 1, local_size_z = 1) in;
 

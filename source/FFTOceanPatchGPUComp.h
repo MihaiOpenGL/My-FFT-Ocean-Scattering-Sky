@@ -62,7 +62,7 @@ private:
 	// name, location
 	std::map<std::string, int> m_FFTHtUniforms;
 
-	bool m_IsComputedStageSupported;
+	bool m_IsComputeShaderSupported;
 };
 
 #endif /* FFT_OCEAN_PATCH_GPU_COMP_H */

@@ -6,8 +6,8 @@ License: download the package and check the License.pdf file
 
 */
 
-//layout (triangles) in;
-//layout (triangle_strip, max_vertices = 3) out;
+layout (triangles) in;
+layout (triangle_strip, max_vertices = 3) out;
 
 // Projector data
 uniform mat4 u_ProjectingMatrix;

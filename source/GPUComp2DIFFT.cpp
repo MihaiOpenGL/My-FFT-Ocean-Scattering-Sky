@@ -11,13 +11,15 @@
 
 
 GPUComp2DIFFT::GPUComp2DIFFT ( void )
-  : m_IndicesTexId(0), m_WeightsTexId(0), m_NumButterflies(0)
+  : m_IndicesTexId(0), m_WeightsTexId(0), m_NumButterflies(0),
+	m_IsComputeShaderSupported(false)
 {
 	LOG("GPUComp2DFFT successfully created!");
 }
 
 GPUComp2DIFFT::GPUComp2DIFFT ( const GlobalConfig& i_Config )
-  : m_IndicesTexId(0), m_WeightsTexId(0), m_NumButterflies(0)
+  : m_IndicesTexId(0), m_WeightsTexId(0), m_NumButterflies(0),
+	m_IsComputeShaderSupported(false)
 {
 	Initialize(i_Config);
 }
@@ -37,6 +39,8 @@ void GPUComp2DIFFT::Destroy ( void )
 void GPUComp2DIFFT::Initialize ( const GlobalConfig& i_Config )
 {
 	Base2DIFFT::Initialize(i_Config);
+
+	m_IsComputeShaderSupported = i_Config.GLExtVars.IsComputeShaderSupported;
 
 	// For FFT Slopes we need 3 layers, otherwise only 2 are needed
 	m_FFTLayerCount = (m_UseFFTSlopes ? 3 : 2);
@@ -199,58 +203,62 @@ void GPUComp2DIFFT::Perform2DIFFT ( void )
 	/////// Horizontal pass
 	m_HorizontalSM.UseProgram();
 
-	glBindImageTexture(2, m_IndicesTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
-	glBindImageTexture(3, m_WeightsTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG16F);
-
-	// input - Ht
-	glBindImageTexture(0, m_PingPongTexIds[0], 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA16F);
-	glBindImageTexture(0, m_PingPongTexIds[0], 0, GL_TRUE, 1, GL_READ_ONLY, GL_RGBA16F);
-	if (m_UseFFTSlopes)
+	if (m_IsComputeShaderSupported)
 	{
-		glBindImageTexture(0, m_PingPongTexIds[0], 0, GL_TRUE, 2, GL_READ_ONLY, GL_RGBA16F);
+		glBindImageTexture(2, m_IndicesTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
+		glBindImageTexture(3, m_WeightsTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG16F);
+
+		// input - Ht
+		glBindImageTexture(0, m_PingPongTexIds[0], 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA16F);
+		glBindImageTexture(0, m_PingPongTexIds[0], 0, GL_TRUE, 1, GL_READ_ONLY, GL_RGBA16F);
+		if (m_UseFFTSlopes)
+		{
+			glBindImageTexture(0, m_PingPongTexIds[0], 0, GL_TRUE, 2, GL_READ_ONLY, GL_RGBA16F);
+		}
+
+		// output - displacement
+		glBindImageTexture(1, m_PingPongTexIds[1], 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+		glBindImageTexture(1, m_PingPongTexIds[1], 0, GL_TRUE, 1, GL_WRITE_ONLY, GL_RGBA16F);
+		if (m_UseFFTSlopes)
+		{
+			glBindImageTexture(1, m_PingPongTexIds[1], 0, GL_TRUE, 2, GL_WRITE_ONLY, GL_RGBA16F);
+		}
+		// compute
+		glDispatchCompute(1, m_FFTSize, 1);
+
+		// Make sure, all values are written.
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}
-
-	// output - displacement
-	glBindImageTexture(1, m_PingPongTexIds[1], 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-	glBindImageTexture(1, m_PingPongTexIds[1], 0, GL_TRUE, 1, GL_WRITE_ONLY, GL_RGBA16F);
-	if (m_UseFFTSlopes)
-	{
-		glBindImageTexture(1, m_PingPongTexIds[1], 0, GL_TRUE, 2, GL_WRITE_ONLY, GL_RGBA16F);
-	}
-	// compute
-	glDispatchCompute(1, m_FFTSize, 1);
-
-	// Make sure, all values are written.
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
 
 	/////// Vertical pass
 	m_VerticalSM.UseProgram();
 
-	glBindImageTexture(2, m_IndicesTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
-	glBindImageTexture(3, m_WeightsTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG16F);
-
-	// input - displacement
-	glBindImageTexture(0, m_PingPongTexIds[1], 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA16F);
-	glBindImageTexture(0, m_PingPongTexIds[1], 0, GL_TRUE, 1, GL_READ_ONLY, GL_RGBA16F);
-	if (m_UseFFTSlopes)
+	if (m_IsComputeShaderSupported)
 	{
-		glBindImageTexture(0, m_PingPongTexIds[1], 0, GL_TRUE, 2, GL_READ_ONLY, GL_RGBA16F);
+		glBindImageTexture(2, m_IndicesTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16F);
+		glBindImageTexture(3, m_WeightsTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG16F);
+
+		// input - displacement
+		glBindImageTexture(0, m_PingPongTexIds[1], 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA16F);
+		glBindImageTexture(0, m_PingPongTexIds[1], 0, GL_TRUE, 1, GL_READ_ONLY, GL_RGBA16F);
+		if (m_UseFFTSlopes)
+		{
+			glBindImageTexture(0, m_PingPongTexIds[1], 0, GL_TRUE, 2, GL_READ_ONLY, GL_RGBA16F);
+		}
+
+		// output - final displacement
+		glBindImageTexture(1, m_PingPongTexIds[0], 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+		glBindImageTexture(1, m_PingPongTexIds[0], 0, GL_TRUE, 1, GL_WRITE_ONLY, GL_RGBA16F);
+		if (m_UseFFTSlopes)
+		{
+			glBindImageTexture(1, m_PingPongTexIds[0], 0, GL_TRUE, 2, GL_WRITE_ONLY, GL_RGBA16F);
+		}
+		// compute
+		glDispatchCompute(1, m_FFTSize, 1);
+
+		// Make sure, all values are written.
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 	}
-
-	// output - final displacement
-	glBindImageTexture(1, m_PingPongTexIds[0], 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-	glBindImageTexture(1, m_PingPongTexIds[0], 0, GL_TRUE, 1, GL_WRITE_ONLY, GL_RGBA16F);
-	if (m_UseFFTSlopes)
-	{
-		glBindImageTexture(1, m_PingPongTexIds[0], 0, GL_TRUE, 2, GL_WRITE_ONLY, GL_RGBA16F);
-	}
-	// compute
-	glDispatchCompute(1, m_FFTSize, 1);
-
-	// Make sure, all values are written.
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
 }
 
 void GPUComp2DIFFT::BindDestinationTexture ( void ) const

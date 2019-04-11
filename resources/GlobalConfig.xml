@@ -2,12 +2,12 @@
 	<Window>
 		<UseWindowHints>false</UseWindowHints>
 		<IsWindowMode>true</IsWindowMode>
-		<IsWindowResizable>false</IsWindowResizable>
+		<IsWindowResizable>true</IsWindowResizable>
 	</Window>
 	<OpenGLContext>
 		<OpenGLVersion>
 			<major>3</major>
-			<minor>3</minor>
+			<minor>2</minor>
 		</OpenGLVersion>
 		<IsCoreProfile>true</IsCoreProfile>
 	</OpenGLContext>
@@ -185,7 +185,7 @@
 		</Sky>
 		<Ocean>
 			<Grid>
-				<Type>GridWorldSpace</Type>
+				<Type>GridScreenSpace</Type>
 				<WorldSpace>
 					<Width>256</Width>
 					<Height>512</Height>
@@ -240,7 +240,7 @@
 					<ChoppyScale>1.0f</ChoppyScale>
 					<TileScale>1.0f</TileScale>
 					<ComputeFFT>
-						<Type>FFTGpuFrag</Type>
+						<Type>FFTGpuComp</Type>
 						<UseFFTSlopes>true</UseFFTSlopes>
 						<Use2FBOs>true</Use2FBOs>
 					</ComputeFFT>
@@ -257,7 +257,7 @@
 						</Unified>
 					</Spectrum>
 					<NormalGradientFolding>
-						<Type>NormalGpuFrag</Type>
+						<Type>NormalGpuComp</Type>
 					</NormalGradientFolding>
 				</OceanPatch>
 				<PerlinNoise>
