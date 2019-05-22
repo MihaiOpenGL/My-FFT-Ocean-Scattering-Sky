@@ -6,7 +6,7 @@
 
  For OpenGL/ES Loading
  GLAD: https://github.com/Dav1dde/glad
- License: 
+ License: https://github.com/Dav1dde/glad/blob/master/LICENSE
 
  For GL Context, Window and Input Management
  SDL2: https://www.libsdl.org/
@@ -17,8 +17,8 @@
  License: http://glm.g-truc.net/copying.txt
 
  For Image loading
- GLI: http://gli.g-truc.net/0.8.2/index.html
- License: http://gli.g-truc.net/copying.txt
+ SDL2 image: https://www.libsdl.org/projects/SDL_image/
+ License: https://www.libsdl.org/license.php
 
  For FFT computation on CPU
  FFTW: http://www.fftw.org/
@@ -129,7 +129,7 @@ void ProcessKeyEvents (const SDL_Event& event)
 		case SDLK_LSHIFT:
 			if (g_pApplication)
 			{
-				g_pApplication->SetKeySpeed(g_pApplication->GetKeySpeed() * 10.0f);
+				g_pApplication->SetKeySpeed(g_Config.Input.KeySpeed * 10.0f);
 			}
 			break;
 		}
@@ -141,7 +141,7 @@ void ProcessKeyEvents (const SDL_Event& event)
 		case SDLK_LSHIFT:
 			if (g_pApplication)
 			{
-				g_pApplication->SetKeySpeed(g_pApplication->GetKeySpeed() / 10.0f);
+				g_pApplication->SetKeySpeed(g_Config.Input.KeySpeed);
 			}
 			break;
 			//// OTHER INPUTS - I treat these here, because I need this to happen once(when the event is triggered), not in update
@@ -339,9 +339,10 @@ SDL_Window* InitGLContext(void)
 				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 			}
 		}
-
-		SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 	}
+
+//    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,  SDL_GL_CONTEXT_PROFILE_ES);
+//    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles");
 
 	///////////////
 	LOG("/////// GL Context Specs ///////////");
@@ -456,6 +457,11 @@ SDL_Window* InitGLContext(void)
 
 	LOG("Loaded GL Version: %d %d", GLVersion.major, GLVersion.minor);
 
+    if ((GLVersion.major < 3) || (GLVersion.major == 3 && GLVersion.minor < 2))
+    {
+        ERR("This app shall not run under OpenGL 3.2 !!!");
+        return nullptr;
+    }
 
 	/////// Init extension info
 	g_Config.GLExtVars.Initialize();
@@ -472,12 +478,18 @@ SDL_Window* InitGLContext(void)
 	int numExtensions = 0;
 	glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
 
+    if (numExtensions == 0)
+    {
+        LOG("No GL extensions supported! You will not be able to use some features aof the app!");
+    }
+    
 	LOG("Supported OpenGL Extensions:");
 	for (short i = 0; i < numExtensions; ++i)
 	{
 		const char* extension = (const char*)glGetStringi(GL_EXTENSIONS, i);
 		LOG(extension);
 	}
+    
 	LOG("Required extensions: \n%s", g_Config.GLExtVars.RequiredGLExtensions);
 
 	/////////////////////////////
@@ -608,16 +620,6 @@ SDL_Window* InitGLContext(void)
 	{
 		LOG("NO to Anisotropic Filtering!");
 	}
-
-	if (g_Config.GLExtVars.IsTexDDSSupported)
-	{
-		LOG("YES to Compressed DDS textures!");
-	}
-	else
-	{
-		LOG("NO to Compressed DDS textures!");
-	}
-
 
 	LOG("//////////////////////////////////////////////////////\n");
 	///////////////////////////////
@@ -772,7 +774,7 @@ void TerminateGLContext ( SDL_Window* i_pWindow )
 
 int main ( int argc, char **argv )
 {
-	if (!g_Config.Initialize("../resources/GlobalConfig.xml"))
+	if (!g_Config.Initialize("resources/GlobalConfig.xml"))
 	{
 		return -1;
 	}

@@ -38,6 +38,18 @@ Macosx system frameworks !!! (aka libs)
 4) check for the libSDL2.a and libSDL2main.a libs in /usr/local/libs
 
 
+### BUILDING SDL2 image ####
+
+1) download glfw source files from https://www.libsdl.org/projects/SDL_image/
+
+2) build the lib
+cd SDL2_image-2.0.4
+./configure
+make
+
+3) static lib path: (hidden folder)
+.libs/libSDL2_image.a
+
 ##### BUILDING FFTW ####
 
 1) download source from http://fftw.org/

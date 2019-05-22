@@ -6,7 +6,7 @@
 #include "FileUtils.h"
 #include "GlobalConfig.h"
 #include <sstream>
-#include <assert.h>
+#include <cassert>
 #include <new>
 
 
@@ -221,9 +221,8 @@ bool ShaderManager::CreateComputeProgram ( const std::string& i_ComputeFileName,
 
 bool ShaderManager::CreateShader ( const std::string& i_ShaderFileName, unsigned int i_ShaderType, const GlobalConfig& i_Config )
 {
-	FileUtils::TextFile shaderSource;
-
-	if (!FileUtils::LoadTextFile(i_ShaderFileName, shaderSource))
+	std::string shaderSource;
+	if (!FileUtils::LoadFile(i_ShaderFileName, shaderSource))
 	{
 		ERR("Invalid shader source file!");
 		return false;
@@ -252,13 +251,13 @@ bool ShaderManager::CreateShader ( const std::string& i_ShaderFileName, unsigned
 
 	shaderContent[0] = i_Config.ShaderDefines.Header.c_str();
 	shaderContent[1] = optionsString.c_str();
-	shaderContent[2] = shaderSource.text.c_str();
+	shaderContent[2] = shaderSource.c_str();
 
 	// NOTE! This shouldn't be necessary, because all kSize strings are null terminated
 	//, but I use it anyway as a precaution!
 	shaderContentLengths[0] = i_Config.ShaderDefines.Header.length();
 	shaderContentLengths[1] = optionsString.length();
-	shaderContentLengths[2] = shaderSource.text.length();
+	shaderContentLengths[2] = shaderSource.length();
 
 	unsigned int shaderID = glCreateShader(i_ShaderType);
 
@@ -523,6 +522,8 @@ void ShaderManager::SetUniform ( int i_UniformLocation, int i_ValueCount, const 
 		case UNIFORM_TYPE::UT_FLOAT_MAT_2: glUniformMatrix2fv(i_UniformLocation, i_ValueCount, GL_FALSE, i_pUniformValue); break;
 		case UNIFORM_TYPE::UT_FLOAT_MAT_3: glUniformMatrix3fv(i_UniformLocation, i_ValueCount, GL_FALSE, i_pUniformValue); break;
 		case UNIFORM_TYPE::UT_FLOAT_MAT_4: glUniformMatrix4fv(i_UniformLocation, i_ValueCount, GL_FALSE, i_pUniformValue); break;
+		case UNIFORM_TYPE::UT_COUNT:
+		default: ERR("Invalid uniform type!");
 	}
 
 }

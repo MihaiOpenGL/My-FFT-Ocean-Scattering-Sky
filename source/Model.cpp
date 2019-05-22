@@ -6,12 +6,12 @@
 #include "CommonHeaders.h"
 #include "Material.h"
 #include "GLConfig.h"
+// glm::vec2, glm::vec2 come from the header
 #include "GlobalConfig.h"
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
+#include "SDL/SDL_rwops.h"
+#include "SDL/SDL_filesystem.h"
 #include <limits>
 #include <sstream>
-#include <cstdio>
 #include <cstring>
 
 
@@ -90,148 +90,63 @@ bool Model::Initialize ( const std::string& i_Name, const std::string& i_ObjPath
 
 bool Model::ParseObjFile(const std::string& i_ObjPath, bool i_UseMaterial, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, bool i_UseFlattenedModel)
 {
+	int crrMeshIndex = -1;
 	std::vector<Model::MeshData*> meshDataVector;
 	std::map<std::string, Material> materialMap;
-	int crrMeshIndex = -1;
 
-	std::string directory = i_ObjPath.substr(0, i_ObjPath.find_last_of('/'));
+	std::string directoryName = i_ObjPath.substr(0, i_ObjPath.find_last_of('/'));
 
-	FILE* pObjFile = nullptr;
-	// i_Path - path to the obj file
-	pObjFile = fopen(i_ObjPath.c_str(), "r");
+	char* pBasePath = SDL_GetBasePath();
+	std::string fileName(pBasePath ? pBasePath : "");
+	fileName += i_ObjPath;
+	SDL_RWops* pObjFile = SDL_RWFromFile(fileName.c_str(), "rb");
 	if (pObjFile == nullptr)
 	{
 		ERR("Failed to open the obj file: %s!", i_ObjPath.c_str());
 		return false;
 	}
 
-	while (true)
+	size_t fileSize = (size_t)SDL_RWsize(pObjFile);
+
+	char* pFileContent = new char[fileSize + 1];
+
+	size_t nbRead = (size_t)SDL_RWread(pObjFile, pFileContent, sizeof(char), fileSize);
+	if (nbRead != fileSize)
 	{
-		char lineHeader[128];
-		// read the first word of the line
-		int res = fscanf(pObjFile, "%s", lineHeader);
-		if (res == EOF)
-		{
-			fclose(pObjFile);
-			LOG("File %s has been successfully parsed!", i_ObjPath.c_str());
-			break;
-		}
-
-		if (strcmp(lineHeader, "mtllib") == 0) // material file
-		{
-			if (i_UseMaterial)
-			{
-				char mtlFileName[128];
-				fscanf(pObjFile, "%s\n", mtlFileName);
-
-				ParseMTLFile(mtlFileName, directory, materialMap);
-			}
-		}
-		else if (strcmp(lineHeader, "o") == 0) // object - aka mesh
-		{
-			char meshName[128];
-			fscanf(pObjFile, "%s", meshName);
-
-			meshDataVector.push_back(new MeshData(meshName));
-
-			crrMeshIndex++;
-		}
-		else if (strcmp(lineHeader, "v") == 0) // vertex position
-		{
-			glm::vec3 position;
-			fscanf(pObjFile, "%f %f %f\n", &position.x, &position.y, &position.z);
-			
-			assert(crrMeshIndex >= 0 && crrMeshIndex < meshDataVector.size());
-
-			if (meshDataVector[crrMeshIndex])
-			{
-				meshDataVector[crrMeshIndex]->VertexPositions.push_back(position);
-			}
-		}
-		else if (strcmp(lineHeader, "vn") == 0) // vertex normal
-		{
-			glm::vec3 normal;
-			fscanf(pObjFile, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-			
-			assert(crrMeshIndex >= 0 && crrMeshIndex < meshDataVector.size());
-
-			if (meshDataVector[crrMeshIndex])
-			{
-				meshDataVector[crrMeshIndex]->VertexNormals.push_back(normal);
-			}
-		}
-		else if (strcmp(lineHeader, "vt") == 0) // vertex texture coordinates
-		{
-			glm::vec2 uv;
-			fscanf(pObjFile, "%f %f\n", &uv.x, &uv.y);
-			
-			assert(crrMeshIndex >= 0 && crrMeshIndex < meshDataVector.size());
-
-			if (meshDataVector[crrMeshIndex])
-			{
-				meshDataVector[crrMeshIndex]->VertexUVs.push_back(uv);
-			}
-		}
-		else if (strcmp(lineHeader, "f") == 0) // face
-		{
-			unsigned int positionIndex[3], uvIndex[3], normalIndex[3], matches;
-			fpos_t fpos;
-
-			// f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3
-			fgetpos(pObjFile, &fpos);
-			matches = fscanf(pObjFile, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &positionIndex[0], &uvIndex[0], &normalIndex[0], &positionIndex[1], &uvIndex[1], &normalIndex[1], &positionIndex[2], &uvIndex[2], &normalIndex[2]);
-			if (matches != 9)
-			{
-				fsetpos(pObjFile, &fpos);
-
-				// f v1//vn1 v2//vn2 v3//vn3
-				matches = fscanf(pObjFile, "%d//%d %d//%d %d//%d\n", &positionIndex[0], &normalIndex[0], &positionIndex[1], &normalIndex[1], &positionIndex[2], &normalIndex[2]);
-				if (matches != 6)
-				{
-					fsetpos(pObjFile, &fpos);
-
-					// f v1 v2 v3
-					matches = fscanf(pObjFile, "%d %d %d\n", &positionIndex[0], &positionIndex[1], &positionIndex[2]);
-					if (matches != 3)
-					{
-						ERR("File can't be read by our simple parser : ( Try exporting with other options\n");
-						return false;
-					}
-				}
-			}
-
-			assert(crrMeshIndex >= 0 && crrMeshIndex < meshDataVector.size());
-
-			if (meshDataVector[crrMeshIndex])
-			{
-				meshDataVector[crrMeshIndex]->PositionIndices.push_back(positionIndex[0]);
-				meshDataVector[crrMeshIndex]->PositionIndices.push_back(positionIndex[1]);
-				meshDataVector[crrMeshIndex]->PositionIndices.push_back(positionIndex[2]);
-				meshDataVector[crrMeshIndex]->UVsIndices.push_back(uvIndex[0]);
-				meshDataVector[crrMeshIndex]->UVsIndices.push_back(uvIndex[1]);
-				meshDataVector[crrMeshIndex]->UVsIndices.push_back(uvIndex[2]);
-				meshDataVector[crrMeshIndex]->NormalsIndices.push_back(normalIndex[0]);
-				meshDataVector[crrMeshIndex]->NormalsIndices.push_back(normalIndex[1]);
-				meshDataVector[crrMeshIndex]->NormalsIndices.push_back(normalIndex[2]);
-			}
-		}
-		else if (strcmp(lineHeader, "usemtl") == 0) // use material from material file
-		{
-			if (i_UseMaterial)
-			{
-				char materialName[128];
-				fscanf(pObjFile, "%s\n", materialName);
-
-				assert(crrMeshIndex >= 0 && crrMeshIndex < meshDataVector.size());
-
-				if (meshDataVector[crrMeshIndex])
-				{
-					meshDataVector[crrMeshIndex]->MaterialName = materialName;
-				}
-			}
-		}
+		ERR("Mismatch of bytes read vs file size in bytes!");
+		return false;
 	}
 
+	pFileContent[fileSize] = '\0';
+
+	std::string objContent(pFileContent);
+	SAFE_ARRAY_DELETE(pFileContent);
+
+	// process OBJ file
+	size_t fileCrrSearchPos = 0, fileFoundSepPos = 0;
+	std::string lineSep("\r\n");
+
+	std::string line;
+	while (std::string::npos != (fileFoundSepPos = objContent.find_first_of(lineSep, fileCrrSearchPos)))
+	{
+		size_t lineLength = fileFoundSepPos - fileCrrSearchPos;
+
+		line = objContent.substr(fileCrrSearchPos, lineLength);
+
+		if (!line.empty())
+		{
+			ParseOBJLine(line, meshDataVector, crrMeshIndex, i_UseMaterial, materialMap, directoryName);
+		}
+
+		fileCrrSearchPos = fileFoundSepPos + lineSep.size();
+	}
+
+	//process last line (after separator)
+	line = objContent.substr(fileCrrSearchPos);
+	if (!line.empty())
+	{
+		ParseOBJLine(line, meshDataVector, crrMeshIndex, i_UseMaterial, materialMap, directoryName);
+	}
 
 	// process mesh & material data
 	unsigned int crrPosIndexOffset = 0, crrNormalIndexOffset = 0, crrUVIndexOffset = 0;
@@ -283,105 +198,434 @@ bool Model::ParseObjFile(const std::string& i_ObjPath, bool i_UseMaterial, const
 	return true;
 }
 
+void Model::ParseOBJLine(const std::string& i_Line, std::vector<Model::MeshData*>& io_MeshDataVector, int& io_CrrMeshIndex,
+	bool i_UseMaterial, std::map<std::string, Material>& o_MaterialMap, const std::string& i_DirectoryName)
+{
+	// process line
+	size_t lineCrrSearchPos = 0, lineFoundSepPos = 0;
+	std::string tokenSep(" ");
+
+	// get first token
+	lineFoundSepPos = i_Line.find_first_of(tokenSep, lineCrrSearchPos);
+	size_t tokenLength = lineFoundSepPos - lineCrrSearchPos;
+
+	std::string token = i_Line.substr(lineCrrSearchPos, tokenLength);
+	// filter out unneeded lines
+	if (token.empty() || (token != "mtllib" && token != "o" &&
+		token != "v" && token != "vn" && token != "vt" &&
+		token != "f" && token != "usemtl"))
+	{
+		return; //jump to the next line
+	}
+
+	lineCrrSearchPos = lineFoundSepPos + tokenSep.size();
+
+	if (token == "mtllib") // material file
+	{
+		if (i_UseMaterial)
+		{
+			//get the name of the material file
+			token = i_Line.substr(lineCrrSearchPos);
+
+			if (!token.empty())
+			{
+				ParseMTLFile(token, i_DirectoryName, o_MaterialMap);
+			}
+		}
+	}
+	else if (token == "o") // object - aka mesh
+	{
+		//the name of the object - mesh
+		token = i_Line.substr(lineCrrSearchPos);
+
+		if (!token.empty())
+		{
+			io_MeshDataVector.push_back(new MeshData(token));
+
+			io_CrrMeshIndex++;
+		}
+	}
+	else if (token == "v") // vertex position
+	{
+		glm::vec3 position;
+		size_t idx = 0;
+
+		ParseVertexToken(lineFoundSepPos, lineCrrSearchPos, tokenSep, i_Line, idx, position, 3);
+
+		assert(io_CrrMeshIndex >= 0 && io_CrrMeshIndex < io_MeshDataVector.size());
+
+		if (io_MeshDataVector[io_CrrMeshIndex])
+		{
+			io_MeshDataVector[io_CrrMeshIndex]->VertexPositions.push_back(position);
+		}
+	}
+	else if (token == "vn") // vertex normal
+	{
+		glm::vec3 normal;
+		size_t idx = 0;
+
+		ParseVertexToken(lineFoundSepPos, lineCrrSearchPos, tokenSep, i_Line, idx, normal, 3);
+
+		assert(io_CrrMeshIndex >= 0 && io_CrrMeshIndex < io_MeshDataVector.size());
+
+		if (io_MeshDataVector[io_CrrMeshIndex])
+		{
+			io_MeshDataVector[io_CrrMeshIndex]->VertexNormals.push_back(normal);
+		}
+	}
+	else if (token == "vt") // vertex texture coordinates
+	{
+		glm::vec2 uv;
+		glm::vec3 uv_;
+		size_t idx = 0;
+
+		ParseVertexToken(lineFoundSepPos, lineCrrSearchPos, tokenSep, i_Line, idx, uv_, 2);
+
+		uv.x = uv_.x;
+		uv.y = uv_.y;
+
+		assert(io_CrrMeshIndex >= 0 && io_CrrMeshIndex < io_MeshDataVector.size());
+
+		if (io_MeshDataVector[io_CrrMeshIndex])
+		{
+			io_MeshDataVector[io_CrrMeshIndex]->VertexUVs.push_back(uv);
+		}
+	}
+	else if (token == "f") // face
+	{
+		glm::ivec3 positionIndex, uvIndex, normalIndex;
+		size_t faceIdx = 0;
+
+		ParseFaceToken(lineFoundSepPos, lineCrrSearchPos, tokenSep, i_Line, faceIdx, positionIndex, uvIndex, normalIndex);
+
+		assert(io_CrrMeshIndex >= 0 && io_CrrMeshIndex < io_MeshDataVector.size());
+
+		if (io_MeshDataVector[io_CrrMeshIndex])
+		{
+			io_MeshDataVector[io_CrrMeshIndex]->PositionIndices.push_back(positionIndex[0]);
+			io_MeshDataVector[io_CrrMeshIndex]->PositionIndices.push_back(positionIndex[1]);
+			io_MeshDataVector[io_CrrMeshIndex]->PositionIndices.push_back(positionIndex[2]);
+			io_MeshDataVector[io_CrrMeshIndex]->UVsIndices.push_back(uvIndex[0]);
+			io_MeshDataVector[io_CrrMeshIndex]->UVsIndices.push_back(uvIndex[1]);
+			io_MeshDataVector[io_CrrMeshIndex]->UVsIndices.push_back(uvIndex[2]);
+			io_MeshDataVector[io_CrrMeshIndex]->NormalsIndices.push_back(normalIndex[0]);
+			io_MeshDataVector[io_CrrMeshIndex]->NormalsIndices.push_back(normalIndex[1]);
+			io_MeshDataVector[io_CrrMeshIndex]->NormalsIndices.push_back(normalIndex[2]);
+		}
+	}
+	else if (token == "usemtl") // use material from material file
+	{
+		if (i_UseMaterial)
+		{
+			//get the name of the material file
+			token = i_Line.substr(lineCrrSearchPos);
+
+			if (!token.empty())
+			{
+				assert(io_CrrMeshIndex >= 0 && io_CrrMeshIndex < io_MeshDataVector.size());
+
+				if (io_MeshDataVector[io_CrrMeshIndex])
+				{
+					io_MeshDataVector[io_CrrMeshIndex]->MaterialName = token;
+				}
+			}
+		}
+	}
+}
+
+void Model::ParseVertexToken(size_t& io_LineFoundSepPos, size_t& io_LineCrrSearchPos, const std::string& i_TokenSep,
+							  const std::string& i_Line, size_t& io_Idx, glm::vec3& o_Out, size_t i_CustomSize)
+{
+	io_LineFoundSepPos = i_Line.find_first_of(i_TokenSep, io_LineCrrSearchPos);
+
+	std::string token;
+	size_t tokenLength;
+
+	if (io_LineFoundSepPos == std::string::npos) // last token
+	{
+		tokenLength = i_Line.size();
+	}
+	else
+	{
+		tokenLength = io_LineFoundSepPos - io_LineCrrSearchPos;
+	}
+
+	token = i_Line.substr(io_LineCrrSearchPos, tokenLength);
+	if (!token.empty())
+	{
+		o_Out[io_Idx] = std::stof(token);
+	}
+
+	if (io_LineFoundSepPos != std::string::npos) // still parsing
+	{
+		assert(i_CustomSize <= o_Out.length());
+
+		if (io_Idx < i_CustomSize)
+		{
+			io_Idx++;
+		}
+		else
+		{
+			io_Idx = i_CustomSize - 1;
+		}
+
+		io_LineCrrSearchPos = io_LineFoundSepPos + i_TokenSep.size();
+
+		ParseVertexToken(io_LineFoundSepPos, io_LineCrrSearchPos, i_TokenSep, i_Line, io_Idx, o_Out, i_CustomSize);
+	}
+}
+
+void Model::ParseFaceToken(size_t& io_LineFoundSepPos, size_t& io_LineCrrSearchPos, const std::string& i_TokenSep,
+						  const std::string& i_Line, size_t& io_FaceIdx, glm::ivec3& o_VertexIdx, glm::ivec3& o_UVIdx, glm::ivec3& o_NormalIdx)
+{
+	io_LineFoundSepPos = i_Line.find_first_of(i_TokenSep, io_LineCrrSearchPos);
+
+	std::string token;
+	size_t tokenLength;
+
+	if (io_LineFoundSepPos == std::string::npos) // last token
+	{
+		tokenLength = i_Line.size();
+	}
+	else
+	{
+		tokenLength = io_LineFoundSepPos - io_LineCrrSearchPos;
+	}
+
+	token = i_Line.substr(io_LineCrrSearchPos, tokenLength);
+	if (!token.empty())
+	{
+		size_t tokenCrrSearchPos = 0, tokenFoundSepPos = 0, typeIdx = 0;
+		std::string subTokenSep("/");
+
+		ParseFaceSubToken(tokenFoundSepPos, tokenCrrSearchPos, subTokenSep, token, io_FaceIdx, typeIdx, o_VertexIdx, o_UVIdx, o_NormalIdx);
+	}
+
+	if (io_LineFoundSepPos != std::string::npos) // still parsing
+	{
+		if (io_FaceIdx < o_VertexIdx.length())
+		{
+			io_FaceIdx++;
+		}
+		else
+		{
+			io_FaceIdx = o_VertexIdx.length() - 1;
+		}
+
+		io_LineCrrSearchPos = io_LineFoundSepPos + i_TokenSep.size();
+
+		ParseFaceToken(io_LineFoundSepPos, io_LineCrrSearchPos, i_TokenSep, i_Line, io_FaceIdx, o_VertexIdx, o_UVIdx, o_NormalIdx);
+	}
+}
+
+void Model::ParseFaceSubToken(size_t& io_TokenFoundSepPos, size_t& io_TokenCrrSearchPos, const std::string& i_TokenSep, const std::string& i_Token,
+							   size_t i_FaceIdx, size_t& io_TypeIdx, glm::ivec3& o_VertexIdx, glm::ivec3& o_UVIdx, glm::ivec3& o_NormalIdx)
+{
+	io_TokenFoundSepPos = i_Token.find_first_of(i_TokenSep, io_TokenCrrSearchPos);
+
+	std::string subToken;
+	size_t tokenLength;
+
+	if (io_TokenFoundSepPos == std::string::npos) // last token
+	{
+		tokenLength = i_Token.size();
+	}
+	else
+	{
+		tokenLength = io_TokenFoundSepPos - io_TokenCrrSearchPos;
+	}
+
+	subToken = i_Token.substr(io_TokenCrrSearchPos, tokenLength);
+	if (!i_Token.empty())
+	{
+		unsigned int val = std::stoi(subToken);
+		if (io_TypeIdx == 0) o_VertexIdx[i_FaceIdx] = val;
+		else if (io_TypeIdx == 1) o_UVIdx[i_FaceIdx] = val;
+		else if (io_TypeIdx == 2) o_NormalIdx[i_FaceIdx] = val;
+	}
+
+	if (io_TokenFoundSepPos != std::string::npos) // still parsing
+	{
+		if (io_TypeIdx < o_VertexIdx.length())
+		{
+			io_TypeIdx++;
+		}
+		else
+		{
+			io_TypeIdx = o_VertexIdx.length() - 1;
+		}
+
+		io_TokenCrrSearchPos = io_TokenFoundSepPos + i_TokenSep.size();
+
+		ParseFaceSubToken(io_TokenFoundSepPos, io_TokenCrrSearchPos, i_TokenSep, i_Token, i_FaceIdx, io_TypeIdx, o_VertexIdx, o_UVIdx, o_NormalIdx);
+	}
+}
+
 bool Model::ParseMTLFile(const std::string& i_MTLFileName, const std::string& i_Directory, std::map<std::string, Material>& o_MaterialMap)
 {
 	std::string mtlFilePath = i_Directory + "/" + i_MTLFileName;
 
-	FILE* pMtlFile = fopen(mtlFilePath.c_str(), "r");
+	std::vector<Model::LoadedTextureData> loadedTextureVector;
+	std::string crrMaterialName;
+
+	char* pBasePath = SDL_GetBasePath();
+	std::string baseName(pBasePath ? pBasePath : "");
+	std::string fileName(baseName + mtlFilePath);
+	std::string texBaseName(i_Directory + "/");
+
+	SDL_RWops* pMtlFile = SDL_RWFromFile(fileName.c_str(), "rb");
 	if (pMtlFile == nullptr)
 	{
-		ERR("Failed to open the mtl file: %s!", mtlFilePath.c_str());
+		ERR("Failed to open the mtl file: %s!", fileName.c_str());
 		return false;
 	}
 
-	std::vector<Model::LoadedTextureData> loadedTextureVector;
+	size_t fileSize = (size_t)SDL_RWsize(pMtlFile);
 
-	std::string crrMaterialName;
+	char* pFileContent = new char[fileSize + 1];
 
-	while (true)
+	size_t nbRead = (size_t)SDL_RWread(pMtlFile, pFileContent, sizeof(char), fileSize);
+	if (nbRead != fileSize)
 	{
-		char lineHeader[128];
+		ERR("Mismatch of bytes read vs file size in bytes!");
+		return false;
+	}
 
-		int res = fscanf(pMtlFile, "%s", lineHeader);
-		if (res == EOF)
+	pFileContent[fileSize] = '\0';
+
+	std::string mtlContent(pFileContent);
+	SAFE_ARRAY_DELETE(pFileContent);
+
+	// process MTL file
+	size_t fileCrrSearchPos = 0, fileFoundSepPos = 0;
+	std::string lineSep("\r\n");
+
+	std::string line;
+	while (std::string::npos != (fileFoundSepPos = mtlContent.find_first_of(lineSep, fileCrrSearchPos)))
+	{
+		size_t lineLength = fileFoundSepPos - fileCrrSearchPos;
+
+		line = mtlContent.substr(fileCrrSearchPos, lineLength);
+
+		if (!line.empty())
 		{
-			fclose(pMtlFile);
-			LOG("File %s has been successfully parsed!", mtlFilePath.c_str());
-			break;
+			ParseMTLLine(line, o_MaterialMap, crrMaterialName, loadedTextureVector, texBaseName);
 		}
 
-		if (strcmp(lineHeader, "newmtl") == 0) // material name
-		{
-			char mtlName[128];
-			fscanf(pMtlFile, "%s\n", mtlName);
+		fileCrrSearchPos = fileFoundSepPos + lineSep.size();
+	}
 
-			crrMaterialName = mtlName;
-
-			Material material(crrMaterialName);
-			o_MaterialMap[crrMaterialName] = material;
-		}
-		else if (strcmp(lineHeader, "map_Ka") == 0) // material ambient texture map
-		{
-			char map_Ka[128];
-			fscanf(pMtlFile, "%s\n", map_Ka);
-
-			std::string texPath(i_Directory + "/" + std::string(map_Ka));
-
-			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_AMBIENT, loadedTextureVector);
-
-			o_MaterialMap[crrMaterialName].TextureArray.push_back(texData);
-		}
-		else if (strcmp(lineHeader, "map_Kd") == 0) // material diffuse texture map
-		{
-			char map_Kd[128];
-			fscanf(pMtlFile, "%s\n", map_Kd);
-
-			std::string texPath(i_Directory + "/" + std::string(map_Kd));
-
-			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_DIFFUSE, loadedTextureVector);
-
-			o_MaterialMap[crrMaterialName].TextureArray.push_back(texData);
-		}
-		else if (strcmp(lineHeader, "map_Ks") == 0) // material specular texture map
-		{
-			char map_Ks[128];
-			fscanf(pMtlFile, "%s\n", map_Ks);
-
-			std::string texPath(i_Directory + "/" + std::string(map_Ks));
-
-			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_SPECULAR, loadedTextureVector);
-
-			o_MaterialMap[crrMaterialName].TextureArray.push_back(texData);
-		}
-		else if (strcmp(lineHeader, "map_Bump") == 0) // material normal texture map
-		{
-			char map_Bump[128];
-			fscanf(pMtlFile, "%s\n", map_Bump);
-
-			std::string texPath(i_Directory + "/" + std::string(map_Bump));
-
-			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_NORMAL, loadedTextureVector);
-
-			o_MaterialMap[crrMaterialName].TextureArray.push_back(texData);
-		}
+	//process last line (after separator)
+	line = mtlContent.substr(fileCrrSearchPos);
+	if (!line.empty())
+	{
+		ParseMTLLine(line, o_MaterialMap, crrMaterialName, loadedTextureVector, texBaseName);
 	}
 
 	return true;
 }
 
-Material::TextureData Model::ProcessTexture(const std::string& i_TexPath, const Material::TEXTURE_MAP_TYPE& i_TexType, const std::vector<Model::LoadedTextureData>& i_LoadedTextureVector)
+void Model::ParseMTLLine(const std::string& i_Line, std::map<std::string, Material>& o_MaterialMap, std::string& io_CrrMaterialName,
+			std::vector<Model::LoadedTextureData>& io_LoadedTextureVector, const std::string& i_TexBaseName)
+{
+	// process line
+	size_t lineCrrSearchPos = 0, lineFoundSepPos = 0;
+	std::string tokenSep(" ");
+
+	// get first token
+	lineFoundSepPos = i_Line.find_first_of(tokenSep, lineCrrSearchPos);
+	size_t tokenLength = lineFoundSepPos - lineCrrSearchPos;
+
+	std::string token = i_Line.substr(lineCrrSearchPos, tokenLength);
+	// filter out unneeded lines
+
+	if (token.empty() || (token != "newmtl" && token != "map_Ka" &&
+		token != "map_Kd" && token != "map_Ks" && token != "map_Bump"))
+	{
+		return; //jump to the next line
+	}
+
+	lineCrrSearchPos = lineFoundSepPos + tokenSep.size();
+
+	if (token == "newmtl") // material name
+	{
+		token = i_Line.substr(lineCrrSearchPos);
+
+		if (!token.empty())
+		{
+			io_CrrMaterialName = token;
+
+			Material material(io_CrrMaterialName);
+			o_MaterialMap[io_CrrMaterialName] = material;
+		}
+	}
+	else if (token == "map_Ka") // material ambient texture map
+	{
+		token = i_Line.substr(lineCrrSearchPos);
+
+		if (!token.empty())
+		{
+			std::string texPath(i_TexBaseName + "/" + token);
+
+			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_AMBIENT, io_LoadedTextureVector);
+
+			o_MaterialMap[io_CrrMaterialName].TextureArray.push_back(texData);
+		}
+	}
+	else if (token == "map_Kd") // material diffuse texture map
+	{
+		token = i_Line.substr(lineCrrSearchPos);
+
+		if (!token.empty())
+		{
+			std::string texPath(i_TexBaseName + "/" + token);
+
+			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_DIFFUSE, io_LoadedTextureVector);
+
+			o_MaterialMap[io_CrrMaterialName].TextureArray.push_back(texData);
+		}
+	}
+	else if (token ==  "map_Ks") // material specular texture map
+	{
+		token = i_Line.substr(lineCrrSearchPos);
+
+		if (!token.empty())
+		{
+			std::string texPath(i_TexBaseName + "/" + token);
+
+			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_SPECULAR, io_LoadedTextureVector);
+
+			o_MaterialMap[io_CrrMaterialName].TextureArray.push_back(texData);
+		}
+	}
+	else if (token == "map_Bump") // material normal texture map
+	{
+		token = i_Line.substr(lineCrrSearchPos);
+
+		if (!token.empty())
+		{
+			std::string texPath(i_TexBaseName + "/" + token);
+
+			Material::TextureData texData = ProcessTexture(texPath, Material::TEXTURE_MAP_TYPE::TMT_NORMAL, io_LoadedTextureVector);
+
+			o_MaterialMap[io_CrrMaterialName].TextureArray.push_back(texData);
+		}
+	}
+}
+
+Material::TextureData Model::ProcessTexture(const std::string& i_TexPath, const Material::TEXTURE_MAP_TYPE& i_TexType, std::vector<Model::LoadedTextureData>& io_LoadedTextureVector)
 {
 	Material::TextureData texData;
 
 	bool skip = false;
-	for (unsigned int i = 0; i < i_LoadedTextureVector.size(); ++i)
+	for (unsigned int i = 0; i < io_LoadedTextureVector.size(); ++i)
 	{
-		if (i_TexPath == i_LoadedTextureVector[i].Path)
+		if (i_TexPath == io_LoadedTextureVector[i].Path)
 		{
 			skip = true;
 
-			texData.Id = i_LoadedTextureVector[i].Id;
-			texData.Type = i_LoadedTextureVector[i].Type;
+			texData.Id = io_LoadedTextureVector[i].Id;
+			texData.Type = io_LoadedTextureVector[i].Type;
 
 			break;
 		}
@@ -390,6 +634,12 @@ Material::TextureData Model::ProcessTexture(const std::string& i_TexPath, const 
 	if (!skip)
 	{
 		unsigned int texId = m_TM.Load2DTexture(i_TexPath.c_str(), GL_REPEAT, GL_LINEAR, true);
+
+		Model::LoadedTextureData loadTexData;
+		loadTexData.Id = texId;
+		loadTexData.Type = i_TexType;
+		loadTexData.Path = i_TexPath;
+		io_LoadedTextureVector.push_back(loadTexData);
 
 		texData.Id = texId;
 		texData.Type = i_TexType;

@@ -51,8 +51,7 @@ Mesh::Mesh ( const std::string& i_Name, const std::vector<MeshBufferManager::Ver
 		std::vector<MeshBufferManager::VertexData> flattenedVertexData(i_VertexData);
 		for (unsigned short i = 0; i < flattenedVertexData.size(); ++i)
 		{
-			//flattenedVertexData[i].position.y = 0.0f;
-			flattenedVertexData[i].position.y = (m_Limits.MaxY - m_Limits.MinY) * 0.333f; //use 1/3 the height of the mesh
+			flattenedVertexData[i].position.y = (m_Limits.MaxY - m_Limits.MinY) * 0.4f;
 		}
 
 		m_FlattenedMBM.Initialize(i_Name);
@@ -96,7 +95,7 @@ void Mesh::Render ( const ShaderManager& i_SM, const TextureManager& i_TM, unsig
 				break;
 			}
 
-			int loc = glGetUniformLocation(i_SM.GetProgramID(), ("u_Material." + samplerName).c_str());
+			int loc = glGetUniformLocation(i_SM.GetProgramID(), ("u_" + samplerName).c_str());
 
 			if (loc != -1)
 			{

@@ -11,7 +11,7 @@
 
 
 Projector::Projector ( void )
-	: m_IsPlaneWithinFrustum(false), m_IsFrustumVisible(false),
+	: m_IsPlaneWithinFrustum(false),
 	  m_MaxWaveAmplitude(0.0f), m_StrengthElevation(0.0f), m_AimPointCorrection(0.0f), 
 	  m_Type(Projector::PROJ_TYPE::PT_COUNT), m_IsUnderMainPlane(false)
 {
@@ -19,7 +19,7 @@ Projector::Projector ( void )
 }
 
 Projector::Projector (const GlobalConfig& i_Config, Projector::PROJ_TYPE i_Type)
-	: m_IsPlaneWithinFrustum(false), m_IsFrustumVisible(false),
+	: m_IsPlaneWithinFrustum(false),
 	  m_MaxWaveAmplitude(0.0f), m_StrengthElevation(0.0f), m_AimPointCorrection(0.0f),
 	  m_Type(Projector::PROJ_TYPE::PT_COUNT), m_IsUnderMainPlane(false)
 {

@@ -14,7 +14,6 @@
         GL_ARB_shading_language_420pack,
         GL_ARB_texture_filter_anisotropic,
         GL_EXT_shader_image_load_store,
-        GL_EXT_texture_compression_s3tc,
         GL_EXT_texture_filter_anisotropic
     Loader: True
     Local files: True
@@ -22,9 +21,9 @@
     Reproducible: False
 
     Commandline:
-        --profile="core" --api="gl=3.2" --generator="c" --spec="gl" --local-files --extensions="GL_ARB_arrays_of_arrays,GL_ARB_compute_shader,GL_ARB_enhanced_layouts,GL_ARB_shader_image_load_store,GL_ARB_shading_language_420pack,GL_ARB_texture_filter_anisotropic,GL_EXT_shader_image_load_store,GL_EXT_texture_compression_s3tc,GL_EXT_texture_filter_anisotropic"
+        --profile="core" --api="gl=3.2" --generator="c" --spec="gl" --local-files --extensions="GL_ARB_arrays_of_arrays,GL_ARB_compute_shader,GL_ARB_enhanced_layouts,GL_ARB_shader_image_load_store,GL_ARB_shading_language_420pack,GL_ARB_texture_filter_anisotropic,GL_EXT_shader_image_load_store,GL_EXT_texture_filter_anisotropic"
     Online:
-        https://glad.dav1d.de/#profile=core&language=c&specification=gl&loader=on&api=gl%3D3.2&extensions=GL_ARB_arrays_of_arrays&extensions=GL_ARB_compute_shader&extensions=GL_ARB_enhanced_layouts&extensions=GL_ARB_shader_image_load_store&extensions=GL_ARB_shading_language_420pack&extensions=GL_ARB_texture_filter_anisotropic&extensions=GL_EXT_shader_image_load_store&extensions=GL_EXT_texture_compression_s3tc&extensions=GL_EXT_texture_filter_anisotropic
+        https://glad.dav1d.de/#profile=core&language=c&specification=gl&loader=on&api=gl%3D3.2&extensions=GL_ARB_arrays_of_arrays&extensions=GL_ARB_compute_shader&extensions=GL_ARB_enhanced_layouts&extensions=GL_ARB_shader_image_load_store&extensions=GL_ARB_shading_language_420pack&extensions=GL_ARB_texture_filter_anisotropic&extensions=GL_EXT_shader_image_load_store&extensions=GL_EXT_texture_filter_anisotropic
 */
 
 
@@ -2083,10 +2082,6 @@ GLAPI PFNGLSAMPLEMASKIPROC glad_glSampleMaski;
 #define GL_TRANSFORM_FEEDBACK_BARRIER_BIT_EXT 0x00000800
 #define GL_ATOMIC_COUNTER_BARRIER_BIT_EXT 0x00001000
 #define GL_ALL_BARRIER_BITS_EXT 0xFFFFFFFF
-#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0x83F0
-#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT 0x83F1
-#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT 0x83F2
-#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
 #define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
 #ifndef GL_ARB_arrays_of_arrays
@@ -2135,10 +2130,6 @@ typedef void (APIENTRYP PFNGLMEMORYBARRIEREXTPROC)(GLbitfield barriers);
 GLAPI PFNGLMEMORYBARRIEREXTPROC glad_glMemoryBarrierEXT;
 #define glMemoryBarrierEXT glad_glMemoryBarrierEXT
 #endif
-#ifndef GL_EXT_texture_compression_s3tc
-#define GL_EXT_texture_compression_s3tc 1
-GLAPI int GLAD_GL_EXT_texture_compression_s3tc;
-#endif
 #ifndef GL_EXT_texture_filter_anisotropic
 #define GL_EXT_texture_filter_anisotropic 1
 GLAPI int GLAD_GL_EXT_texture_filter_anisotropic;
@@ -2157,10 +2148,6 @@ GLAPI PFNGLMEMORYBARRIERPROC glad_glMemoryBarrier;
 #define glMemoryBarrier glad_glMemoryBarrier
 #endif
 
-#define GL_COMPRESSED_RGB_S3TC_DXT1 GL_COMPRESSED_RGB_S3TC_DXT1_EXT
-#define GL_COMPRESSED_RGBA_S3TC_DXT1 GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
-#define GL_COMPRESSED_RGBA_S3TC_DXT3 GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
-#define GL_COMPRESSED_RGBA_S3TC_DXT5 GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
 #define GL_TEXTURE_MAX_ANISOTROPY GL_TEXTURE_MAX_ANISOTROPY_EXT
 #define GL_MAX_TEXTURE_MAX_ANISOTROPY GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT
 #define GL_SHADER_IMAGE_ACCESS_BARRIER_BIT GL_SHADER_IMAGE_ACCESS_BARRIER_BIT_EXT

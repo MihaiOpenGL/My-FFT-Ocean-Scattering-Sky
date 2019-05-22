@@ -14,7 +14,7 @@
 Camera::Camera ( void )
 	: m_Name("Default"), m_Position(glm::vec3(0.0f)), m_Forward(glm::vec3(0.0f, 0.0f, -1.0f)),
 	  m_Right(glm::vec3(+1.0f, 0.0f, 0.0f)), m_Up(glm::vec3(0.0f, +1.0f, 0.0f)),
-	  m_Pitch(0.0f), m_Yaw(0.0f), m_FOVy(0.0f), m_InitialFOVy(0.0f), m_ZNear(0.0f), m_ZFar(0.0f),
+	  m_Pitch(0.0f), m_Yaw(0.0f), m_FOVy(0), m_InitialFOVy(0), m_ZNear(0.0f), m_ZFar(0.0f),
 	  m_UseConstraints(false)
 {
 	LOG("Camera %s successfully created!", m_Name.c_str());
@@ -23,7 +23,7 @@ Camera::Camera ( void )
 Camera::Camera ( const std::string& i_Name )
 	: m_Name(i_Name), m_Position(glm::vec3(0.0f)), m_Forward(glm::vec3(0.0f, 0.0f, -1.0f)),
 	  m_Right(glm::vec3(+1.0f, 0.0f, 0.0f)), m_Up(glm::vec3(0.0f, +1.0f, 0.0f)),
-	  m_Pitch(0.0f), m_Yaw(0.0f), m_FOVy(0.0f), m_InitialFOVy(0.0f), m_ZNear(0.0f), m_ZFar(0.0f),
+	  m_Pitch(0.0f), m_Yaw(0.0f), m_FOVy(0), m_InitialFOVy(0), m_ZNear(0.0f), m_ZFar(0.0f),
 	  m_UseConstraints(false)
 {
 	LOG("Camera %s successfully created!", m_Name.c_str());
@@ -170,7 +170,7 @@ void Camera::UpdatePerspectiveProjectionMatrix ( int i_WindowWidth, int i_Window
 
 	float correctionFactor = ComputePerspectiveProjectionCorrectionFactor();
 
-	m_Projection = glm::perspective(glm::radians(m_FOVy), i_WindowWidth /static_cast<float>(i_WindowHeight), m_ZNear * correctionFactor, m_ZFar * correctionFactor);
+	m_Projection = glm::perspective(glm::radians(static_cast<float>(m_FOVy)), i_WindowWidth /static_cast<float>(i_WindowHeight), m_ZNear * correctionFactor, m_ZFar * correctionFactor);
 
 	// update the other matrices too
 	// more info about projection matrix: http://www.songho.ca/opengl/gl_projectionmatrix.html
@@ -182,7 +182,7 @@ void Camera::UpdatePerspectiveProjectionMatrix ( int i_WindowWidth, int i_Window
 	m_InverseProjectionView = glm::inverse(m_ProjectionView);
 }
 
-void Camera::UpdatePerspectiveProjectionMatrix ( float i_Fovy, float i_Aspect, float i_ZNear, float i_ZFar )
+void Camera::UpdatePerspectiveProjectionMatrix ( int i_Fovy, float i_Aspect, float i_ZNear, float i_ZFar )
 {
 	assert(i_Fovy > 0);
 	assert(i_Aspect > 0);
@@ -191,7 +191,7 @@ void Camera::UpdatePerspectiveProjectionMatrix ( float i_Fovy, float i_Aspect, f
 
 	float correctionFactor = ComputePerspectiveProjectionCorrectionFactor();
 
-	m_Projection = glm::perspective(glm::radians(i_Fovy), i_Aspect, i_ZNear * correctionFactor, i_ZFar * correctionFactor);
+	m_Projection = glm::perspective(glm::radians(static_cast<float>(i_Fovy)), i_Aspect, i_ZNear * correctionFactor, i_ZFar * correctionFactor);
 
 	// update the other matrices too
 	// more info about projection matrix: http://www.songho.ca/opengl/gl_projectionmatrix.html
@@ -301,7 +301,7 @@ float Camera::GetYaw ( void ) const
 	return m_Yaw;
 }
 
-float Camera::GetFOV ( void ) const
+int Camera::GetFOV ( void ) const
 {
 	return m_FOVy;
 }
@@ -361,7 +361,7 @@ void Camera::SetUp ( const glm::vec3& i_Up )
 	m_Up = i_Up;
 }
 
-void Camera::SetFOV ( float i_FOV )
+void Camera::SetFOV ( int i_FOV )
 {
 	m_FOVy = i_FOV;
 }

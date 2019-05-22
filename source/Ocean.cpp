@@ -22,6 +22,7 @@
 #include "MotorBoat.h"
 #include <sstream> // std::stringstream
 #include <time.h>
+#include <cassert>
 
 
 Ocean::Ocean ( void )
@@ -30,8 +31,8 @@ Ocean::Ocean ( void )
 	  m_OccluderIndexCount(0), m_IsWireframeMode(false), m_IsFrustumVisible(false),
 	  m_GridType(CustomTypes::Ocean::GridType::GT_COUNT), m_SkyModelType(CustomTypes::Sky::ModelType::MT_COUNT),
 	  m_SurfaceUseGridCorners(false), m_BottomUseGridCorners(false), m_EnableBottomCaustics(false),
-	  m_EnableBoatKelvinWake(false), m_EnableBoatPropellerWash(false), m_EnableUnderWaterGodRays(false),
-	  m_GodRaysMapWidth(0), m_GodRaysMapHeight(0), m_CausticsMapSize(0),
+	  m_EnableBoatFoam(false), m_EnableBoatKelvinWake(false), m_EnableBoatPropellerWash(false),
+	  m_EnableUnderWaterGodRays(false),  m_GodRaysMapWidth(0), m_GodRaysMapHeight(0), m_CausticsMapSize(0),
 	  m_PerlinNoiseSpeed(0.0f), m_SunDirY(0.0f)
 {
 	LOG("Ocean successfully created!");
@@ -43,8 +44,8 @@ Ocean::Ocean ( const GlobalConfig& i_Config )
 	  m_OccluderIndexCount(0), m_IsWireframeMode(false), m_IsFrustumVisible(false),
 	  m_GridType(CustomTypes::Ocean::GridType::GT_COUNT), m_SkyModelType(CustomTypes::Sky::ModelType::MT_COUNT),
 	  m_SurfaceUseGridCorners(false), m_BottomUseGridCorners(false), m_EnableBottomCaustics(false),
-	  m_EnableBoatKelvinWake(false), m_EnableBoatPropellerWash(false), m_EnableUnderWaterGodRays(false),
-	  m_GodRaysMapWidth(0), m_GodRaysMapHeight(0), m_CausticsMapSize(0),
+	  m_EnableBoatFoam(false), m_EnableBoatKelvinWake(false), m_EnableBoatPropellerWash(false),
+	  m_EnableUnderWaterGodRays(false), m_GodRaysMapWidth(0), m_GodRaysMapHeight(0), m_CausticsMapSize(0),
 	  m_PerlinNoiseSpeed(0.0f), m_SunDirY(0.0f)
 {
 	Initialize(i_Config);
@@ -71,6 +72,7 @@ void Ocean::Initialize ( const GlobalConfig& i_Config )
 	m_BottomUseGridCorners = i_Config.Scene.Ocean.Bottom.Projector.UseGridCorners;
 	m_EnableUnderWaterGodRays = i_Config.Scene.Ocean.UnderWater.GodRays.Enabled;
 	m_EnableBottomCaustics = i_Config.Scene.Ocean.Bottom.Caustics.Enabled;
+	m_EnableBoatFoam = i_Config.Scene.Ocean.Surface.BoatEffects.Foam.Enabled;
 	m_EnableBoatKelvinWake = i_Config.Scene.Ocean.Surface.BoatEffects.KelvinWake.Enabled;
 	m_EnableBoatPropellerWash = i_Config.Scene.Ocean.Surface.BoatEffects.PropellerWash.Enabled;
 
@@ -92,23 +94,24 @@ void Ocean::Initialize ( const GlobalConfig& i_Config )
 
 	//////////////////////////////
 
-	if (i_Config.Scene.Ocean.Surface.OceanPatch.ComputeFFT.Type == CustomTypes::Ocean::ComputeFFTType::CFT_GPU_FRAG)
+	switch (i_Config.Scene.Ocean.Surface.OceanPatch.ComputeFFT.Type)
 	{
-		m_pFFTOceanPatch = new FFTOceanPatchGPUFrag(i_Config);
-	}
-	else if (i_Config.Scene.Ocean.Surface.OceanPatch.ComputeFFT.Type == CustomTypes::Ocean::ComputeFFTType::CFT_GPU_COMP)
-	{
-		if (!i_Config.GLExtVars.IsComputeShaderSupported)
-		{
-			ERR("Compute shader extensions are required!");
-			return;
-		}
-
-		m_pFFTOceanPatch = new FFTOceanPatchGPUComp(i_Config);
-	}
-	else if (i_Config.Scene.Ocean.Surface.OceanPatch.ComputeFFT.Type == CustomTypes::Ocean::ComputeFFTType::CFT_CPU_FFTW)
-	{
-		m_pFFTOceanPatch = new FFTOceanPatchCPUFFTW(i_Config);
+		case CustomTypes::Ocean::ComputeFFTType::CFT_GPU_FRAG:
+			m_pFFTOceanPatch = new FFTOceanPatchGPUFrag(i_Config);
+			break;
+		case CustomTypes::Ocean::ComputeFFTType::CFT_GPU_COMP:
+			if (!i_Config.GLExtVars.IsComputeShaderSupported)
+			{
+				ERR("Compute shader extensions are required!");
+				return;
+			}
+			m_pFFTOceanPatch = new FFTOceanPatchGPUComp(i_Config);
+			break;
+		case CustomTypes::Ocean::ComputeFFTType::CFT_CPU_FFTW:
+			m_pFFTOceanPatch = new FFTOceanPatchCPUFFTW(i_Config);
+			break;
+		case CustomTypes::Ocean::ComputeFFTType::CFT_COUNT:
+		default: ERR("Invalid ocean compute fft type!");
 	}
 	assert(m_pFFTOceanPatch != nullptr);
 
@@ -285,36 +288,37 @@ void Ocean::SetupOceanSurface ( const GlobalConfig& i_Config )
 	m_OceanSurfaceSM.Initialize("Ocean Surface");
 
 	std::string fragmentShaderPath;
-	if (m_SkyModelType == CustomTypes::Sky::ModelType::MT_PRECOMPUTED_SCATTERING)
-	{
-		fragmentShaderPath = "../resources/shaders/OceanSurfacePrecomputedScattering.frag.glsl";
-	}
-	else
-	{
-		fragmentShaderPath = "../resources/shaders/OceanSurface.frag.glsl";
-	}
 
-	if (m_GridType == CustomTypes::Ocean::GridType::GT_SCREEN_SPACE)
+	switch(m_SkyModelType)
 	{
-		m_OceanSurfaceSM.BuildRenderingProgram("../resources/shaders/OceanScreenGrid.vert.glsl", "../resources/shaders/OceanSurfaceScreenGrid.geom.glsl", fragmentShaderPath, i_Config);
+		case CustomTypes::Sky::ModelType::MT_PRECOMPUTED_SCATTERING:
+			fragmentShaderPath = "resources/shaders/OceanSurfacePrecomputedScattering.frag.glsl";
+			break;
+		case CustomTypes::Sky::ModelType::MT_CUBE_MAP:
+		case CustomTypes::Sky::ModelType::MT_SCATTERING:
+			fragmentShaderPath = "resources/shaders/OceanSurface.frag.glsl";
+			break;
+		case CustomTypes::Sky::ModelType::MT_COUNT:
+		default: ERR("Invalid sky model type!");
 	}
-	else if (m_GridType == CustomTypes::Ocean::GridType::GT_WORLD_SPACE)
-	{
-		m_OceanSurfaceSM.BuildRenderingProgram("../resources/shaders/OceanSurfaceWorldGrid.vert.glsl", fragmentShaderPath, i_Config);
-	}
-
-	m_OceanSurfaceSM.UseProgram();
 
 	std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int> oceanSurfaceAttributes;
 
-	if (m_GridType == CustomTypes::Ocean::GridType::GT_SCREEN_SPACE)
+	switch (m_GridType)
 	{
-		oceanSurfaceAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_POSITION] = m_OceanSurfaceSM.GetAttributeLocation("a_position");
+		case CustomTypes::Ocean::GridType::GT_SCREEN_SPACE:
+			m_OceanSurfaceSM.BuildRenderingProgram("resources/shaders/OceanScreenGrid.vert.glsl", "resources/shaders/OceanSurfaceScreenGrid.geom.glsl", fragmentShaderPath, i_Config);
+			oceanSurfaceAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_POSITION] = m_OceanSurfaceSM.GetAttributeLocation("a_position");
+			break;
+		case CustomTypes::Ocean::GridType::GT_WORLD_SPACE:
+			m_OceanSurfaceSM.BuildRenderingProgram("resources/shaders/OceanSurfaceWorldGrid.vert.glsl", fragmentShaderPath, i_Config);
+			oceanSurfaceAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_UV] = m_OceanSurfaceSM.GetAttributeLocation("a_uv");
+			break;
+		case CustomTypes::Ocean::GridType::GT_COUNT:
+		default: ERR("Invalid ocean grid type!");
 	}
-	else if (m_GridType == CustomTypes::Ocean::GridType::GT_WORLD_SPACE)
-	{
-		oceanSurfaceAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_UV] = m_OceanSurfaceSM.GetAttributeLocation("a_uv");
-	}
+
+	m_OceanSurfaceSM.UseProgram();
 
 	m_OceanSurfaceUniforms["u_HDRExposure"] = m_OceanSurfaceSM.GetUniformLocation("u_HDRExposure");
 	m_OceanSurfaceSM.SetUniform(m_OceanSurfaceUniforms.find("u_HDRExposure")->second, i_Config.Rendering.HDR.Exposure);
@@ -457,10 +461,22 @@ void Ocean::SetupOceanSurface ( const GlobalConfig& i_Config )
 	// Sun data
 	if (m_SkyModelType == CustomTypes::Sky::ModelType::MT_CUBE_MAP || m_SkyModelType == CustomTypes::Sky::ModelType::MT_SCATTERING)
 	{
-		float sunShininess = (m_SkyModelType == CustomTypes::Sky::ModelType::MT_CUBE_MAP ? 
-			i_Config.Scene.Sky.Model.Cubemap.Sun.Shininess : i_Config.Scene.Sky.Model.Scattering.Sun.Shininess);
-		float sunStrength = (m_SkyModelType == CustomTypes::Sky::ModelType::MT_CUBE_MAP ?
-			i_Config.Scene.Sky.Model.Cubemap.Sun.Strength : i_Config.Scene.Sky.Model.Scattering.Sun.Strength);
+		float sunShininess = 0.0f, sunStrength = 0.0f;
+		switch (m_SkyModelType)
+		{
+			case CustomTypes::Sky::ModelType::MT_CUBE_MAP:
+				sunShininess = i_Config.Scene.Sky.Model.Cubemap.Sun.Shininess;
+				sunStrength = i_Config.Scene.Sky.Model.Cubemap.Sun.Strength;
+				break;
+			case CustomTypes::Sky::ModelType::MT_SCATTERING:
+				sunShininess = i_Config.Scene.Sky.Model.Scattering.Sun.Shininess;
+				sunStrength = i_Config.Scene.Sky.Model.Scattering.Sun.Strength;
+				break;
+			case CustomTypes::Sky::ModelType::MT_PRECOMPUTED_SCATTERING:
+				break;
+			case CustomTypes::Sky::ModelType::MT_COUNT:
+			default: ERR("Invalid sky model type!");
+		}
 
 		m_OceanSurfaceUniforms["u_SunData.Shininess"] = m_OceanSurfaceSM.GetUniformLocation("u_SunData.Shininess");
 		m_OceanSurfaceSM.SetUniform(m_OceanSurfaceUniforms.find("u_SunData.Shininess")->second, sunShininess);
@@ -470,7 +486,7 @@ void Ocean::SetupOceanSurface ( const GlobalConfig& i_Config )
 
 	m_OceanSurfaceUniforms["u_SunData.Direction"] = m_OceanSurfaceSM.GetUniformLocation("u_SunData.Direction");
 
-	if (i_Config.Scene.Ocean.Surface.BoatEffects.Foam.Enabled)
+	if (m_EnableBoatFoam)
 	{
 		m_OceanSurfaceUniforms["u_BoatFoamData.Map"] = m_OceanSurfaceSM.GetUniformLocation("u_BoatFoamData.Map");
 		m_OceanSurfaceSM.SetUniform(m_OceanSurfaceUniforms.find("u_BoatFoamData.Map")->second, i_Config.TexUnit.Ocean.Surface.BoatFoamMap);
@@ -478,7 +494,7 @@ void Ocean::SetupOceanSurface ( const GlobalConfig& i_Config )
 		m_OceanSurfaceSM.SetUniform(m_OceanSurfaceUniforms.find("u_BoatFoamData.Scale")->second, i_Config.Scene.Ocean.Surface.BoatEffects.Foam.Scale);
 	}
 
-	if (m_EnableBoatKelvinWake)
+	if (m_EnableBoatFoam || m_EnableBoatKelvinWake)
 	{
 		m_OceanSurfaceUniforms["u_BoatKelvinWakeData.DispNormMap"] = m_OceanSurfaceSM.GetUniformLocation("u_BoatKelvinWakeData.DispNormMap");
 		m_OceanSurfaceSM.SetUniform(m_OceanSurfaceUniforms.find("u_BoatKelvinWakeData.DispNormMap")->second, i_Config.TexUnit.Ocean.Surface.KelvinWakeDispNormMap);
@@ -514,24 +530,24 @@ void Ocean::SetupOceanBottom ( const GlobalConfig& i_Config )
 {
 	m_OceanBottomSM.Initialize("Ocean Bottom");
 
-	if (m_GridType == CustomTypes::Ocean::GridType::GT_SCREEN_SPACE)
-	{
-		m_OceanBottomSM.BuildRenderingProgram("../resources/shaders/OceanScreenGrid.vert.glsl", "../resources/shaders/OceanBottomScreenGrid.geom.glsl", "../resources/shaders/OceanBottom.frag.glsl", i_Config);
-	}
-	else if (m_GridType == CustomTypes::Ocean::GridType::GT_WORLD_SPACE)
-	{
-		m_OceanBottomSM.BuildRenderingProgram("../resources/shaders/OceanBottomWorldGrid.vert.glsl", "../resources/shaders/OceanBottom.frag.glsl", i_Config);
-	}
-
-	m_OceanBottomSM.UseProgram();
-
 	std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int> oceanBottomAttributes;
+
+	switch (m_GridType)
+	{
+		case CustomTypes::Ocean::GridType::GT_SCREEN_SPACE:
+			m_OceanBottomSM.BuildRenderingProgram("resources/shaders/OceanScreenGrid.vert.glsl", "resources/shaders/OceanBottomScreenGrid.geom.glsl", "resources/shaders/OceanBottom.frag.glsl", i_Config);
+			oceanBottomAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_POSITION] = m_OceanBottomSM.GetAttributeLocation("a_position");
+			break;
+		case CustomTypes::Ocean::GridType::GT_WORLD_SPACE:
+			m_OceanBottomSM.BuildRenderingProgram("resources/shaders/OceanBottomWorldGrid.vert.glsl", "resources/shaders/OceanBottom.frag.glsl", i_Config);
+			break;
+		case CustomTypes::Ocean::GridType::GT_COUNT:
+		default: ERR("Invalid ocean grid type!");
+	}
+
 	oceanBottomAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_UV] = m_OceanBottomSM.GetAttributeLocation("a_uv");
 
-	if (m_GridType == CustomTypes::Ocean::GridType::GT_SCREEN_SPACE)
-	{
-		oceanBottomAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_POSITION] = m_OceanBottomSM.GetAttributeLocation("a_position");
-	}
+	m_OceanBottomSM.UseProgram();
 
 	m_OceanBottomUniforms["u_HDRExposure"] = m_OceanBottomSM.GetUniformLocation("u_HDRExposure");
 	m_OceanBottomSM.SetUniform(m_OceanBottomUniforms.find("u_HDRExposure")->second, i_Config.Rendering.HDR.Exposure);
@@ -596,27 +612,23 @@ void Ocean::SetupOceanBottomCaustics ( const GlobalConfig& i_Config )
 	{
 		m_OceanCausticsSM.Initialize("Ocean Bottom Caustics");
 
-		if (m_GridType == CustomTypes::Ocean::GridType::GT_SCREEN_SPACE)
+		std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int> oceanCausticsAttributes;
+
+		switch (m_GridType)
 		{
-			m_OceanCausticsSM.BuildRenderingProgram("../resources/shaders/OceanScreenGrid.vert.glsl", "../resources/shaders/OceanCausticsScreenGrid.geom.glsl", "../resources/shaders/OceanCaustics.frag.glsl", i_Config);
-		}
-		else if (m_GridType == CustomTypes::Ocean::GridType::GT_WORLD_SPACE)
-		{
-			m_OceanCausticsSM.BuildRenderingProgram("../resources/shaders/OceanCausticsWorldGrid.vert.glsl", "../resources/shaders/OceanCaustics.frag.glsl", i_Config);
+			case CustomTypes::Ocean::GridType::GT_SCREEN_SPACE:
+				m_OceanCausticsSM.BuildRenderingProgram("resources/shaders/OceanScreenGrid.vert.glsl", "resources/shaders/OceanCausticsScreenGrid.geom.glsl", "resources/shaders/OceanCaustics.frag.glsl", i_Config);
+				oceanCausticsAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_POSITION] = m_OceanCausticsSM.GetAttributeLocation("a_position");
+				break;
+			case CustomTypes::Ocean::GridType::GT_WORLD_SPACE:
+				m_OceanCausticsSM.BuildRenderingProgram("resources/shaders/OceanCausticsWorldGrid.vert.glsl", "resources/shaders/OceanCaustics.frag.glsl", i_Config);
+				oceanCausticsAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_UV] = m_OceanCausticsSM.GetAttributeLocation("a_uv");
+				break;
+			case CustomTypes::Ocean::GridType::GT_COUNT:
+			default: ERR("Invalid ocean grid type!");
 		}
 
 		m_OceanCausticsSM.UseProgram();
-
-		std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int> oceanCausticsAttributes;
-
-		if (m_GridType == CustomTypes::Ocean::GridType::GT_SCREEN_SPACE)
-		{
-			oceanCausticsAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_POSITION] = m_OceanCausticsSM.GetAttributeLocation("a_position");
-		}
-		else if (m_GridType == CustomTypes::Ocean::GridType::GT_WORLD_SPACE)
-		{
-			oceanCausticsAttributes[MeshBufferManager::VERTEX_ATTRIBUTE_TYPE::VAT_UV] = m_OceanCausticsSM.GetAttributeLocation("a_uv");
-		}
 
 		m_OceanCausticsUniforms["u_BottomPlaneDistance"] = m_OceanCausticsSM.GetUniformLocation("u_BottomPlaneDistance");
 		m_OceanCausticsSM.SetUniform(m_OceanCausticsUniforms.find("u_BottomPlaneDistance")->second, m_BottomProjector.GetPlaneDistance());
@@ -722,7 +734,7 @@ void Ocean::SetupOceanBottomGodRays ( const GlobalConfig& i_Config )
 
 		////// OCCLUDER SETUP ///////
 		m_OceanOccluderSM.Initialize("Ocean Occluder");
-		m_OceanOccluderSM.BuildRenderingProgram("../resources/shaders/OceanOccluder.vert.glsl", "../resources/shaders/OceanOccluder.frag.glsl", i_Config);
+		m_OceanOccluderSM.BuildRenderingProgram("resources/shaders/OceanOccluder.vert.glsl", "resources/shaders/OceanOccluder.frag.glsl", i_Config);
 
 		m_OceanOccluderSM.UseProgram();
 
@@ -750,7 +762,7 @@ void Ocean::SetupOceanBottomGodRays ( const GlobalConfig& i_Config )
 
 		////// GOD RAYS SETUP ///////
 		m_OceanGodRaysSM.Initialize("Ocean God Rays");
-		m_OceanGodRaysSM.BuildRenderingProgram("../resources/shaders/Quad.vert.glsl", "../resources/shaders/OceanGodRays.frag.glsl", i_Config);
+		m_OceanGodRaysSM.BuildRenderingProgram("resources/shaders/Quad.vert.glsl", "resources/shaders/OceanGodRays.frag.glsl", i_Config);
 
 		m_OceanGodRaysSM.UseProgram();
 
@@ -793,7 +805,7 @@ void Ocean::SetupOceanBottomGodRays ( const GlobalConfig& i_Config )
 void Ocean::SetupDebugFrustum ( const GlobalConfig& i_Config )
 {
 	m_FrustumSM.Initialize("Ocean Frustums");
-	m_FrustumSM.BuildRenderingProgram("../resources/shaders/OceanFrustum.vert.glsl", "../resources/shaders/OceanFrustum.frag.glsl", i_Config);
+	m_FrustumSM.BuildRenderingProgram("resources/shaders/OceanFrustum.vert.glsl", "resources/shaders/OceanFrustum.frag.glsl", i_Config);
 
 	m_FrustumSM.UseProgram();
 
@@ -925,17 +937,18 @@ void Ocean::SetupDebugFrustum ( const GlobalConfig& i_Config )
 void Ocean::SetupTextures ( const GlobalConfig& i_Config )
 {
 	m_OceanTM.Initialize("Ocean", i_Config);
+
 	// perlin noise is used beginning with middle far to very far away, so we don't need to many levels of mipmaps. 5 levels suffice!
-	m_OceanTM.Load2DTexture("../resources/textures/perlin_noise.dds", GL_REPEAT, GL_LINEAR, false, i_Config.TexUnit.Ocean.Surface.PerlinDisplacementMap, 5);// 0);
+	m_OceanTM.Load2DTexture("resources/textures/perlin_noise.bmp", GL_REPEAT, GL_LINEAR, false, i_Config.TexUnit.Ocean.Surface.PerlinDisplacementMap, 5);// 0);
 																																							// foam should be available only near to middle range from camera position, so 7 levels of mipmaps will suffice
-	m_OceanTM.Load2DTexture("../resources/textures/foam_highres.dds", GL_REPEAT, GL_LINEAR, true, i_Config.TexUnit.Ocean.Surface.WavesFoamMap, 5);// 0);
+	m_OceanTM.Load2DTexture("resources/textures/foam_highres.bmp", GL_REPEAT, GL_LINEAR, true, i_Config.TexUnit.Ocean.Surface.WavesFoamMap, 5);// 0);
 
-	m_OceanTM.Load2DTexture("../resources/textures/sand_d.dds", GL_REPEAT, GL_LINEAR, true, i_Config.TexUnit.Ocean.Bottom.SandDiffuseMap, 3);
+	m_OceanTM.Load2DTexture("resources/textures/sand_d.bmp", GL_REPEAT, GL_LINEAR, true, i_Config.TexUnit.Ocean.Bottom.SandDiffuseMap, 3);
 
-	m_OceanTM.Load2DTexture("../resources/textures/boat_foam.dds", GL_CLAMP_TO_EDGE, GL_LINEAR, true, i_Config.TexUnit.Ocean.Surface.BoatFoamMap, 3);
+	m_OceanTM.Load2DTexture("resources/textures/boat_foam.bmp", GL_CLAMP_TO_EDGE, GL_LINEAR, true, i_Config.TexUnit.Ocean.Surface.BoatFoamMap, 3);
 
-	m_OceanTM.Load2DTexture("../resources/textures/wake_normal_height.dds", GL_CLAMP_TO_EDGE, GL_LINEAR, false, i_Config.TexUnit.Ocean.Surface.KelvinWakeDispNormMap, 3);
-	m_OceanTM.Load2DTexture("../resources/textures/wake_foam.dds", GL_CLAMP_TO_EDGE, GL_LINEAR, true, i_Config.TexUnit.Ocean.Surface.KelvinWakeFoamMap, 3);
+	m_OceanTM.Load2DTexture("resources/textures/wake_normal_height.bmp", GL_CLAMP_TO_EDGE, GL_LINEAR, false, i_Config.TexUnit.Ocean.Surface.KelvinWakeDispNormMap, 3);
+	m_OceanTM.Load2DTexture("resources/textures/wake_foam.bmp", GL_CLAMP_TO_EDGE, GL_LINEAR, true, i_Config.TexUnit.Ocean.Surface.KelvinWakeFoamMap, 3);
 }
 
 void Ocean::Update ( const Camera& i_Camera, const glm::vec3& i_SunDirection, bool i_IsWireframeMode, bool i_IsFrustumVisible, float i_CrrTime )
@@ -1132,7 +1145,7 @@ void Ocean::UpdateBoatEffects ( const MotorBoat& i_MotorBoat )
 {
 	if (m_WaveProjector.IsPlaneWithinFrustum())
 	{
-		if (m_EnableBoatKelvinWake)
+		if (m_EnableBoatFoam || m_EnableBoatKelvinWake)
 		{
 			m_OceanSurfaceSM.UseProgram();
 

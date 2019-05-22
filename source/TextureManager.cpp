@@ -1,11 +1,7 @@
 /* Author: BAIRAC MIHAI */
 
 /*
- ! IMPORTANT! TextureManager supports only DDS images. If there are images in other formaats that are to be used
- then these must be:
- a) vertically flipped (can use IrfanView for this)
- or the texture coordinates in shader must be flipped vertically like this: ve2(uv.x, 1.0f - uv.y)
- b) converted to DDS format (DXT1 or DXT5, can use a convertor for this)
+ ! IMPORTANT! TextureManager supports only BMP image loading.
 
  NOTE ! SINCE OPENGL 3.X GL_CLAMP HAS BEEN REMOVED, USE ONLY GL_CLAMP_TO_EDGE !!!
 */
@@ -14,12 +10,12 @@
 #include "CommonHeaders.h"
 #include "GLConfig.h"
 #include "GlobalConfig.h"
-#include "gli/texture.hpp"
-#include "gli/load.hpp"
-#include "gli/gl.hpp"
 #include "glm/vec3.hpp"
-#include <fstream>
-#include <assert.h>
+#include "SDL/SDL_rwops.h"
+#include "SDL/SDL_filesystem.h"
+#include "SDL/SDL_surface.h"
+#include "SDL/SDL_image.h"
+#include <cassert>
 
 
 int TextureManager::m_MaxTexUnits = 0;
@@ -27,13 +23,13 @@ int TextureManager::m_MaxTextureArrayLayers = 0;
 float TextureManager::m_MaxAnisotropy = 0.0f;
 
 TextureManager::TextureManager ( void )
-	: m_Name("Default"), m_IsTexDDSSupported(false), m_IsTexAnisoFilterSupported(false)
+	: m_Name("Default"), m_IsTexAnisoFilterSupported(false)
 {
 	LOG("Texture Manager [%s] successfully created!", m_Name.c_str());
 }
 
 TextureManager::TextureManager ( const std::string& i_Name, const GlobalConfig& i_Config)
-	: m_Name(i_Name), m_IsTexDDSSupported(false), m_IsTexAnisoFilterSupported(false)
+	: m_Name(i_Name), m_IsTexAnisoFilterSupported(false)
 {
 	Init(i_Config);
 }
@@ -54,7 +50,6 @@ void TextureManager::Initialize(const std::string& i_Name, const GlobalConfig& i
 
 void TextureManager::Init (const GlobalConfig& i_Config)
 {
-	m_IsTexDDSSupported = i_Config.GLExtVars.IsTexDDSSupported;
 	m_IsTexAnisoFilterSupported = i_Config.GLExtVars.IsTexAnisoFilterSupported;
 
 	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &m_MaxTexUnits);
@@ -86,56 +81,39 @@ void TextureManager::Destroy ( void )
 
 unsigned int TextureManager::Load1DTexture ( const std::string& i_ImageFileName, unsigned int i_WrapType, unsigned int i_FilterType, bool i_IsGammaCorrected, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering )
 {
-	gli::texture texture = gli::load(i_ImageFileName);
-	if (texture.empty())
+	char* pBasePath = SDL_GetBasePath();
+	std::string imageName(pBasePath ? pBasePath : "");
+	imageName += i_ImageFileName;
+
+	SDL_RWops* pF = SDL_RWFromFile(imageName.c_str(), "rb");
+	if (!pF)
 	{
-		ERR("Image file %s failed to load!", i_ImageFileName.c_str());
+		ERR("Failed to open image: %s!", imageName.c_str());
 		return 0;
 	}
 
-	gli::gl GL;
-	unsigned int target = GL.translate(texture.target());
-	if (target != GL_TEXTURE_1D)
+	SDL_Surface* pSurface = IMG_LoadBMP_RW(pF);
+	if (!pSurface)
 	{
-		ERR("Texture target must be GL_TEXTURE_1D!");
+		ERR("Failed to load image: %s!, Error: %s", imageName.c_str(), IMG_GetError());
 		return 0;
 	}
 
-	if (! m_IsTexDDSSupported)
-	{
-		ERR("GL_EXT_texture_compression_s3tc is required!");
-		return 0;
-	}
+	unsigned int target = GL_TEXTURE_1D;
 
 	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
-	gli::gl::format format = GL.translate(texture.format());
-	if (i_IsGammaCorrected)
-	{
-		if (format.Internal == gli::gl::internalFormat::INTERNAL_RGB_DXT1)
-		{
-			format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_DXT1;
-		}
-		else if (format.Internal == gli::gl::internalFormat::INTERNAL_RGBA_DXT1)
-		{
-			format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_ALPHA_DXT1;
-		}
-	}
+	unsigned int format = GL_RGB;
+	unsigned int internalFormat = GL_RGB;
+	unsigned int type = GL_UNSIGNED_BYTE;
 
-	glm::tvec3<int> const dimensions(texture.dimensions());
+	SetupPixelFormat(pSurface->format, i_IsGammaCorrected, format, internalFormat);
 
-	if (gli::is_compressed(texture.format()))
-	{
-		m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, format.Internal, format.Internal, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, 1));
-		// allocate memory and load the texture data
-		glCompressedTexImage1D(target, 0, format.Internal, dimensions.x, 0, texture.size(), texture.data());
-	}
-	else
-	{
-		m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, format.Internal, format.External, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, 1));
-		// allocate memory and load the texture data
-		glTexImage1D(target, 0, format.Internal, dimensions.x, 0, format.External, format.Type, texture.data());
-	}
+	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, internalFormat, format, type, pSurface->w, pSurface->h, i_WrapType, i_FilterType, i_MipMapCount, 1));
+
+	glTexImage1D(target, 0, internalFormat, pSurface->w, 0, format, type, pSurface->pixels);
+
+	SDL_FreeSurface(pSurface);
 
 	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
@@ -150,76 +128,49 @@ unsigned int TextureManager::Load1DArrayTexture ( const std::vector<std::string>
 		return 0;
 	}
 
+	char* pBasePath = SDL_GetBasePath();
+
 	unsigned int texId = 0;
-	unsigned int target = 0;
+	unsigned int target = GL_TEXTURE_1D_ARRAY;
 	for (unsigned short i = 0; i < i_ImageFileNameArray.size(); ++i)
 	{
-		gli::texture texture = gli::load(i_ImageFileNameArray[i]);
-		if (texture.empty())
+		std::string imageName(pBasePath ? pBasePath : "");
+		imageName += i_ImageFileNameArray[i];
+
+		SDL_RWops* pF = SDL_RWFromFile(imageName.c_str(), "rb");
+		if (!pF)
 		{
-			ERR("Image file %s faild to load", i_ImageFileNameArray[i].c_str());
+			ERR("Failed to open image: %s!", imageName.c_str());
 			return 0;
 		}
 
-		gli::gl GL;
-		target = GL.translate(texture.target());
-		if (target != GL_TEXTURE_1D_ARRAY)
+		SDL_Surface* pSurface = IMG_LoadBMP_RW(pF);
+		if (!pSurface)
 		{
-			ERR("Texture target must be GL_TEXTURE_1D_ARRAY!");
+			ERR("Failed to load image: %s!, Error: %s", imageName.c_str(), IMG_GetError());
 			return 0;
 		}
 
-		if (! m_IsTexDDSSupported)
-		{
-			ERR("GL_EXT_texture_compression_s3tc is required!");
-			return 0;
-		}
+		unsigned int format = GL_RGB;
+		unsigned int internalFormat = GL_RGB;
+		unsigned int type = GL_UNSIGNED_BYTE;
 
-		gli::gl::format format = GL.translate(texture.format());
-		if (i_IsGammaCorrected)
-		{
-			if (format.Internal == gli::gl::internalFormat::INTERNAL_RGB_DXT1)
-			{
-				format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_DXT1;
-			}
-			else if (format.Internal == gli::gl::internalFormat::INTERNAL_RGBA_DXT1)
-			{
-				format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_ALPHA_DXT1;
-			}
-		}
-
-		glm::tvec3<int> const dimensions(texture.dimensions());
+		SetupPixelFormat(pSurface->format, i_IsGammaCorrected, format, internalFormat);
 
 		if (i == 0)
 		{
 			texId = GenAndBindTexture(target, i_TexUnitId);
 
-			if (gli::is_compressed(texture.format()))
-			{
-				m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, format.Internal, format.Internal, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, i_ImageFileNameArray.size()));
+			m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, internalFormat, format, type, pSurface->w, pSurface->h, i_WrapType, i_FilterType, i_MipMapCount, i_ImageFileNameArray.size()));
 
-				// allocate space for 1d texture array
-				glCompressedTexImage2D(target, 0, format.Internal, dimensions.x, i_ImageFileNameArray.size(), 0, texture.size(), nullptr);
-			}
-			else
-			{
-				m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, format.Internal, format.External, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, i_ImageFileNameArray.size()));
-
-				// allocate space for 1d texture array
-				glTexImage2D(target, 0, format.Internal, dimensions.x, i_ImageFileNameArray.size(), 0, format.External, format.Type, nullptr);
-			}
+			// allocate space for 1d texture array
+			glTexImage2D(target, 0, internalFormat, pSurface->w, i_ImageFileNameArray.size(), 0, format, type, nullptr);
 		}
 
-		if (gli::is_compressed(texture.format()))
-		{
-			// copy data from each dds image to the 2d texture array layer
-			glCompressedTexSubImage2D(target, 0,  0, i, dimensions.x, i_ImageFileNameArray.size(), format.Internal, texture.size(), texture.data());
-		}
-		else
-		{
-			// copy data from each dds image to the 2d texture array layer
-			glTexSubImage2D(target, 0, 0, i, dimensions.x, i_ImageFileNameArray.size(), format.External, format.Type, texture.data());
-		}
+		// copy data from each dds image to the 1d texture array layer
+		glTexSubImage2D(target, 0, 0, i, pSurface->w, i_ImageFileNameArray.size(), format, type, pSurface->pixels);
+
+		SDL_FreeSurface(pSurface);
 	}
 
 	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
@@ -229,56 +180,38 @@ unsigned int TextureManager::Load1DArrayTexture ( const std::vector<std::string>
 
 unsigned int TextureManager::Load2DTexture ( const std::string& i_ImageFileName, unsigned int i_WrapType, unsigned int i_FilterType, bool i_IsGammaCorrected, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering )
 {
-	gli::texture texture = gli::load(i_ImageFileName);
-	if (texture.empty())
+	char* pBasePath = SDL_GetBasePath();
+	std::string imageName(pBasePath ? pBasePath : "");
+	imageName += i_ImageFileName;
+
+	SDL_RWops* pF = SDL_RWFromFile(imageName.c_str(), "rb");
+	if (!pF)
 	{
-		ERR("Image file %s failed to load!", i_ImageFileName.c_str());
+		ERR("Failed to open image: %s!", imageName.c_str());
 		return 0;
 	}
 
-	gli::gl GL;
-	unsigned int target = GL.translate(texture.target());
-	if (target != GL_TEXTURE_2D)
+	SDL_Surface* pSurface = IMG_LoadBMP_RW(pF);
+	if (!pSurface)
 	{
-		ERR("Texture target must be GL_TEXTURE_2D!");
+		ERR("Failed to load image: %s!, Error: %s", imageName.c_str(), IMG_GetError());
 		return 0;
 	}
 
-	if (! m_IsTexDDSSupported)
-	{
-		ERR("GL_EXT_texture_compression_s3tc is required!");
-		return 0;
-	}
+	unsigned int target = GL_TEXTURE_2D;
 
 	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
-	gli::gl::format format = GL.translate(texture.format());
-	if (i_IsGammaCorrected)
-	{
-		if (format.Internal == gli::gl::internalFormat::INTERNAL_RGB_DXT1)
-		{
-			format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_DXT1;
-		}
-		else if (format.Internal == gli::gl::internalFormat::INTERNAL_RGBA_DXT1)
-		{
-			format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_ALPHA_DXT1;
-		}
-	}
+	unsigned int format = GL_RGB;
+	unsigned int internalFormat = GL_RGB;
+	unsigned int type = GL_UNSIGNED_BYTE;
 
-	glm::tvec3<int> const dimensions(texture.dimensions());
+	SetupPixelFormat(pSurface->format, i_IsGammaCorrected, format, internalFormat);
 
-	if (gli::is_compressed(texture.format()))
-	{
-		m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, format.Internal, format.Internal, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, 1));
-		// allocate memory and load the texture data
-		glCompressedTexImage2D(target, 0, format.Internal, dimensions.x, dimensions.y, 0, texture.size(), texture.data());
-	}
-	else
-	{
-		m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, format.Internal, format.External, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, 1));
-		// allocate memory and load the texture data
-		glTexImage2D(target, 0, format.Internal, dimensions.x, dimensions.y, 0, format.External, format.Type, texture.data());
-	}
+	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, internalFormat, format, type, pSurface->w, pSurface->h, i_WrapType, i_FilterType, i_MipMapCount, 1));
+	glTexImage2D(target, 0, internalFormat, pSurface->w, pSurface->h, 0, format, type, pSurface->pixels);
+
+	SDL_FreeSurface(pSurface);
 
 	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
@@ -293,140 +226,52 @@ unsigned int TextureManager::Load2DArrayTexture ( const std::vector<std::string>
 		return 0;
 	}
 
+	char* pBasePath = SDL_GetBasePath();
+
 	unsigned int texId = 0;
-	unsigned int target = 0;
+	unsigned int target = GL_TEXTURE_2D_ARRAY;
 	for (unsigned short i = 0; i < i_ImageFileNameArray.size(); ++i)
 	{
-		gli::texture texture = gli::load(i_ImageFileNameArray[i]);
-		if (texture.empty())
+		std::string imageName(pBasePath ? pBasePath : "");
+		imageName += i_ImageFileNameArray[i];
+
+		SDL_RWops* pF = SDL_RWFromFile(imageName.c_str(), "rb");
+		if (!pF)
 		{
-			ERR("Image file %s failed to load!", i_ImageFileNameArray[i].c_str());
+			ERR("Failed to open image: %s!", imageName.c_str());
 			return 0;
 		}
 
-		gli::gl GL;
-		target = GL.translate(texture.target());
-		if (target != GL_TEXTURE_2D_ARRAY)
+		SDL_Surface* pSurface = IMG_LoadBMP_RW(pF);
+		if (!pSurface)
 		{
-			ERR("Texture target must be GL_TEXTURE_2D_ARRAY!");
+			ERR("Failed to load image: %s!, Error: %s", imageName.c_str(), IMG_GetError());
 			return 0;
 		}
 
-		if (! m_IsTexDDSSupported)
-		{
-			ERR("GL_EXT_texture_compression_s3tc is required!");
-			return 0;
-		}
+		unsigned int format = GL_RGB;
+		unsigned int internalFormat = GL_RGB;
+		unsigned int type = GL_UNSIGNED_BYTE;
 
-		gli::gl::format format = GL.translate(texture.format());
-		if (i_IsGammaCorrected)
-		{
-			if (format.Internal == gli::gl::internalFormat::INTERNAL_RGB_DXT1)
-			{
-				format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_DXT1;
-			}
-			else if (format.Internal == gli::gl::internalFormat::INTERNAL_RGBA_DXT1)
-			{
-				format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_ALPHA_DXT1;
-			}
-		}
-
-		glm::tvec3<int> const dimensions(texture.dimensions());
+		SetupPixelFormat(pSurface->format, i_IsGammaCorrected, format, internalFormat);
 
 		if (i == 0)
 		{
 			texId = GenAndBindTexture(target, i_TexUnitId);
 
-			if (gli::is_compressed(texture.format()))
-			{
-				m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, format.Internal, format.Internal, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, i_ImageFileNameArray.size()));
+			m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, internalFormat, format, type, pSurface->w, pSurface->h, i_WrapType, i_FilterType, i_MipMapCount, i_ImageFileNameArray.size()));
 
-				// allocate space for 2d texture array
-				glCompressedTexImage3D(target, 0, format.Internal, dimensions.x, dimensions.y, i_ImageFileNameArray.size(), 0, texture.size(), nullptr);
-			}
-			else
-			{
-				m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, format.Internal, format.External, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, i_ImageFileNameArray.size()));
-
-				// allocate space for 2d texture array
-				glTexImage3D(target, 0, format.Internal, dimensions.x, dimensions.y, i_ImageFileNameArray.size(), 0, format.External, format.Type, nullptr);
-			}
+			// allocate space for 2d texture array
+			glTexImage3D(target, 0, internalFormat, pSurface->w, pSurface->h, i_ImageFileNameArray.size(), 0, format, type, nullptr);
 		}
 
-		if (gli::is_compressed(texture.format()))
-		{
-			// copy data from each dds image to the 2d texture array layer
-			glCompressedTexSubImage3D(target, 0, 0, 0, i, dimensions.x, dimensions.y, i_ImageFileNameArray.size(), format.Internal, texture.size(), texture.data());
-		}
-		else
-		{
-			// copy data from each dds image to the 2d texture array layer
-			glTexSubImage3D(target, 0, 0, 0, i, dimensions.x, dimensions.y, i_ImageFileNameArray.size(), format.External, format.Type, texture.data());
-		}
+		// copy data from each dds image to the 2d texture array layer
+		glTexSubImage3D(target, 0, 0, 0, i, pSurface->w, pSurface->h, i_ImageFileNameArray.size(), format, type, pSurface->pixels);
+
+		SDL_FreeSurface(pSurface);
 	}
 
 	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
-
-	return texId;
-}
-
-unsigned int TextureManager::LoadCubeMapTexture ( const std::string& i_ImageFileName, unsigned int i_WrapType, unsigned int i_FilterType, bool i_IsGammaCorrected, short i_TexUnitId, short i_MipMapCount )
-{
-	gli::texture texture = gli::load(i_ImageFileName);
-	if (texture.empty())
-	{
-		ERR("Image file %s failed to load!", i_ImageFileName.c_str());
-		return 0;
-	}
-
-	gli::gl GL;
-	unsigned int target = GL.translate(texture.target());
-	if (target != GL_TEXTURE_CUBE_MAP)
-	{
-		ERR("Texture target must be GL_TEXTURE_CUBE_MAP!");
-		return 0;
-	}
-
-	if (! m_IsTexDDSSupported)
-	{
-		ERR("GL_EXT_texture_compression_s3tc is required!");
-		return 0;
-	}
-
-	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
-
-	gli::gl::format format = GL.translate(texture.format());
-	if (i_IsGammaCorrected)
-	{
-		if (format.Internal == gli::gl::internalFormat::INTERNAL_RGB_DXT1)
-		{
-			format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_DXT1;
-		}
-		else if (format.Internal == gli::gl::internalFormat::INTERNAL_RGBA_DXT1)
-		{
-			format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_ALPHA_DXT1;
-		}
-	}
-
-	glm::tvec3<int> const dimensions(texture.dimensions());
-
-	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, GL_TEXTURE_CUBE_MAP, format.Internal, format.Internal, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, 1));
-
-	for (unsigned short i = 0; i < 6; ++ i)
-	{
-		if (gli::is_compressed(texture.format()))
-		{
-			// allocate memory and load the texture data
-			glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format.Internal, dimensions.x, dimensions.y, 0, texture.size(), texture.data(0, i, 0));
-		}
-		else
-		{
-			// allocate memory and load the texture data
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format.Internal, dimensions.x, dimensions.y, 0, format.External, format.Type, texture.data(0, i, 0));
-		}
-	}
-
-	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount);
 
 	return texId;
 }
@@ -445,67 +290,258 @@ unsigned int TextureManager::LoadCubeMapTexture ( const std::vector<std::string>
 		return 0;
 	}
 
-	unsigned int texId = GenAndBindTexture(GL_TEXTURE_CUBE_MAP, i_TexUnitId);
+	unsigned int target = GL_TEXTURE_CUBE_MAP;
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
 
-	for (unsigned short i = 0; i < i_ImageFileArray.size(); ++ i)
+	char* pBasePath = SDL_GetBasePath();
+
+	for (unsigned short i = 0; i < i_ImageFileArray.size(); ++i)
 	{
-		gli::texture texture = gli::load(i_ImageFileArray[i]);
-		if (texture.empty())
+		std::string imageName(pBasePath ? pBasePath : "");
+		imageName += i_ImageFileArray[i];
+
+		SDL_RWops* pF = SDL_RWFromFile(imageName.c_str(), "rb");
+		if (!pF)
 		{
-			ERR("Image file %s failed to load!", i_ImageFileArray[i].c_str());
+			ERR("Failed to open image: %s!", imageName.c_str());
 			return 0;
 		}
 
-		gli::gl GL;
-		unsigned int target = GL.translate(texture.target());
-		if (target != GL_TEXTURE_2D)
+		SDL_Surface* pSurface = IMG_LoadBMP_RW(pF);
+		if (!pSurface)
 		{
-			ERR("Texture target must be GL_TEXTURE_2D!");
+			ERR("Failed to load image: %s!, Error: %s", imageName.c_str(), IMG_GetError());
 			return 0;
 		}
 
-		if (! m_IsTexDDSSupported)
-		{
-			ERR("GL_EXT_texture_compression_s3tc is required!");
-			return 0;
-		}
+		unsigned int format = GL_RGB;
+		unsigned int internalFormat = GL_RGB;
+		unsigned int type = GL_UNSIGNED_BYTE;
 
-		gli::gl::format format = GL.translate(texture.format());
-		if (i_IsGammaCorrected)
-		{
-			if (format.Internal == gli::gl::internalFormat::INTERNAL_RGB_DXT1)
-			{
-				format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_DXT1;
-			}
-			else if (format.Internal == gli::gl::internalFormat::INTERNAL_RGBA_DXT1)
-			{
-				format.Internal = gli::gl::internalFormat::INTERNAL_SRGB_ALPHA_DXT1;
-			}
-		}
+		SetupPixelFormat(pSurface->format, i_IsGammaCorrected, format, internalFormat);
 
-		glm::tvec3<int> const dimensions(texture.dimensions());
+		if (i == 0)
+		{
+			m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, internalFormat, format, type, pSurface->w, pSurface->h, i_WrapType, i_FilterType, i_MipMapCount, 1));
+		}
+		// allocate memory and load the texture data
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, pSurface->w, pSurface->h, 0, format, type, pSurface->pixels);
 
-		if (gli::is_compressed(texture.format()))
-		{
-			if (i == 0)
-			{
-				m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, GL_TEXTURE_CUBE_MAP, format.Internal, format.Internal, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, 1));
-			}
-			// allocate memory and load the texture data
-			glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format.Internal, dimensions.x, dimensions.y, 0, texture.size(), texture.data());
-		}
-		else
-		{
-			if (i == 0)
-			{
-				m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, GL_TEXTURE_CUBE_MAP, format.Internal, format.External, format.Type, dimensions.x, dimensions.y, i_WrapType, i_FilterType, i_MipMapCount, 1));
-			}
-			// allocate memory and load the texture data
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format.Internal, dimensions.x, dimensions.y, 0, format.External, format.Type, texture.data());
-		}
+		SDL_FreeSurface(pSurface);
 	}
 
-	SetupTextureParameteres(GL_TEXTURE_CUBE_MAP, i_WrapType, i_FilterType, i_MipMapCount);
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount);
+
+	return texId;
+}
+
+unsigned int TextureManager::Load2DRawTexture(const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering, unsigned short i_DataOffset)
+{
+	if (i_FormatExternal != GL_RED && i_FormatExternal != GL_RG &&
+		i_FormatExternal != GL_RGB && i_FormatExternal != GL_RGBA &&
+		i_FormatExternal != GL_RGB16F && i_FormatExternal != GL_RGBA16F)
+	{
+		ERR("Only GL_RED, GL_RG, GL_RGB, GL_RGBA, GL_RGB16F and GL_RGBA16F external formats are supported!");
+		return 0;
+	}
+
+	if (i_DataType != GL_UNSIGNED_BYTE && i_DataType != GL_FLOAT)
+	{
+		ERR("Only GL_UNSIGNED_BYTE and GL_FLOAT data types are supported!");
+		return 0;
+	}
+
+	// TODO fix image load - move in FileUtils
+	char* basePath = SDL_GetBasePath();
+	std::string fileName(basePath ? basePath : "");
+	fileName += i_ImageFileName;
+
+	SDL_RWops* pF = SDL_RWFromFile(fileName.c_str(), "rb");
+	if (!pF)
+	{
+		ERR("Failed to open %s image file name!", fileName.c_str());
+		return 0;
+	}
+
+	unsigned short channelCount = 1;
+	switch (i_FormatExternal)
+	{
+	case GL_RED:
+		channelCount = 1;
+		break;
+	case GL_RG:
+		channelCount = 2;
+		break;
+	case GL_RGB:
+	case GL_RGB16F:
+		channelCount = 3;
+		break;
+	case GL_RGBA:
+	case GL_RGBA16F:
+		channelCount = 4;
+		break;
+	}
+
+	size_t fileSize = i_Width * i_Height * channelCount;
+
+	if (i_DataOffset >= fileSize)
+	{
+		ERR("Data offset %d is bigger than the size of the image!", i_DataOffset);
+		return 0;
+	}
+
+	fileSize += i_DataOffset;
+
+	size_t nbRead = 0;
+	unsigned char* pUCharData = nullptr;
+	float* pFloatData = nullptr;
+	if (i_DataType == GL_UNSIGNED_BYTE)
+	{
+		pUCharData = new unsigned char[fileSize];
+		assert(pUCharData != nullptr);
+		nbRead = (size_t)SDL_RWread(pF, pUCharData, sizeof(unsigned char), fileSize);
+	}
+	else if (i_DataType == GL_FLOAT)
+	{
+		pFloatData = new float[fileSize];
+		assert(pFloatData != nullptr);
+		nbRead = (size_t)SDL_RWread(pF, pFloatData, sizeof(float), fileSize);
+	}
+
+	if (nbRead != fileSize)
+	{
+		ERR("Mismatch of bytes read vs file size in bytes!");
+		return 0;
+	}
+
+	SDL_RWclose(pF);
+
+	unsigned int target = GL_TEXTURE_2D;
+
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
+
+	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_DataType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, 1));
+	// allocate memory and load the texture data
+
+	if (i_DataType == GL_UNSIGNED_BYTE)
+	{
+		glTexImage2D(target, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_DataType, pUCharData + i_DataOffset);
+
+		SAFE_ARRAY_DELETE(pUCharData);
+	}
+	else if (i_DataType == GL_FLOAT)
+	{
+		glTexImage2D(target, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_DataType, pFloatData + i_DataOffset);
+
+		SAFE_ARRAY_DELETE(pFloatData);
+	}
+
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
+
+	return texId;
+}
+
+unsigned int TextureManager::Load3DRawTexture(const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned short i_Depth, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering, unsigned short i_DataOffset)
+{
+	if (i_FormatExternal != GL_RED && i_FormatExternal != GL_RG &&
+		i_FormatExternal != GL_RGB && i_FormatExternal != GL_RGBA &&
+		i_FormatExternal != GL_RGB16F && i_FormatExternal != GL_RGBA16F)
+	{
+		ERR("Only GL_RGB, GL_RGBA, GL_RGB16F and GL_RGBA16F external formats are supported!");
+		return 0;
+	}
+
+	if (i_DataType != GL_UNSIGNED_BYTE && i_DataType != GL_FLOAT)
+	{
+		ERR("Only GL_UNSIGNED_BYTE and GL_FLOAT data types are supported!");
+		return 0;
+	}
+
+	// TODO fix image load - move in FileUtils
+	char* basePath = SDL_GetBasePath();
+	std::string fileName(basePath ? basePath : "");
+	fileName += i_ImageFileName;
+
+	SDL_RWops* pF = SDL_RWFromFile(fileName.c_str(), "rb");
+	if (!pF)
+	{
+		ERR("Failed to open %s image file name!", fileName.c_str());
+		return 0;
+	}
+
+	unsigned short channelCount = 1;
+	switch (i_FormatExternal)
+	{
+	case GL_RED:
+		channelCount = 1;
+		break;
+	case GL_RG:
+		channelCount = 2;
+		break;
+	case GL_RGB:
+	case GL_RGB16F:
+		channelCount = 3;
+		break;
+	case GL_RGBA:
+	case GL_RGBA16F:
+		channelCount = 4;
+		break;
+	}
+
+	size_t fileSize = i_Width * i_Height * i_Depth * channelCount;
+
+	if (i_DataOffset >= fileSize)
+	{
+		ERR("Data offset %d is bigger than the size of the image!", i_DataOffset);
+		return 0;
+	}
+
+	fileSize += i_DataOffset;
+
+	size_t nbRead = 0;
+	unsigned char* pUCharData = nullptr;
+	float* pFloatData = nullptr;
+	if (i_DataType == GL_UNSIGNED_BYTE)
+	{
+		pUCharData = new unsigned char[fileSize];
+		assert(pUCharData);
+		nbRead = (size_t)SDL_RWread(pF, pUCharData, sizeof(unsigned char), fileSize);
+	}
+	else if (i_DataType == GL_FLOAT)
+	{
+		pFloatData = new float[fileSize];
+		assert(pFloatData != nullptr);
+		nbRead = (size_t)SDL_RWread(pF, pFloatData, sizeof(unsigned char), fileSize);
+	}
+
+	if (nbRead != fileSize)
+	{
+		ERR("Mismatch of bytes read vs file size in bytes!");
+		return 0;
+	}
+
+	SDL_RWclose(pF);
+
+	unsigned int target = GL_TEXTURE_3D;
+
+	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
+
+	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_DataType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, 1));
+	// allocate memory and load the texture data
+	if (i_DataType == GL_UNSIGNED_BYTE)
+	{
+		glTexImage3D(target, 0, i_FormatInternal, i_Width, i_Height, i_Depth, 0, i_FormatExternal, i_DataType, pUCharData + i_DataOffset);
+
+		SAFE_ARRAY_DELETE(pUCharData);
+	}
+	else if (i_DataType == GL_FLOAT)
+	{
+		glTexImage3D(target, 0, i_FormatInternal, i_Width, i_Height, i_Depth, 0, i_FormatExternal, i_DataType, pFloatData + i_DataOffset);
+
+		SAFE_ARRAY_DELETE(pFloatData);
+	}
+
+	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
 	return texId;
 }
@@ -561,103 +597,7 @@ unsigned int TextureManager::Create2DTexture ( unsigned int i_FormatInternal, un
 	return texId;
 }
 
-unsigned int TextureManager::Create2DRawTexture ( const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering, unsigned short i_DataOffset )
-{
-	if (i_FormatExternal != GL_RED && i_FormatExternal != GL_RG &&
-		i_FormatExternal != GL_RGB && i_FormatExternal != GL_RGBA &&
-		i_FormatExternal != GL_RGB16F && i_FormatExternal != GL_RGBA16F)
-	{
-		ERR("Only GL_RED, GL_RG, GL_RGB, GL_RGBA, GL_RGB16F and GL_RGBA16F external formats are supported!");
-		return 0;
-	}
-
-	if (i_DataType != GL_UNSIGNED_BYTE && i_DataType != GL_FLOAT)
-	{
-		ERR("Only GL_UNSIGNED_BYTE and GL_FLOAT data types are supported!");
-		return 0;
-	}
-
-	FILE* pF = fopen(i_ImageFileName.c_str(), "rb");
-
-	if (!pF)
-	{
-		ERR("Failed to open %s image file name!", i_ImageFileName.c_str());
-		return 0;
-	}
-
-	unsigned char* pUCharData = nullptr;
-	float* pFloatData = nullptr;
-
-	unsigned short channelCount = 1;
-	switch (i_FormatExternal)
-	{
-	case GL_RED:
-		channelCount = 1;
-		break;
-	case GL_RG:
-		channelCount = 2;
-		break;
-	case GL_RGB:
-	case GL_RGB16F:
-		channelCount = 3;
-		break;
-	case GL_RGBA:
-	case GL_RGBA16F:
-		channelCount = 4;
-		break;
-	}
-
-	unsigned long size = i_Width * i_Height * channelCount;
-
-	if (i_DataOffset >= size)
-	{
-		ERR("Data offset %d is bigger than the size of the image!", i_DataOffset);
-		return 0;
-	}
-
-	size += i_DataOffset;
-
-	if (i_DataType == GL_UNSIGNED_BYTE)
-	{
-		pUCharData = new unsigned char[size];
-		assert(pUCharData != nullptr);
-		fread(pUCharData, 1, size * sizeof(unsigned char), pF);
-	}
-	else if (i_DataType == GL_FLOAT)
-	{
-		pFloatData = new float[size];
-		assert(pFloatData != nullptr);
-		fread(pFloatData, 1, size * sizeof(float), pF);
-	}
-
-	fclose(pF);
-
-	unsigned int target = GL_TEXTURE_2D;
-
-	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
-
-	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_DataType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, 1));
-	// allocate memory and load the texture data
-
-	if (i_DataType == GL_UNSIGNED_BYTE)
-	{
-		glTexImage2D(target, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_DataType, pUCharData + i_DataOffset);
-		
-		SAFE_ARRAY_DELETE(pUCharData);
-	}
-	else if (i_DataType == GL_FLOAT)
-	{
-		glTexImage2D(target, 0, i_FormatInternal, i_Width, i_Height, 0, i_FormatExternal, i_DataType, pFloatData + i_DataOffset);
-		
-		SAFE_ARRAY_DELETE(pFloatData);
-	}
-
-	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
-
-	return texId;
-}
-
-unsigned int TextureManager::Create2DArrayTexture ( unsigned short i_LayerCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering )
+unsigned int TextureManager::Create2DArrayTexture(unsigned short i_LayerCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering)
 {
 	if (!TextureManager::CheckLayerCount(i_LayerCount))
 	{
@@ -672,101 +612,6 @@ unsigned int TextureManager::Create2DArrayTexture ( unsigned short i_LayerCount,
 	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_FormatType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, i_LayerCount));
 	// allocate memory and load the texture data
 	glTexImage3D(target, 0, i_FormatInternal, i_Width, i_Height, i_LayerCount, 0, i_FormatExternal, i_FormatType, i_pData);
-
-	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
-
-	return texId;
-}
-
-unsigned int TextureManager::Create3DRawTexture ( const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned short i_Depth, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId, short i_MipMapCount, bool i_AnisoFiltering, unsigned short i_DataOffset )
-{
-	if (i_FormatExternal != GL_RED && i_FormatExternal != GL_RG &&
-		i_FormatExternal != GL_RGB && i_FormatExternal != GL_RGBA &&
-		i_FormatExternal != GL_RGB16F && i_FormatExternal != GL_RGBA16F)
-	{
-		ERR("Only GL_RGB, GL_RGBA, GL_RGB16F and GL_RGBA16F external formats are supported!");
-		return 0;
-	}
-
-	if (i_DataType != GL_UNSIGNED_BYTE && i_DataType != GL_FLOAT)
-	{
-		ERR("Only GL_UNSIGNED_BYTE and GL_FLOAT data types are supported!");
-		return 0;
-	}
-
-	FILE* pF = fopen(i_ImageFileName.c_str(), "rb");
-
-	if (!pF)
-	{
-		ERR("Failed to open %s image file name!", i_ImageFileName.c_str());
-		return 0;
-	}
-
-	unsigned char* pUCharData = nullptr;
-	float* pFloatData = nullptr;
-
-	unsigned short channelCount = 1;
-	switch (i_FormatExternal)
-	{
-	case GL_RED:
-		channelCount = 1;
-		break;
-	case GL_RG:
-		channelCount = 2;
-		break;
-	case GL_RGB:
-	case GL_RGB16F:
-		channelCount = 3;
-		break;
-	case GL_RGBA:
-	case GL_RGBA16F:
-		channelCount = 4;
-		break;
-	}
-
-	unsigned long size = i_Width * i_Height * i_Depth * channelCount;
-
-	if (i_DataOffset >= size)
-	{
-		ERR("Data offset %d is bigger than the size of the image!", i_DataOffset);
-		return 0;
-	}
-
-	size += i_DataOffset;
-
-	if (i_DataType == GL_UNSIGNED_BYTE)
-	{
-		pUCharData = new unsigned char[size];
-		assert(pUCharData);
-		fread(pUCharData, 1, size * sizeof(unsigned char), pF);
-	}
-	else if (i_DataType == GL_FLOAT)
-	{
-		pFloatData = new float[size];
-		assert(pFloatData != nullptr);
-		fread(pFloatData, 1, size * sizeof(float), pF);
-	}
-
-	fclose(pF);
-
-	unsigned int target = GL_TEXTURE_3D;
-
-	unsigned int texId = GenAndBindTexture(target, i_TexUnitId);
-
-	m_TextureDataArray.push_back(TextureInfo(texId, i_TexUnitId, target, i_FormatInternal, i_FormatExternal, i_DataType, i_Width, i_Height, i_WrapType, i_FilterType, i_MipMapCount, 1));
-	// allocate memory and load the texture data
-	if (i_DataType == GL_UNSIGNED_BYTE)
-	{
-		glTexImage3D(target, 0, i_FormatInternal, i_Width, i_Height, i_Depth, 0, i_FormatExternal, i_DataType, pUCharData + i_DataOffset);
-		
-		SAFE_ARRAY_DELETE(pUCharData);
-	}
-	else if (i_DataType == GL_FLOAT)
-	{
-		glTexImage3D(target, 0, i_FormatInternal, i_Width, i_Height, i_Depth, 0, i_FormatExternal, i_DataType, pFloatData + i_DataOffset);
-		
-		SAFE_ARRAY_DELETE(pFloatData);
-	}
 
 	SetupTextureParameteres(target, i_WrapType, i_FilterType, i_MipMapCount, i_AnisoFiltering);
 
@@ -823,6 +668,44 @@ unsigned int TextureManager::GenAndBindTexture(unsigned int i_Target, short i_Te
 	return texId;
 }
 
+void TextureManager::SetupPixelFormat(const SDL_PixelFormat* i_pFormat, bool i_IsGammaCorrected, unsigned int& o_FormatExternal, unsigned int& o_FormatInternal)
+{
+	if (!i_pFormat)
+	{
+		ERR("Image has invalid pixel format!");
+		return;
+	}
+
+	if (i_pFormat->format != SDL_PIXELFORMAT_RGB24 &&
+		i_pFormat->format != SDL_PIXELFORMAT_BGR24 &&
+		i_pFormat->format != SDL_PIXELFORMAT_RGBA32 &&
+		i_pFormat->format != SDL_PIXELFORMAT_BGRA32)
+	{
+		ERR("The supported image formats are: RGB, BGR, RGBA, BGRA!");
+		return;
+	}
+
+	switch (i_pFormat->format)
+	{
+	case SDL_PIXELFORMAT_RGB24:
+		o_FormatExternal = GL_RGB;
+		o_FormatInternal = i_IsGammaCorrected ? GL_SRGB : GL_RGB;
+		break;
+	case SDL_PIXELFORMAT_BGR24:
+		o_FormatExternal = GL_BGR;
+		o_FormatInternal = i_IsGammaCorrected ? GL_SRGB : GL_RGB;
+		break;
+	case SDL_PIXELFORMAT_RGBA32:
+		o_FormatExternal = GL_RGBA;
+		o_FormatInternal = i_IsGammaCorrected ? GL_SRGB_ALPHA : GL_RGBA;
+		break;
+	case SDL_PIXELFORMAT_BGRA32:
+		o_FormatExternal = GL_BGRA;
+		o_FormatInternal = i_IsGammaCorrected ? GL_SRGB_ALPHA : GL_RGBA;
+		break;
+	}
+}
+
 unsigned int TextureManager::SetupTextureParameteres(unsigned int i_Target, unsigned int i_WrapType, unsigned int i_FilterType, short i_MipMapCount, bool i_AnisoFiltering)
 {
 	if (i_WrapType != GL_REPEAT && i_WrapType != GL_CLAMP_TO_EDGE)
@@ -872,7 +755,6 @@ unsigned int TextureManager::SetupTextureParameteres(unsigned int i_Target, unsi
 
 	glTexParameteri(i_Target, GL_TEXTURE_BASE_LEVEL, 0);
 
-
 	if (i_MipMapCount > 1000)
 	{
 		ERR("MipMap count can not be bigger than 1000!");
@@ -916,18 +798,7 @@ void TextureManager::Update1DTextureData ( unsigned int i_TexId, void* i_pNewDat
 
 			if (ti.target == GL_TEXTURE_1D)
 			{
-				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5
-					)
-				{
-					glCompressedTexImage1D(ti.target, 0, ti.formatInternal, ti.width, 0, ti.width * ti.formatType, i_pNewData);
-				}
-				else
-				{
-					glTexImage1D(ti.target, 0, ti.formatInternal, ti.width, 0, ti.formatExternal, ti.formatType, i_pNewData);
-				}
+				glTexImage1D(ti.target, 0, ti.formatInternal, ti.width, 0, ti.formatExternal, ti.formatType, i_pNewData);
 
 				return;
 			}
@@ -951,18 +822,7 @@ void TextureManager::Update2DTextureData ( unsigned int i_TexId, void* i_pNewDat
 
 			if (ti.target == GL_TEXTURE_2D)
 			{
-				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5
-					)
-				{
-					glCompressedTexImage2D(ti.target, 0, ti.formatInternal, ti.width, ti.height, 0, ti.width * ti.height * ti.formatType, i_pNewData);
-				}
-				else
-				{
-					glTexImage2D(ti.target, 0, ti.formatInternal, ti.width, ti.height, 0, ti.formatExternal, ti.formatType, i_pNewData);
-				}
+				glTexImage2D(ti.target, 0, ti.formatInternal, ti.width, ti.height, 0, ti.formatExternal, ti.formatType, i_pNewData);
 
 				return;
 			}
@@ -986,18 +846,7 @@ void TextureManager::Update2DArrayTextureData ( unsigned int i_TexId, void* i_pN
 
 			if (ti.target == GL_TEXTURE_2D_ARRAY)
 			{
-				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5
-					)
-				{
-					glCompressedTexImage3D(ti.target, 0, ti.formatInternal, ti.width, ti.height, ti.layerCount, 0, ti.width * ti.height * ti.formatType, i_pNewData);
-				}
-				else
-				{
-					glTexImage3D(ti.target, 0, ti.formatInternal, ti.width, ti.height, ti.layerCount, 0, ti.formatExternal, ti.formatType, i_pNewData);
-				}
+				glTexImage3D(ti.target, 0, ti.formatInternal, ti.width, ti.height, ti.layerCount, 0, ti.formatExternal, ti.formatType, i_pNewData);
 
 				return;
 			}
@@ -1021,18 +870,7 @@ void TextureManager::Update2DTextureSize ( unsigned int i_TexId, unsigned short 
 			// NOTE! Update the texture with NO DATA !!!!
 			if (ti.target == GL_TEXTURE_2D)
 			{
-				if (ti.formatInternal == GL_COMPRESSED_RGB_S3TC_DXT1 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT1 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT3 ||
-					ti.formatInternal == GL_COMPRESSED_RGBA_S3TC_DXT5
-					)
-				{
-					glCompressedTexImage2D(ti.target, 0, ti.formatInternal, ti.width, ti.height, 0, ti.width * ti.height * ti.formatType, nullptr);
-				}
-				else
-				{
-					glTexImage2D(ti.target, 0, ti.formatInternal, ti.width, ti.height, 0, ti.formatExternal, ti.formatType, nullptr);
-				}
+				glTexImage2D(ti.target, 0, ti.formatInternal, ti.width, ti.height, 0, ti.formatExternal, ti.formatType, nullptr);
 
 				return;
 			}

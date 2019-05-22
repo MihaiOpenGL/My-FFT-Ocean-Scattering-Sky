@@ -38,14 +38,16 @@ Application::Application()
 }
 
 Application::Application(const GlobalConfig& i_Config, int i_WindowWidth, int i_WindowHeight)
-	: m_WindowWidth(0), m_WindowHeight(0),
-	  m_pFBM(nullptr), m_pGUIBar(nullptr),
+	: m_WindowWidth(0), m_WindowHeight(0), m_pFBM(nullptr),
+#ifdef USE_GUI
+	  m_pGUIBar(nullptr),
+#endif //USE_GUI
       m_pCamera(nullptr), m_pObservingCamera(nullptr), m_pCurrentViewingCamera(nullptr), m_pCurrentControllingCamera(nullptr),
 	  m_pPostProcessingManager(nullptr), m_pSky(nullptr), m_pOcean(nullptr), m_pMotorBoat(nullptr),
 	  m_TimeScale(0.0f), m_CrrTime(0.0f), m_DeltaTime(0.0f),
 	  m_IsGUIVisible(false), m_IsCameraViewChanged(false), m_IsCameraControlChanged(false),
 	  m_IsRenderWireframe(false), m_IsRenderPoints(false), m_IsCursorReleased(false),
-      m_IsFrustumVisible(false), m_IsUnderWater(false), m_IsInBoatMode(false),
+      m_IsFrustumVisible(false), m_IsInBoatMode(false),
 	  m_MouseOldXPos(0), m_MouseOldYPos(0), m_IsInDraggingMode(false),
 	  m_KeySpeed(0.0f), m_MouseSpeed(0.0f), m_SunPhi(0.0f), m_SunTheta(0.0f)
 {
@@ -78,6 +80,7 @@ void Application::SetupGlobals(const GlobalConfig& i_Config)
 	m_MouseSpeed = i_Config.Input.MouseSpeed;
 }
 
+#ifdef USE_GUI
 //// GUI Callbacks
 void TW_CALL Application::GetCameraPosition(void *i_pValue, void *i_pClientData)
 {
@@ -255,6 +258,7 @@ void TW_CALL Application::GetFOV(void* i_pValue, void* i_pClientData)
 {
 	*static_cast<float *>(i_pValue) = static_cast<const Camera *>(i_pClientData)->GetFOV();
 }
+#endif //USE_GUI
 
 // Small function that converts LDR to HDR
 glm::vec3 Application::HDR(glm::vec3 i_L, float i_E)
@@ -268,6 +272,7 @@ glm::vec3 Application::HDR(glm::vec3 i_L, float i_E)
 
 void Application::InitScene(const GlobalConfig& i_Config)
 {
+#ifdef USE_GUI
 	////////////// Init AntTweakBar - GUI //////////
 	int ret = 0;
 
@@ -294,7 +299,7 @@ void Application::InitScene(const GlobalConfig& i_Config)
 	assert(m_pGUIBar != nullptr);
 	ret = TwDefine("Parameters size='350 400'");
 	assert(ret != 0);
-
+#endif //USE_GUI
 	//////////////////////////////////////////
 
 	// compute default framebuffer underwater color !!!	
@@ -332,6 +337,7 @@ void Application::InitScene(const GlobalConfig& i_Config)
 	m_IsCameraViewChanged = false;
 	m_IsCameraControlChanged = false;
 
+#ifdef USE_GUI
 	// add params to GUI
 	ret = TwAddVarRW(m_pGUIBar, "TimeScale", TW_TYPE_FLOAT, &m_TimeScale, "min=-20.0f; max=20.0f; step=1.0f group=Simulation");
 	assert(ret != 0);
@@ -340,7 +346,7 @@ void Application::InitScene(const GlobalConfig& i_Config)
 	assert(ret != 0);
 	ret = TwAddVarCB(m_pGUIBar, "CameraDirection", TW_TYPE_DIR3F, nullptr, GetCameraDirection, m_pCurrentControllingCamera, "group=Camera");
 	assert(ret != 0);
-
+#endif //USE_GUI
 	//////////////////////////////////////////////////////
 
 	m_pPostProcessingManager = new PostProcessingManager(i_Config);
@@ -352,6 +358,7 @@ void Application::InitScene(const GlobalConfig& i_Config)
 	assert(m_pSky != nullptr);
 	LOG("Sky is: %d bytes in size", sizeof(*m_pSky));
 
+#ifdef USE_GUI
 	if (m_pSky && m_pSky->GetModelType() != CustomTypes::Sky::ModelType::MT_CUBE_MAP)
 	{
 		ret = TwAddVarCB(m_pGUIBar, "Enabled", TW_TYPE_BOOL16, SetEnabledClouds, GetEnabledClouds, m_pSky, "group=Clouds");
@@ -374,12 +381,14 @@ void Application::InitScene(const GlobalConfig& i_Config)
 			assert(ret != 0);
 		}
 	}
+#endif //USE_GUI
 
 	///////// OCEAN ///////////
 	m_pOcean = new Ocean(i_Config);
 	assert(m_pOcean != nullptr);
 	LOG("Ocean is: %d bytes in size", sizeof(*m_pSky));
 
+#ifdef USE_GUI
 	// add params to GUI
 	ret = TwAddVarCB(m_pGUIBar, "Amplitude", TW_TYPE_FLOAT, SetOceanAmplitude, GetOceanAmplitude, m_pOcean, "min=0.01; max=1.0; step=0.01 group=Waves");
 	assert(ret != 0);
@@ -405,11 +414,12 @@ void Application::InitScene(const GlobalConfig& i_Config)
 	// add params to GUI
 	ret = TwAddVarCB(m_pGUIBar, "FOV", TW_TYPE_FLOAT, SetFOV, GetFOV, m_pCurrentControllingCamera, "min=5.0; max=129.0; step=1.0 group=Rendering");
 	assert(ret != 0);
+#endif //USE_GUI
 
 	//////// MOTOR BOAT ////////
 	m_pMotorBoat = new MotorBoat(i_Config);
 	assert(m_pMotorBoat != nullptr);
-	LOG("Motor is: %d bytes in size", sizeof(*m_pSky));
+	LOG("Motor Boat is: %d bytes in size", sizeof(*m_pSky));
 }
 
 void Application::Update(float i_CrrTime, float i_DeltaTime, const GlobalConfig& i_Config)
@@ -568,7 +578,9 @@ void Application::Render(const GlobalConfig& i_Config)
 
 	RenderPPE(i_Config);
 
+#ifdef USE_GUI
 	RenderGUI();
+#endif //USE_GUI
 }
 
 void Application::RenderPPE(const GlobalConfig& i_Config)
@@ -679,31 +691,32 @@ void Application::RenderScene(const GlobalConfig& i_Config)
 			m_pMotorBoat->Render();
 		}
 	}
-	////////////////////
 
 	if (i_Config.Scene.Ocean.Surface.BoatEffects.HideInsideWater && 
 		m_pMotorBoat && m_pCurrentViewingCamera && m_pCurrentViewingCamera->GetAltitude() > 0.0f)
 	{
+        //TODO Fix this when using PPE
+        
 		///////////// MAKE THE WATER IN THE BOAT DISAPPEAR !!! ///////////
 		// actually what this does - creates a hole in the ocean in the place of the flattened boat
 		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_ALWAYS, 1, 0xFF); //always pass the stencil test, ref value = 1
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); // if both the stencil test and the depth test succeed however, we want to replace the stored stencil value with the reference value
+		glStencilMask(0xFF); // enable writing to the stencil buffer
 
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-		glStencilMask(0xFF);
-		glDepthMask(GL_FALSE);
-		glClear(GL_STENCIL_BUFFER_BIT); // Clear stencil buffer (0 by default)
+        glClear(GL_STENCIL_BUFFER_BIT);
+        
+		// for all default buffers
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); //disable writing to color buffer
 
-		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-
+		// by drawing something we write 1 in the stencil buffer for each drawn fragment
 		m_pMotorBoat->RenderFlattened();
 
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		// for all default buffers
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); //enable writing to color buffer
 
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
-		glDepthMask(GL_TRUE);
-		///////////////
+		glStencilMask(0x00); // disable writing to the stencil buffer
+		glStencilFunc(GL_EQUAL, 0, 0xFF); // pass the stencil test only if the stored stencil value is 0, same as not equal to 1
 	}
 
 	if (m_pFBM)
@@ -717,8 +730,8 @@ void Application::RenderScene(const GlobalConfig& i_Config)
 		m_pOcean->Render(*m_pCurrentViewingCamera);
 	}
 
-	if (m_pCurrentViewingCamera && m_pCurrentViewingCamera->GetAltitude() >= 0.0f
-		&& i_Config.Scene.Ocean.Surface.BoatEffects.HideInsideWater)
+	if (i_Config.Scene.Ocean.Surface.BoatEffects.HideInsideWater &&
+		m_pCurrentViewingCamera && m_pCurrentViewingCamera->GetAltitude() > 0.0f)
 	{
 		glDisable(GL_STENCIL_TEST);
 	}
@@ -748,12 +761,14 @@ void Application::RenderScene(const GlobalConfig& i_Config)
 
 void Application::RenderGUI()
 {
+#ifdef USE_GUI
 	if (m_IsGUIVisible)
 	{
 		//Draw AntTweakBar bars
 		int ret = TwDraw(); // returneaza 'Invalid Value' ca eroare OpenGL, dar e ok!
 		//assert(ret != 0);
 	}
+#endif //USE_GUI
 }
 
 void Application::TerminateScene(void)
@@ -773,9 +788,11 @@ void Application::TerminateScene(void)
 
 	SAFE_DELETE(m_pMotorBoat);
 
+#ifdef USE_GUI
 	// Terminate AntTweakBar
 	int ret = TwTerminate();
 	assert(ret != 0);
+#endif //USE_GUI
 }
 
 
@@ -810,7 +827,7 @@ void Application::SetupGL(const GlobalConfig& i_Config)
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 	glStencilFunc(GL_ALWAYS, 0, 0xFF);
 	glStencilMask(0x0);
-	glEnable(GL_STENCIL_TEST);
+	glDisable(GL_STENCIL_TEST);
 
 	// Point Size
 	glPointSize(1.0f);
@@ -893,19 +910,23 @@ void Application::OnWindowResize(int i_Width, int i_Height)
 		m_pPostProcessingManager->UpdateSize(m_WindowWidth, m_WindowHeight);
 	}
 
+#ifdef USE_GUI
 	if (m_IsGUIVisible)
 	{
 		int ret = TwWindowSize(m_WindowWidth, m_WindowHeight);
 		assert(ret != 0);
 	}
+#endif //USE_GUI
 }
 
 bool Application::OnGUIMouseEventSDL(const SDL_Event& sdlEvent, unsigned char sdlMajorVersion, unsigned char sdlMinorVersion)
 {
+#ifdef USE_GUI
 	if (m_IsGUIVisible)
 	{
 		return TwEventSDL(&sdlEvent, sdlMajorVersion, sdlMinorVersion);
 	}
+#endif //USE_GUI
 
 	return false;
 }
@@ -919,17 +940,21 @@ void Application::OnMouseMotion(int i_XPos, int i_YPos)
 		if (m_pSky && m_pSky->GetAllowChangeDirWithMouse())
 		{
 
-			if (m_pSky->GetModelType() == CustomTypes::Sky::ModelType::MT_PRECOMPUTED_SCATTERING)
-			{
-				// precomputed scattering model
-				m_SunPhi += (m_MouseOldXPos - i_XPos) / 800.0f; //azimuth - dX
-				m_SunTheta += (m_MouseOldYPos - i_YPos) / 800.0f; //zenith - dY
-			}
-			else
-			{
-				// scattering and cubemap models
-				m_SunPhi += (m_MouseOldYPos - i_YPos) / 800.0f; //zenith - dY
-				m_SunTheta += (m_MouseOldXPos - i_XPos) / 800.0f; //azimuth - dX
+			switch(m_pSky->GetModelType())
+			{ 
+				case CustomTypes::Sky::ModelType::MT_PRECOMPUTED_SCATTERING:
+					// precomputed scattering model
+					m_SunPhi += (m_MouseOldXPos - i_XPos) / 800.0f; //azimuth - dX
+					m_SunTheta += (m_MouseOldYPos - i_YPos) / 800.0f; //zenith - dY
+					break;
+				case CustomTypes::Sky::ModelType::MT_CUBE_MAP:
+				case CustomTypes::Sky::ModelType::MT_SCATTERING:
+					// scattering and cubemap models
+					m_SunPhi += (m_MouseOldYPos - i_YPos) / 800.0f; //zenith - dY
+					m_SunTheta += (m_MouseOldXPos - i_XPos) / 800.0f; //azimuth - dX
+					break;
+				case CustomTypes::Sky::ModelType::MT_COUNT:
+				default: ERR("Invalid sky model type!");
 			}
 
 			m_pSky->SetSunDirection(m_SunPhi, m_SunTheta);
@@ -943,11 +968,13 @@ void Application::OnMouseMotion(int i_XPos, int i_YPos)
 		m_MouseOldXPos = i_XPos;
 		m_MouseOldYPos = i_YPos;
 
+#ifdef USE_GUI
 		if (m_IsGUIVisible && m_IsCursorReleased)
 		{
 			int ret = TwMouseMotion(i_XPos, i_YPos);
 			//assert(ret != 0);
 		}
+#endif //USE_GUI
 	}
 }
 

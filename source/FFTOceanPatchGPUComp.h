@@ -41,8 +41,8 @@ private:
 	//// Methods ////
 	void Destroy(void);
 
-	void SetFFTData(void);
-	void InitFFTData(void);
+	void SetFFTData(void) override;
+	void InitFFTData(void) override;
 
 	//// Variables ////
 	GPUComp2DIFFT m_2DIFFT;

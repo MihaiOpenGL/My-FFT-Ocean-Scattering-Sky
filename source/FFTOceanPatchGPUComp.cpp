@@ -67,11 +67,11 @@ void FFTOceanPatchGPUComp::Initialize ( const GlobalConfig& i_Config )
 
 	if (m_2DIFFT.GetUseFFTSlopes())
 	{
-		m_FFTHtSM.BuildComputeProgram("../resources/shaders/FFTHt.comp.glsl", i_Config);
+		m_FFTHtSM.BuildComputeProgram("resources/shaders/FFTHt.comp.glsl", i_Config);
 	}
 	else
 	{
-		m_FFTHtSM.BuildComputeProgram("../resources/shaders/FFTHt_NoFFTSlopes.comp.glsl", i_Config);
+		m_FFTHtSM.BuildComputeProgram("resources/shaders/FFTHt_NoFFTSlopes.comp.glsl", i_Config);
 	}
 
 	m_FFTHtSM.UseProgram();

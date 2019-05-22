@@ -438,43 +438,49 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\resources\textures\perlin_noise.dds">
-      <Filter>resources\textures</Filter>
-    </Image>
-    <Image Include="..\resources\textures\foam_highres.dds">
-      <Filter>resources\textures</Filter>
-    </Image>
-    <Image Include="..\resources\textures\sand_d.dds">
-      <Filter>resources\textures</Filter>
-    </Image>
-    <Image Include="..\resources\textures\xneg.dds">
-      <Filter>resources\textures</Filter>
-    </Image>
-    <Image Include="..\resources\textures\xpos.dds">
-      <Filter>resources\textures</Filter>
-    </Image>
-    <Image Include="..\resources\textures\yneg.dds">
-      <Filter>resources\textures</Filter>
-    </Image>
-    <Image Include="..\resources\textures\ypos.dds">
-      <Filter>resources\textures</Filter>
-    </Image>
-    <Image Include="..\resources\textures\zneg.dds">
-      <Filter>resources\textures</Filter>
-    </Image>
-    <Image Include="..\resources\textures\zpos.dds">
-      <Filter>resources\textures</Filter>
-    </Image>
-    <Image Include="..\resources\models\motor_boat\boat_d.dds">
+    <Image Include="..\resources\models\motor_boat\boat_d.bmp">
       <Filter>resources\models\motor_boat</Filter>
     </Image>
-    <Image Include="..\resources\models\motor_boat\boat_n.dds">
+    <Image Include="..\resources\models\motor_boat\boat_n.bmp">
       <Filter>resources\models\motor_boat</Filter>
     </Image>
-    <Image Include="..\resources\textures\wake_foam.dds">
+    <Image Include="..\resources\textures\boat_foam.bmp">
       <Filter>resources\textures</Filter>
     </Image>
-    <Image Include="..\resources\textures\wake_normal_height.dds">
+    <Image Include="..\resources\textures\foam_highres.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\perlin_noise.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\sand_d.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\sand_n.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\wake_foam.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\wake_normal_height.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\xneg.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\xpos.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\yneg.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\ypos.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\zneg.bmp">
+      <Filter>resources\textures</Filter>
+    </Image>
+    <Image Include="..\resources\textures\zpos.bmp">
       <Filter>resources\textures</Filter>
     </Image>
   </ItemGroup>

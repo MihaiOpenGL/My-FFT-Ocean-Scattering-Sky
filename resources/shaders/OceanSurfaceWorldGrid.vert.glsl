@@ -52,7 +52,7 @@ struct WaveBlending
 };
 uniform WaveBlending u_WaveBlending;
 
-#ifdef BOAT_KELVIN_WAKE
+// used by both BOAT_FOAM and BOAT_KELVIN_WAKE
 struct BoatKelvinWakeData 
 {
 	sampler2D DispNormMap;
@@ -64,7 +64,7 @@ struct BoatKelvinWakeData
 	float Scale;
 };
 uniform BoatKelvinWakeData u_BoatKelvinWakeData;
-#endif // BOAT_KELVIN_WAKE
+//
 
 in vec2 a_uv;
 
@@ -75,9 +75,9 @@ out float v_blendFactor;
 out float v_fogCoord;
 out vec4 v_clipPos; //for local reflections + refractions
 
-#ifdef BOAT_KELVIN_WAKE
-out vec2 v_wakeBaseUV;
-#endif // BOAT_KELVIN_WAKE
+// used by both BOAT_FOAM and BOAT_KELVIN_WAKE
+out vec2 v_boatEffectBaseUV;
+//
 
 
 /*  Ray - Plane Intersection
@@ -217,34 +217,16 @@ vec3 computeFFTDisplacement (vec3 worldPos, vec2 scaledUV)
 	return fftDisp;
 }
 
-float computeBoatKelvinWakeDisplacement (vec3 worldPos)
+float computeBoatKelvinWakeDisplacement(void)
 {
 	float bowWakeDisp = 0.0f;
 
 #ifdef BOAT_KELVIN_WAKE // inspired from SunDog Triton Demo ocean shaders
-	ivec2 texSize = textureSize(u_BoatKelvinWakeData.DispNormMap, 0);
-
-	// compute the position
-	vec3 Pos = worldPos - u_BoatKelvinWakeData.BoatPosition;
-	
-	vec3 P = u_BoatKelvinWakeData.WakePosition - u_BoatKelvinWakeData.BoatPosition;
-
-	// compute the frame to rotate on
-	vec3 Forward = normalize(P);
-    vec3 Up = vec3(0.0f, 1.0f, 0.0f);
-    vec3 Right = normalize(cross(Up, Forward));
-
-	// compute the UVs
-	vec2 wakeBaseUV;
-	wakeBaseUV.x = dot(Pos.xz, Right.xz);
-	wakeBaseUV.y = dot(Pos.xz, Forward.xz);
-
-	v_wakeBaseUV = wakeBaseUV;
-
 	//////// BOW WAKE - in front of the boat ////////
 	// center them to boat position
-	vec2 bowWakeDispUV = wakeBaseUV;
+	vec2 bowWakeDispUV = v_boatEffectBaseUV;
 
+	ivec2 texSize = textureSize(u_BoatKelvinWakeData.DispNormMap, 0);
 	bowWakeDispUV += vec2(texSize.x, texSize.y * 0.4f);
 	bowWakeDispUV /= (texSize * u_BoatKelvinWakeData.Scale);
 
@@ -258,6 +240,25 @@ float computeBoatKelvinWakeDisplacement (vec3 worldPos)
 #endif // BOAT_KELVIN_WAKE
 
 	return bowWakeDisp;
+}
+
+void computeBoatBaseEffectUV(vec3 worldPos)
+{
+// used by both BOAT_FOAM and BOAT_KELVIN_WAKE
+	// compute the position
+	vec3 Pos = worldPos - u_BoatKelvinWakeData.BoatPosition;
+	
+	vec3 P = u_BoatKelvinWakeData.WakePosition - u_BoatKelvinWakeData.BoatPosition;
+
+	// compute the frame to rotate on
+	vec3 Forward = normalize(P);
+    vec3 Up = vec3(0.0f, 1.0f, 0.0f);
+    vec3 Right = normalize(cross(Up, Forward));
+
+	// compute the UVs
+	v_boatEffectBaseUV.x = dot(Pos.xz, Right.xz);
+	v_boatEffectBaseUV.y = dot(Pos.xz, Forward.xz);
+//
 }
 
 void main (void)
@@ -326,9 +327,12 @@ void main (void)
 	//disp = fftDisp;
 	disp = mix(perlinDisp, fftDisp, v_blendFactor);
 
+// used by both BOAT_FOAM and BOAT_KELVIN_WAKE
+	computeBoatBaseEffectUV(worldPos);
+//
 
 #ifdef BOAT_KELVIN_WAKE
-	disp.y += computeBoatKelvinWakeDisplacement(worldPos);
+	disp.y += computeBoatKelvinWakeDisplacement();
 #endif // BOAT_KELVIN_WAKE
 
 	v_scaledUV = scaledUV;

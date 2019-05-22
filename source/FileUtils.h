@@ -6,17 +6,12 @@
 #include <string>
 
 /*
- A small helper function to load txt files, basically used to load shader code
+ A small helper function to load txt files, basically used to read files
 */
 
 namespace FileUtils
 {
-	struct TextFile
-	{
-		std::string text;
-	};
-
-	bool LoadTextFile ( const std::string& i_TextFileName, FileUtils::TextFile& o_Text );
+	bool LoadFile(const std::string& i_FileName, std::string& o_Data);
 }
 
 #endif /* FILE_UTILS_H */

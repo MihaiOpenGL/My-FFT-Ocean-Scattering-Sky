@@ -8,12 +8,14 @@
 #ifndef CPU_FFTW_2D_IFFT_H
 #define CPU_FFTW_2D_IFFT_H
 
+#include "AppConfig.h"
 #include "Base2DIFFT.h"
 #include "FFTW/fftw3.h"
 #include "glm/vec4.hpp"
 #include "MeshBufferManager.h"
 #include <complex> //to use std::complex numbers
 
+#ifdef USE_FFTW
 //OPTIMIZATION: use single precision(float) fftw, by default the double-precision(double) is used!
 #define fftw_complex         fftwf_complex
 #define fftw_plan            fftwf_plan
@@ -22,6 +24,7 @@
 #define fftw_execute         fftwf_execute
 #define fftw_malloc          fftwf_malloc
 #define fftw_free            fftwf_free
+#endif //USE_FFTW
 
 class GlobalConfig;
 
@@ -55,6 +58,7 @@ private:
 	void Destroy(void);
 
 	//// Variables ////
+#ifdef USE_FFTW
 	// Pointers are needed here, because we don't know the exact FFT size
 	// for fast fourier transform
 	fftw_complex *m_pDY, *m_pDX, *m_pDZ; // fft displacement on OX, OY and OZ
@@ -62,7 +66,7 @@ private:
 
 	fftw_complex *m_pSX, *m_pSZ; // slopes on OX and OZ
 	fftw_plan m_PSX, m_PSZ; // fftw plans
-
+#endif //USE_FFTW
 	unsigned int m_FFTDataTexId;
 
 	std::vector<glm::vec4> m_FFTProcessedData;

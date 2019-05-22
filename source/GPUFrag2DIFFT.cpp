@@ -113,11 +113,11 @@ void GPUFrag2DIFFT::Initialize ( const GlobalConfig& i_Config )
 
 	if (m_UseFFTSlopes)
 	{
-		m_HorizontalSM.BuildRenderingProgram("../resources/shaders/Quad.vert.glsl", "../resources/shaders/FFTHorizontal.frag.glsl", i_Config);
+		m_HorizontalSM.BuildRenderingProgram("resources/shaders/Quad.vert.glsl", "resources/shaders/FFTHorizontal.frag.glsl", i_Config);
 	}
 	else
 	{
-		m_HorizontalSM.BuildRenderingProgram("../resources/shaders/Quad.vert.glsl", "../resources/shaders/FFTHorizontal_NoFFTSlopes.frag.glsl", i_Config);
+		m_HorizontalSM.BuildRenderingProgram("resources/shaders/Quad.vert.glsl", "resources/shaders/FFTHorizontal_NoFFTSlopes.frag.glsl", i_Config);
 	}
 
 	m_HorizontalSM.UseProgram();
@@ -161,11 +161,11 @@ void GPUFrag2DIFFT::Initialize ( const GlobalConfig& i_Config )
 
 	if (m_UseFFTSlopes)
 	{
-		m_VerticalSM.BuildRenderingProgram("../resources/shaders/Quad.vert.glsl", "../resources/shaders/FFTVertical.frag.glsl", i_Config);
+		m_VerticalSM.BuildRenderingProgram("resources/shaders/Quad.vert.glsl", "resources/shaders/FFTVertical.frag.glsl", i_Config);
 	}
 	else
 	{
-		m_VerticalSM.BuildRenderingProgram("../resources/shaders/Quad.vert.glsl", "../resources/shaders/FFTVertical_NoFFTSlopes.frag.glsl", i_Config);
+		m_VerticalSM.BuildRenderingProgram("resources/shaders/Quad.vert.glsl", "resources/shaders/FFTVertical_NoFFTSlopes.frag.glsl", i_Config);
 	}
 
 	m_VerticalSM.UseProgram();

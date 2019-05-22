@@ -116,6 +116,7 @@ private:
 	float m_KelvinWakeDisplacementFactor;
 	float m_FoamAmountFactor;
 
+	bool m_EnableBoatFoam;
 	bool m_EnableBoatKelvinWake;
 	bool m_EnableBoatPropellerWash;
 	bool m_IsWireframeMode;

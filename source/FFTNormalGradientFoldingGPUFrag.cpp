@@ -38,7 +38,7 @@ void FFTNormalGradientFoldingGPUFrag::Initialize ( const GlobalConfig& i_Config 
 	m_FFTSize = i_Config.Scene.Ocean.Surface.OceanPatch.FFTSize;
 
 	m_SM.Initialize("FFTNormalGradientFoldingGPUFrag");
-	m_SM.BuildRenderingProgram("../resources/shaders/Quad.vert.glsl", "../resources/shaders/FFTNormalGradientFolding.frag.glsl", i_Config);
+	m_SM.BuildRenderingProgram("resources/shaders/Quad.vert.glsl", "resources/shaders/FFTNormalGradientFolding.frag.glsl", i_Config);
 
 	m_SM.UseProgram();
 

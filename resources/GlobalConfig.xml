@@ -20,7 +20,7 @@
 		<InitialPosition>0.0f 15.0f -1.0f</InitialPosition>
 		<InitialPitch>0.0f</InitialPitch>
 		<InitialYaw>PI</InitialYaw>
-		<InitialFieldOfView>45.0f</InitialFieldOfView>
+		<InitialFieldOfView>45</InitialFieldOfView>
 		<InitialZNear>0.1f</InitialZNear>
 		<InitialZFar>5000.0f</InitialZFar>
 	</Camera>
@@ -185,7 +185,7 @@
 		</Sky>
 		<Ocean>
 			<Grid>
-				<Type>GridScreenSpace</Type>
+				<Type>GridWorldSpace</Type>
 				<WorldSpace>
 					<Width>256</Width>
 					<Height>512</Height>
@@ -230,8 +230,8 @@
 					</Fog>
 				</UnderWater>
 				<OceanPatch>
-					<FFTSize>512</FFTSize>
-					<PatchSize>512</PatchSize>
+					<FFTSize>256</FFTSize>
+					<PatchSize>384</PatchSize>
 					<WaveAmpltitude>1.0f</WaveAmpltitude>
 					<WindSpeed>50.0f</WindSpeed>
 					<WindSpeedMixLimit>100.0f</WindSpeedMixLimit>
@@ -240,9 +240,9 @@
 					<ChoppyScale>1.0f</ChoppyScale>
 					<TileScale>1.0f</TileScale>
 					<ComputeFFT>
-						<Type>FFTGpuComp</Type>
+						<Type>FFTGpuFrag</Type>
 						<UseFFTSlopes>true</UseFFTSlopes>
-						<Use2FBOs>true</Use2FBOs>
+						<Use2FBOs>false</Use2FBOs>
 					</ComputeFFT>
 					<Spectrum>
 						<Type>SpectrumPhillips</Type>
@@ -257,7 +257,7 @@
 						</Unified>
 					</Spectrum>
 					<NormalGradientFolding>
-						<Type>NormalGpuComp</Type>
+						<Type>NormalGpuFrag</Type>
 					</NormalGradientFolding>
 				</OceanPatch>
 				<PerlinNoise>
@@ -267,8 +267,8 @@
 					<Speed>0.0001f</Speed>
 				</PerlinNoise>
 				<WaveBlending>
-					<Begin>100.0f</Begin>
-					<End>10000.0f</End>
+					<Begin>500.0f</Begin>
+					<End>5000.0f</End>
 				</WaveBlending>
 				<BoatEffects>
 					<Foam>
@@ -349,7 +349,7 @@
 			<AccelerationFactor>0.01f</AccelerationFactor>
 			<TurnAngleFactor>10.0f</TurnAngleFactor>
 			<KelvinWakeDisplacementFactor>250.0f</KelvinWakeDisplacementFactor>
-			<FoamAmountFactor>2.0f</FoamAmountFactor>
+			<FoamAmountFactor>3.0f</FoamAmountFactor>
 			<UseFlattenedModel>true</UseFlattenedModel>
 			<Density>0.8f</Density>
 			<DragCoefficient>1.0f</DragCoefficient>

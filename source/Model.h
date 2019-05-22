@@ -7,6 +7,8 @@
 #include "Material.h"
 #include "MeshBufferManager.h"
 #include "TextureManager.h"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
 #include <string>
 #include <vector>
 
@@ -82,9 +84,21 @@ private:
 	void Destroy(void);
 
 	bool ParseObjFile(const std::string& i_ObjPath, bool i_UseMaterial, const std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& i_ModelVertexAttributes, bool i_UseFlattenedModel);
-	bool ParseMTLFile(const std::string& i_MTLFileName, const std::string& i_Directory, std::map<std::string, Material>& o_MaterialMap);
+	void ParseOBJLine(const std::string& i_Line, std::vector<Model::MeshData*>& io_MeshDataVector, int& io_CrrMeshIndex,
+		bool i_UseMaterial, std::map<std::string, Material>& o_MaterialMap, const std::string& i_DirectoryName);
 
-	Material::TextureData ProcessTexture(const std::string& i_TexPath, const Material::TEXTURE_MAP_TYPE& i_TexType, const std::vector<Model::LoadedTextureData>& i_LoadedTextureVector);
+	void ParseVertexToken(size_t& io_LineFoundSepPos, size_t& io_LineCrrSearchPos, const std::string& i_TokenSep,
+		const std::string& i_Line, size_t& io_Idx, glm::vec3& o_Out, size_t i_CustomSize);
+	void ParseFaceToken(size_t& io_LineFoundSepPos, size_t& io_LineCrrSearchPos, const std::string& i_TokenSep,
+		const std::string& i_Line, size_t& io_FaceIdx, glm::ivec3& o_VertexIdx, glm::ivec3& o_UVIdx, glm::ivec3& o_NormalIdx);
+	void ParseFaceSubToken(size_t& io_TokenFoundSepPos, size_t& io_TokenCrrSearchPos, const std::string& i_TokenSep, const std::string& i_Token,
+		size_t i_FaceIdx, size_t& io_TypeIdx, glm::ivec3& o_VertexIdx, glm::ivec3& o_UVIdx, glm::ivec3& o_NormalIdx);
+
+	bool ParseMTLFile(const std::string& i_MTLFileName, const std::string& i_Directory, std::map<std::string, Material>& o_MaterialMap);
+	void ParseMTLLine(const std::string& i_Line, std::map<std::string, Material>& o_MaterialMap, std::string& io_CrrMaterialName,
+		std::vector<Model::LoadedTextureData>& io_LoadedTextureVector, const std::string& i_TexBaseName);
+
+	Material::TextureData ProcessTexture(const std::string& i_TexPath, const Material::TEXTURE_MAP_TYPE& i_TexType, std::vector<Model::LoadedTextureData>& io_LoadedTextureVector);
 
 	//// Variables ////
 	std::string m_Name;

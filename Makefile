@@ -23,8 +23,7 @@ TARGETDIR	= bin/$(OS)/$(CFGDIR)
 OBJDIR		= $(BUILDDIR)
 
 INC				= -I$(INCDIR) 
-LDFLAGS		=  -L$(LIBDIR) -L/usr/lib -L/usr/local/lib -lSDL2 -lSDL2main -lfftw3f -lAntTweakBar -lGL -lX11 -lpthread -ldl
-
+LDFLAGS		=  -L$(LIBDIR) -L/usr/lib -L/usr/local/lib -lSDL2 -lSDL2main -lSDL2_image -lfftw3f -lAntTweakBar -lGL -lX11 -lpthread -ldl
 EXE				= MyFFTOcean
 TARGET		= $(TARGETDIR)/$(EXE)
 

@@ -139,9 +139,9 @@ in float v_attFactor;
 in float v_fogCoord;
 in vec4 v_clipPos;
 
-#ifdef BOAT_KELVIN_WAKE
-in vec2 v_wakeBaseUV;
-#endif // BOAT_KELVIN_WAKE
+// used by both BOAT_FOAM and BOAT_KELVIN_WAKE
+in vec2 v_boatEffectBaseUV;
+//
 ///
 
 out vec4 fragColor;
@@ -203,7 +203,7 @@ vec2 computeBoatKelvinWakeSlopes (void)
 	ivec2 texSize = textureSize(u_BoatKelvinWakeData.DispNormMap, 0);
 
 	// center them to boat position
-	vec2 wakeNormUV = v_wakeBaseUV;
+	vec2 wakeNormUV = v_boatEffectBaseUV;
 	wakeNormUV += vec2(texSize.x, texSize.y * 0.4f);
 	wakeNormUV /= (texSize * u_BoatKelvinWakeData.Scale);
 
@@ -343,7 +343,7 @@ vec3 computeBoatFoamEffect (void)
 #ifdef BOAT_FOAM
 	ivec2 texSize = textureSize(u_BoatFoamData.Map, 0);
 
-	vec2 boatFoamUV = v_wakeBaseUV;
+	vec2 boatFoamUV = v_boatEffectBaseUV;
 	boatFoamUV += vec2(texSize.x * 1.0f / u_BoatFoamData.Scale, texSize.y * 0.4f) / u_BoatFoamData.Scale;
 	boatFoamUV /= texSize;
 
@@ -364,7 +364,7 @@ vec3 computeBoatKelvinWakeEffectFoam (vec2 wakeSlope)
 
 	////////// BOW WAKE FOAM //////////
 	// center them to ship position
-	vec2 bowWakeFoamUV = v_wakeBaseUV;
+	vec2 bowWakeFoamUV = v_boatEffectBaseUV;
 	bowWakeFoamUV += vec2(texSize.x, texSize.y * 0.4f) / u_BoatKelvinWakeData.Scale;
 	bowWakeFoamUV /= (texSize * u_BoatKelvinWakeData.Scale);
 

@@ -1,7 +1,11 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+#include "AppConfig.h"
+
+#ifdef USE_GUI
 #include "GUI/AntTweakBar.h"
+#endif
 #include "SDL/SDL_events.h"
 #define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
 #include "glm/vec3.hpp"
@@ -99,7 +103,7 @@ private:
 
 	void InitScene(const GlobalConfig& i_Config);
 	void TerminateScene(void);
-
+#ifdef USE_GUI
 	static void TW_CALL GetCameraPosition(void *i_pValue, void *i_pClientData);
 	static void TW_CALL GetCameraDirection(void *i_pValue, void *i_pClientData);
 	static void TW_CALL GetEnabledClouds(void *i_pValue, void *i_pClientData);
@@ -135,7 +139,7 @@ private:
 	static void TW_CALL GetOceanChoppyScale(void* i_pValue, void* i_pClientData);
 	static void TW_CALL SetFOV(const void* i_pValue, void* i_pClientData);
 	static void TW_CALL GetFOV(void* i_pValue, void* i_pClientData);
-
+#endif //USE_GUI
 	void SetWindowSize(int i_WindowWidth, int i_WindowHeight);
 
 	void SetupDefaultFrameBuffer(const GlobalConfig& i_Config);
@@ -164,10 +168,10 @@ private:
 	//////// Auxilliary FBO for reflected and refracted objects!
 	FrameBufferManager* m_pFBM;
 	////////
-
+#ifdef USE_GUI
 	// pointer to TwBar is required by the AntTweakBar library specs
 	TwBar *m_pGUIBar;
-
+#endif //USE_GUI
 	Camera *m_pCamera, *m_pObservingCamera, *m_pCurrentViewingCamera, *m_pCurrentControllingCamera;
 
 	PostProcessingManager* m_pPostProcessingManager;
@@ -183,8 +187,6 @@ private:
 	bool m_IsCursorReleased;
 
 	bool m_IsFrustumVisible;
-
-	bool m_IsUnderWater;
 
 	bool m_IsInBoatMode;
 

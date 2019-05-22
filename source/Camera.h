@@ -67,7 +67,7 @@ public:
 
 	void UpdateViewMatrix(void);
 	void UpdatePerspectiveProjectionMatrix(int i_WindowWidth, int i_WindowHeight);
-	void UpdatePerspectiveProjectionMatrix(float i_Fovy, float i_Aspect, float i_ZNear, float i_ZFar);
+	void UpdatePerspectiveProjectionMatrix(int i_Fovy, float i_Aspect, float i_ZNear, float i_ZFar);
 	void UpdateOrthographicProjectionMatrix(float i_Left, float i_Right, float i_Bottom, float i_Top, float i_ZNear, float i_ZFar);
 	void UpdateOrientationWithMouse(float i_Dx, float i_Dy);
 	void UpdatePositionWithKeyboard(float i_Value, Camera::CAMERA_DIRECTIONS i_Dir);
@@ -83,7 +83,7 @@ public:
 
 	float GetPitch(void) const;
 	float GetYaw(void) const;
-	float GetFOV(void) const;
+	int GetFOV(void) const;
 
 
 	const glm::mat4& GetViewMatrix(void) const;
@@ -100,7 +100,7 @@ public:
 	void SetRight(const glm::vec3& i_Right);
 	void SetUp(const glm::vec3& i_Up);
 
-	void SetFOV(float i_FOV);
+	void SetFOV(int i_FOV);
 	void ResetFOV(void);
 
 	void SetProjectionMatrix(const glm::mat4& i_ProjectionMatrix);
@@ -133,7 +133,7 @@ private:
 	glm::mat4 m_InverseProjectionView; // clip -> world
 
 	// Projection
-	float m_FOVy, m_InitialFOVy;
+	int m_FOVy, m_InitialFOVy;
 	float m_ZNear;
 	float m_ZFar;
 

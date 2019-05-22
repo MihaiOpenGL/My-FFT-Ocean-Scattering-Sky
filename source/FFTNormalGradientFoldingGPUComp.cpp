@@ -39,7 +39,7 @@ void FFTNormalGradientFoldingGPUComp::Initialize ( const GlobalConfig& i_Config 
 	m_FFTSize = i_Config.Scene.Ocean.Surface.OceanPatch.FFTSize;
 
 	m_SM.Initialize("FFTNormalGradientFoldingGPUComp");
-	m_SM.BuildComputeProgram("../resources/shaders/FFTNormalGradientFolding.comp.glsl", i_Config);
+	m_SM.BuildComputeProgram("resources/shaders/FFTNormalGradientFolding.comp.glsl", i_Config);
 
 	m_SM.UseProgram();
 	m_Uniforms["u_FFTSize"] = m_SM.GetUniformLocation("u_FFTSize");

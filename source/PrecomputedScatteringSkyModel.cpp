@@ -70,7 +70,7 @@ void PrecomputedScatteringSkyModel::Initialize ( const GlobalConfig& i_Config )
 void PrecomputedScatteringSkyModel::SetupSkyShaders ( const GlobalConfig& i_Config, std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& o_Attributes )
 {
 	m_SM.Initialize("PrecomputedScatteringSkyModel Sky");
-	m_SM.BuildRenderingProgram("../resources/shaders/PrecomputedScatteringSkyModel.vert.glsl", "../resources/shaders/PrecomputedScatteringSkyModel.frag.glsl", i_Config);
+	m_SM.BuildRenderingProgram("resources/shaders/PrecomputedScatteringSkyModel.vert.glsl", "resources/shaders/PrecomputedScatteringSkyModel.frag.glsl", i_Config);
 
 	m_SM.UseProgram();
 
@@ -121,7 +121,7 @@ void PrecomputedScatteringSkyModel::SetupSkyShaders ( const GlobalConfig& i_Conf
 void PrecomputedScatteringSkyModel::SetupCloudsShaders ( const GlobalConfig& i_Config, std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& o_Attributes )
 {
 	m_CloudsSM.Initialize("PrecomputedScatteringSkyModel Clouds");
-	m_CloudsSM.BuildRenderingProgram("../resources/shaders/PrecomputedScatteringSkyModelClouds.vert.glsl", "../resources/shaders/PrecomputedScatteringSkyModelClouds.frag.glsl", i_Config);
+	m_CloudsSM.BuildRenderingProgram("resources/shaders/PrecomputedScatteringSkyModelClouds.vert.glsl", "resources/shaders/PrecomputedScatteringSkyModelClouds.frag.glsl", i_Config);
 
 	m_CloudsSM.UseProgram();
 
@@ -218,11 +218,11 @@ void PrecomputedScatteringSkyModel::SetupTextures ( const GlobalConfig& i_Config
 {
 	m_TM.Initialize("PrecomputedScatteringSkyModel", i_Config);
 
-	m_TM.Create2DRawTexture("../resources/textures/irradiance.raw", GL_RGB16F, GL_RGB, GL_FLOAT, 64, 16, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Sky.PrecomputedScatteringSkyModel.IrradianceMap);
-	m_TM.Create3DRawTexture("../resources/textures/inscatter.raw", GL_RGBA16F, GL_RGBA, GL_FLOAT, 256, 128, 32, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Sky.PrecomputedScatteringSkyModel.InscatterMap);
-	m_TM.Create2DRawTexture("../resources/textures/transmittance.raw", GL_RGB16F, GL_RGB, GL_FLOAT, 256, 64, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Sky.PrecomputedScatteringSkyModel.TransmittanceMap);
+	m_TM.Load2DRawTexture("resources/textures/irradiance.raw", GL_RGB16F, GL_RGB, GL_FLOAT, 64, 16, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Sky.PrecomputedScatteringSkyModel.IrradianceMap);
+	m_TM.Load3DRawTexture("resources/textures/inscatter.raw", GL_RGBA16F, GL_RGBA, GL_FLOAT, 256, 128, 32, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Sky.PrecomputedScatteringSkyModel.InscatterMap);
+	m_TM.Load2DRawTexture("resources/textures/transmittance.raw", GL_RGB16F, GL_RGB, GL_FLOAT, 256, 64, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Sky.PrecomputedScatteringSkyModel.TransmittanceMap);
 
-	m_TM.Create2DRawTexture("../resources/textures/noise.pgm", GL_RGB, GL_RED, GL_UNSIGNED_BYTE, 512, 512, GL_REPEAT, GL_LINEAR, i_Config.TexUnit.Sky.PrecomputedScatteringSkyModel.NoiseMap, 0, true, 38);
+	m_TM.Load2DRawTexture("resources/textures/noise.pgm", GL_RED, GL_RED, GL_UNSIGNED_BYTE, 512, 512, GL_REPEAT, GL_LINEAR, i_Config.TexUnit.Sky.PrecomputedScatteringSkyModel.NoiseMap, 0, true, 38);
 }
 
 void PrecomputedScatteringSkyModel::Update ( const Camera& i_Camera, bool i_IsUnderWater, bool i_IsWireframeMode, float i_CrrTime )

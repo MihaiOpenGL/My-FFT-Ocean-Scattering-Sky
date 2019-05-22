@@ -38,19 +38,19 @@ void Sky::Initialize ( const GlobalConfig& i_Config )
 {
 	m_ModelType = i_Config.Scene.Sky.Model.Type;
 
-	if (m_ModelType == CustomTypes::Sky::ModelType::MT_CUBE_MAP)
+	switch(m_ModelType)
 	{
-		m_pSkyModel = new CubeMapSkyModel(i_Config);
-	}
-	
-	else if (m_ModelType == CustomTypes::Sky::ModelType::MT_SCATTERING)
-	{
-		m_pSkyModel = new ScatteringSkyModel(i_Config);
-	}
-	
-	else if (m_ModelType == CustomTypes::Sky::ModelType::MT_PRECOMPUTED_SCATTERING)
-	{
-		m_pSkyModel = new PrecomputedScatteringSkyModel(i_Config);
+		case CustomTypes::Sky::ModelType::MT_CUBE_MAP:
+			m_pSkyModel = new CubeMapSkyModel(i_Config);
+			break;
+		case CustomTypes::Sky::ModelType::MT_SCATTERING:
+			m_pSkyModel = new ScatteringSkyModel(i_Config);
+			break;
+		case CustomTypes::Sky::ModelType::MT_PRECOMPUTED_SCATTERING:
+			m_pSkyModel = new PrecomputedScatteringSkyModel(i_Config);
+			break;
+		case CustomTypes::Sky::ModelType::MT_COUNT:
+		default: ERR("Invalid sky model type!");
 	}
 	assert(m_pSkyModel != nullptr);
 

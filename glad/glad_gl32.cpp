@@ -14,7 +14,6 @@
         GL_ARB_shading_language_420pack,
         GL_ARB_texture_filter_anisotropic,
         GL_EXT_shader_image_load_store,
-        GL_EXT_texture_compression_s3tc,
         GL_EXT_texture_filter_anisotropic
     Loader: True
     Local files: True
@@ -22,9 +21,9 @@
     Reproducible: False
 
     Commandline:
-        --profile="core" --api="gl=3.2" --generator="c" --spec="gl" --local-files --extensions="GL_ARB_arrays_of_arrays,GL_ARB_compute_shader,GL_ARB_enhanced_layouts,GL_ARB_shader_image_load_store,GL_ARB_shading_language_420pack,GL_ARB_texture_filter_anisotropic,GL_EXT_shader_image_load_store,GL_EXT_texture_compression_s3tc,GL_EXT_texture_filter_anisotropic"
+        --profile="core" --api="gl=3.2" --generator="c" --spec="gl" --local-files --extensions="GL_ARB_arrays_of_arrays,GL_ARB_compute_shader,GL_ARB_enhanced_layouts,GL_ARB_shader_image_load_store,GL_ARB_shading_language_420pack,GL_ARB_texture_filter_anisotropic,GL_EXT_shader_image_load_store,GL_EXT_texture_filter_anisotropic"
     Online:
-        https://glad.dav1d.de/#profile=core&language=c&specification=gl&loader=on&api=gl%3D3.2&extensions=GL_ARB_arrays_of_arrays&extensions=GL_ARB_compute_shader&extensions=GL_ARB_enhanced_layouts&extensions=GL_ARB_shader_image_load_store&extensions=GL_ARB_shading_language_420pack&extensions=GL_ARB_texture_filter_anisotropic&extensions=GL_EXT_shader_image_load_store&extensions=GL_EXT_texture_compression_s3tc&extensions=GL_EXT_texture_filter_anisotropic
+        https://glad.dav1d.de/#profile=core&language=c&specification=gl&loader=on&api=gl%3D3.2&extensions=GL_ARB_arrays_of_arrays&extensions=GL_ARB_compute_shader&extensions=GL_ARB_enhanced_layouts&extensions=GL_ARB_shader_image_load_store&extensions=GL_ARB_shading_language_420pack&extensions=GL_ARB_texture_filter_anisotropic&extensions=GL_EXT_shader_image_load_store&extensions=GL_EXT_texture_filter_anisotropic
 */
 
 #include <stdio.h>
@@ -594,7 +593,6 @@ int GLAD_GL_ARB_shader_image_load_store = 0;
 int GLAD_GL_ARB_shading_language_420pack = 0;
 int GLAD_GL_ARB_texture_filter_anisotropic = 0;
 int GLAD_GL_EXT_shader_image_load_store = 0;
-int GLAD_GL_EXT_texture_compression_s3tc = 0;
 int GLAD_GL_EXT_texture_filter_anisotropic = 0;
 PFNGLDISPATCHCOMPUTEPROC glad_glDispatchCompute = NULL;
 PFNGLDISPATCHCOMPUTEINDIRECTPROC glad_glDispatchComputeIndirect = NULL;
@@ -982,7 +980,6 @@ static int find_extensionsGL(void) {
 	GLAD_GL_ARB_shading_language_420pack = has_ext("GL_ARB_shading_language_420pack");
 	GLAD_GL_ARB_texture_filter_anisotropic = has_ext("GL_ARB_texture_filter_anisotropic");
 	GLAD_GL_EXT_shader_image_load_store = has_ext("GL_EXT_shader_image_load_store");
-	GLAD_GL_EXT_texture_compression_s3tc = has_ext("GL_EXT_texture_compression_s3tc");
 	GLAD_GL_EXT_texture_filter_anisotropic = has_ext("GL_EXT_texture_filter_anisotropic");
 	free_exts();
 	return 1;

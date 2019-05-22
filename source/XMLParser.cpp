@@ -4,7 +4,7 @@
 #include "CommonHeaders.h"
 // glm::vec2, glm::vec3, come from the header
 #include "glm/gtc/constants.hpp" //pi()
-#include <fstream>
+#include "FileUtils.h"
 
 #define ELEMENT_START 0
 #define ELEMENT_VALUE 1
@@ -35,23 +35,12 @@ void XMLParser::Destroy ( void )
 
 void XMLParser::Initialize ( const std::string& i_FileName )
 {
+
 	////// Read the content of the file
-	std::ifstream fileStream(i_FileName);
-
-	if (!fileStream.good())
+	std::string xmlFile;
+	if (!FileUtils::LoadFile(i_FileName, xmlFile))
 	{
-		ERR("Failed to open %s text file name!", i_FileName.c_str());
-		return;
-	}
-
-	// read the whole file in a std::string
-	std::string fileContent = std::string((std::istreambuf_iterator<char>(fileStream)), std::istreambuf_iterator<char>());
-
-	fileStream.close();
-
-	if (fileContent.empty())
-	{
-		ERR("File %s is empty!", i_FileName.c_str());
+		ERR("Failed to open %s xml file!", i_FileName.c_str());
 		return;
 	}
 
@@ -61,7 +50,7 @@ void XMLParser::Initialize ( const std::string& i_FileName )
 	std::vector<std::string> lines;
 
 	std::string delimiters = "\r\n";
-	Tokenize(fileContent, delimiters, lines);
+	Tokenize(xmlFile, delimiters, lines);
 
 	// parse each line and build the XML tree
 	m_Tree.name = "XMLDoc";
@@ -190,6 +179,12 @@ void XMLParser::Tokenize ( const std::string& i_Content, const std::string& i_De
 
 void XMLParser::PopulateKeyMap ( std::map<std::string, XMLGenericType>& o_KeyMap )
 {
+	if (m_Tree.children.empty())
+	{
+		ERR("Invalid xml tree!");
+		return;
+	}
+
 	std::string keyPath("");
 	PopulateKey(m_Tree.children[0], keyPath, o_KeyMap);
 }

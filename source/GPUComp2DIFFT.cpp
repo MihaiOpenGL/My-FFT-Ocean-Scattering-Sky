@@ -88,11 +88,11 @@ void GPUComp2DIFFT::Initialize ( const GlobalConfig& i_Config )
 
 	if (m_UseFFTSlopes)
 	{
-		m_HorizontalSM.BuildComputeProgram("../resources/shaders/FFTHorizontal.comp.glsl", i_Config);
+		m_HorizontalSM.BuildComputeProgram("resources/shaders/FFTHorizontal.comp.glsl", i_Config);
 	}
 	else
 	{
-		m_HorizontalSM.BuildComputeProgram("../resources/shaders/FFTHorizontal_NoFFTSlopes.comp.glsl", i_Config);
+		m_HorizontalSM.BuildComputeProgram("resources/shaders/FFTHorizontal_NoFFTSlopes.comp.glsl", i_Config);
 	}
 
 	m_HorizontalSM.UseProgram();
@@ -107,11 +107,11 @@ void GPUComp2DIFFT::Initialize ( const GlobalConfig& i_Config )
 
 	if (m_UseFFTSlopes)
 	{
-		m_VerticalSM.BuildComputeProgram("../resources/shaders/FFTVertical.comp.glsl", i_Config);
+		m_VerticalSM.BuildComputeProgram("resources/shaders/FFTVertical.comp.glsl", i_Config);
 	}
 	else
 	{
-		m_VerticalSM.BuildComputeProgram("../resources/shaders/FFTVertical_NoFFTSlopes.comp.glsl", i_Config);
+		m_VerticalSM.BuildComputeProgram("resources/shaders/FFTVertical_NoFFTSlopes.comp.glsl", i_Config);
 	}
 
 	m_VerticalSM.UseProgram();

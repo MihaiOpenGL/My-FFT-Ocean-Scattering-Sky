@@ -63,11 +63,11 @@ void FFTOceanPatchGPUFrag::Initialize ( const GlobalConfig& i_Config )
 
 	if (m_2DIFFT.GetUseFFTSlopes())
 	{
-		m_FFTHtSM.BuildRenderingProgram("../resources/shaders/Quad.vert.glsl", "../resources/shaders/FFTHt.frag.glsl", i_Config);
+		m_FFTHtSM.BuildRenderingProgram("resources/shaders/Quad.vert.glsl", "resources/shaders/FFTHt.frag.glsl", i_Config);
 	}
 	else
 	{
-		m_FFTHtSM.BuildRenderingProgram("../resources/shaders/Quad.vert.glsl", "../resources/shaders/FFTHt_NoFFTSlopes.frag.glsl", i_Config);
+		m_FFTHtSM.BuildRenderingProgram("resources/shaders/Quad.vert.glsl", "resources/shaders/FFTHt_NoFFTSlopes.frag.glsl", i_Config);
 	}
 
 	m_FFTHtSM.UseProgram();
@@ -151,13 +151,16 @@ void FFTOceanPatchGPUFrag::InitFFTData ( void )
 			{
 				float specFactor = 1.0f;
 
-				if (m_SpectrumType == CustomTypes::Ocean::SpectrumType::ST_PHILLIPS)
+				switch (m_SpectrumType)
 				{
-					specFactor = glm::sqrt(PhillipsSpectrum(waveVector) / 2.0f);
-				}
-				else if (m_SpectrumType == CustomTypes::Ocean::SpectrumType::ST_UNIFIED)
-				{
-					specFactor = glm::sqrt(UnifiedSpectrum(waveVector) / 2.0f) * glm::two_pi<float>() / m_PatchSize;
+					case CustomTypes::Ocean::SpectrumType::ST_PHILLIPS:
+						specFactor = glm::sqrt(PhillipsSpectrum(waveVector) / 2.0f);
+						break;
+					case CustomTypes::Ocean::SpectrumType::ST_UNIFIED:
+						specFactor = glm::sqrt(UnifiedSpectrum(waveVector) / 2.0f) * glm::two_pi<float>() / m_PatchSize;
+						break;
+					case CustomTypes::Ocean::SpectrumType::ST_COUNT:
+					default: ERR("Invalid ocean spectrum type!");
 				}
 
 				glm::vec2 hTilde0 = GaussianRandomVariable() * specFactor;

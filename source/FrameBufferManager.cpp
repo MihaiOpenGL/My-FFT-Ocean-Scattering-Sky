@@ -6,7 +6,7 @@
 #include "GlobalConfig.h"
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
-#include <assert.h>
+#include <cassert>
 
 
 int FrameBufferManager::m_MaxColorAttachments = 0;
@@ -316,47 +316,38 @@ void FrameBufferManager::SetupDepthBuffer ( DEPTH_BUFFER_TYPE i_DepthBufferType,
 	switch (i_DepthBufferType)
 	{
 		case DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH:
-		{
 			glGenRenderbuffers(1, &m_RBOID);
 			glBindRenderbuffer(GL_RENDERBUFFER, m_RBOID);
 			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, i_Width, i_Height);
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
 			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_RBOID);
-		}
-		break;
+			break;
 		case DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH_STENCIL:
-		{
 			glGenRenderbuffers(1, &m_RBOID);
 			glBindRenderbuffer(GL_RENDERBUFFER, m_RBOID);
 			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, i_Width, i_Height);
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
 			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RBOID);
-		}
-		break;
-	case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH:
-	{
-		// we don't need to sample from it, so we pass -1 as the tex unit id!
-		m_DepthTexID = m_TM.Create2DTexture(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, i_Width, i_Height, GL_REPEAT, GL_NEAREST, nullptr, -1, -1, false);
-		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_DepthTexID, 0);
-	}
-	break;
-	case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH_STENCIL:
-	{
-		// we don't need to sample from it, so we pass -1 as the tex unit id!
-		m_DepthTexID = m_TM.Create2DTexture(GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, i_Width, i_Height, GL_REPEAT, GL_NEAREST, nullptr, -1, -1, false);
-		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, m_DepthTexID, 0);
-	}
-	break;
-	default:  // DEPTH_BUFFER_TYPE::DBT_NO_DEPTH
-		break;
+			break;
+		case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH:
+			// we don't need to sample from it, so we pass -1 as the tex unit id!
+			m_DepthTexID = m_TM.Create2DTexture(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, i_Width, i_Height, GL_REPEAT, GL_NEAREST, nullptr, -1, -1, false);
+			glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_DepthTexID, 0);
+			break;
+		case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH_STENCIL:
+			// we don't need to sample from it, so we pass -1 as the tex unit id!
+			m_DepthTexID = m_TM.Create2DTexture(GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, i_Width, i_Height, GL_REPEAT, GL_NEAREST, nullptr, -1, -1, false);
+			glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, m_DepthTexID, 0);
+			break;
+		case DEPTH_BUFFER_TYPE::DBT_NO_DEPTH:
+			break;
+		case DEPTH_BUFFER_TYPE::DBT_COUNT:
+		default: ERR("Invalid depth buffer type!");
 	}
 }
 
 void FrameBufferManager::SetupDrawBuffers (unsigned short i_ColorAttachmentCount, unsigned short i_Index )
 {
-
 	if (i_ColorAttachmentCount == 0 || i_ColorAttachmentCount >= m_MaxColorAttachments)
 	{
 		ERR("Number of color attachments exceeds the supported level!");
@@ -452,32 +443,26 @@ void FrameBufferManager::UpdateDepthBufferSize(unsigned short i_Width, unsigned 
 
 	switch (m_DepthBufferType)
 	{
-	case DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH:
-	{
-		glBindRenderbuffer(GL_RENDERBUFFER, m_RBOID);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, i_Width, i_Height);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-	}
-	break;
-	case DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH_STENCIL:
-	{
-		glBindRenderbuffer(GL_RENDERBUFFER, m_RBOID);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, i_Width, i_Height);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-	}
-	break;
-	case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH:
-	{
-		m_TM.Update2DTextureSize(m_DepthTexID, i_Width, i_Height);
-	}
-	break;
-	case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH_STENCIL:
-	{
-		m_TM.Update2DTextureSize(m_DepthTexID, i_Width, i_Height);
-	}
-	break;
-	default:  // DEPTH_BUFFER_TYPE::DBT_NO_DEPTH
-		break;
+		case DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH:
+			glBindRenderbuffer(GL_RENDERBUFFER, m_RBOID);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, i_Width, i_Height);
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+			break;
+		case DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH_STENCIL:
+			glBindRenderbuffer(GL_RENDERBUFFER, m_RBOID);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, i_Width, i_Height);
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+			break;
+		case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH:
+			m_TM.Update2DTextureSize(m_DepthTexID, i_Width, i_Height);
+			break;
+		case DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH_STENCIL:
+			m_TM.Update2DTextureSize(m_DepthTexID, i_Width, i_Height);
+			break;
+		case DEPTH_BUFFER_TYPE::DBT_NO_DEPTH:
+			break;
+		case DEPTH_BUFFER_TYPE::DBT_COUNT:
+		default: ERR("Invalid depth buffer type!");
 	}
 }
 

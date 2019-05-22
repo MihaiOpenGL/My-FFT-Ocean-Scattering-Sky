@@ -8,6 +8,7 @@
 //#define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
 #include "glm/vec2.hpp" //
 #include "CPUFFTW2DIFFT.h"
+#include <complex>
 
 class GlobalConfig;
 
@@ -37,8 +38,8 @@ private:
 	//// Methods ////
 	void Destroy(void);
 
-	void SetFFTData(void);
-	void InitFFTData(void);
+	void SetFFTData(void) override;
+	void InitFFTData(void) override;
 
 	std::complex<float> HTilde0(const glm::vec2& i_WaveVector);
 	std::complex<float> HTilde(unsigned int i_Index, float i_CrrTime);

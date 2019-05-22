@@ -41,35 +41,36 @@ void PostProcessingManager::Initialize ( const GlobalConfig& i_Config )
 	switch(m_EffectType)
 	{
 		case CustomTypes::PostProcessing::EffectType::PPET_Invert:
-			fragmentShaderSource = "../resources/shaders/PPE_Invert.frag.glsl";
+			fragmentShaderSource = "resources/shaders/PPE_Invert.frag.glsl";
 		break;
 		case CustomTypes::PostProcessing::EffectType::PPET_Grey:
-			fragmentShaderSource = "../resources/shaders/PPE_Grey.frag.glsl";
+			fragmentShaderSource = "resources/shaders/PPE_Grey.frag.glsl";
 			break;
 		case CustomTypes::PostProcessing::EffectType::PPET_BlackWhite:
-			fragmentShaderSource = "../resources/shaders/PPE_BlackWhite.frag.glsl";
+			fragmentShaderSource = "resources/shaders/PPE_BlackWhite.frag.glsl";
 			break;
 		case CustomTypes::PostProcessing::EffectType::PPET_Sepia:
-			fragmentShaderSource = "../resources/shaders/PPE_Sepia.frag.glsl";
+			fragmentShaderSource = "resources/shaders/PPE_Sepia.frag.glsl";
 			break;
 		case CustomTypes::PostProcessing::EffectType::PPET_Wavy:
-			fragmentShaderSource = "../resources/shaders/PPE_Wavy.frag.glsl";
+			fragmentShaderSource = "resources/shaders/PPE_Wavy.frag.glsl";
 			break;
 		case CustomTypes::PostProcessing::EffectType::PPET_Blur:
-			fragmentShaderSource = "../resources/shaders/PPE_Blur.frag.glsl";
+			fragmentShaderSource = "resources/shaders/PPE_Blur.frag.glsl";
 			break;
 		case CustomTypes::PostProcessing::EffectType::PPET_EdgeDetection:
-			fragmentShaderSource = "../resources/shaders/PPE_EdgeDetection.frag.glsl";
+			fragmentShaderSource = "resources/shaders/PPE_EdgeDetection.frag.glsl";
 			break;
 		case CustomTypes::PostProcessing::EffectType::PPET_NoEffect:
-			fragmentShaderSource = "../resources/shaders/PPE_NoEffect.frag.glsl";
+			fragmentShaderSource = "resources/shaders/PPE_NoEffect.frag.glsl";
 			break;
+		case CustomTypes::PostProcessing::EffectType::PPET_COUNT:
 		default:
-			ERR("Invalid Post Processing Effect !");
+			ERR("Invalid Post Processing Effect Type!");
 			break;
 	}
 
-	m_SM.BuildRenderingProgram("../resources/shaders/Quad.vert.glsl", fragmentShaderSource, i_Config);
+	m_SM.BuildRenderingProgram("resources/shaders/Quad.vert.glsl", fragmentShaderSource, i_Config);
 
 	m_SM.UseProgram();
 
@@ -84,7 +85,7 @@ void PostProcessingManager::Initialize ( const GlobalConfig& i_Config )
 	unsigned short windowHeight = viewport.w;
 
 	m_FBM.Initialize("PPE", i_Config);
-	m_FBM.CreateSimple(attributes, 1, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, windowWidth, windowHeight, GL_REPEAT, GL_LINEAR, i_Config.TexUnit.Global.PostProcessingMap, -1, false, FrameBufferManager::DEPTH_BUFFER_TYPE::DBT_RENDER_BUFFER_DEPTH_STENCIL);
+	m_FBM.CreateSimple(attributes, 1, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, windowWidth, windowHeight, GL_REPEAT, GL_LINEAR, i_Config.TexUnit.Global.PostProcessingMap, -1, false, FrameBufferManager::DEPTH_BUFFER_TYPE::DBT_TEXTURE_DEPTH_STENCIL);
 	m_FBM.Bind();
 	m_FBM.SetupDrawBuffers(1, 0);
 	m_FBM.UnBind();
@@ -136,7 +137,7 @@ void PostProcessingManager::Render ( void )
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	m_FBM.BindColorAttachmentByIndex(0, false, false);
+	m_FBM.BindColorAttachmentByIndex(0, false);
 
 	m_SM.UseProgram();
 

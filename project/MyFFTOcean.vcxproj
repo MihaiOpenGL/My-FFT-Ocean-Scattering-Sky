@@ -105,7 +105,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)..\libs\win;C:\Program Files (x86)\Visual Leak Detector\lib\Win32</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
+      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -145,7 +145,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)..\libs\win;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
+      <AdditionalDependencies>libfftw3f-3.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;AntTweakBar.lib;opengl32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -351,19 +351,21 @@
     <None Include="..\resources\textures\transmittance.raw" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\resources\models\motor_boat\boat_d.dds" />
-    <Image Include="..\resources\models\motor_boat\boat_n.dds" />
-    <Image Include="..\resources\textures\foam_highres.dds" />
-    <Image Include="..\resources\textures\perlin_noise.dds" />
-    <Image Include="..\resources\textures\sand_d.dds" />
-    <Image Include="..\resources\textures\wake_foam.dds" />
-    <Image Include="..\resources\textures\wake_normal_height.dds" />
-    <Image Include="..\resources\textures\xneg.dds" />
-    <Image Include="..\resources\textures\xpos.dds" />
-    <Image Include="..\resources\textures\yneg.dds" />
-    <Image Include="..\resources\textures\ypos.dds" />
-    <Image Include="..\resources\textures\zneg.dds" />
-    <Image Include="..\resources\textures\zpos.dds" />
+    <Image Include="..\resources\models\motor_boat\boat_d.bmp" />
+    <Image Include="..\resources\models\motor_boat\boat_n.bmp" />
+    <Image Include="..\resources\textures\boat_foam.bmp" />
+    <Image Include="..\resources\textures\foam_highres.bmp" />
+    <Image Include="..\resources\textures\perlin_noise.bmp" />
+    <Image Include="..\resources\textures\sand_d.bmp" />
+    <Image Include="..\resources\textures\sand_n.bmp" />
+    <Image Include="..\resources\textures\wake_foam.bmp" />
+    <Image Include="..\resources\textures\wake_normal_height.bmp" />
+    <Image Include="..\resources\textures\xneg.bmp" />
+    <Image Include="..\resources\textures\xpos.bmp" />
+    <Image Include="..\resources\textures\yneg.bmp" />
+    <Image Include="..\resources\textures\ypos.bmp" />
+    <Image Include="..\resources\textures\zneg.bmp" />
+    <Image Include="..\resources\textures\zpos.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Object Include="..\resources\models\motor_boat\boat.obj">

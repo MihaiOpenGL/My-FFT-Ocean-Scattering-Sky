@@ -54,7 +54,7 @@ public:
 		glm::vec3 InitialPosition;
 		float InitialPitch;
 		float InitialYaw;
-		float InitialFieldOfView;
+		int InitialFieldOfView;
 		float InitialZNear;
 		float InitialZFar;
 	} Camera;

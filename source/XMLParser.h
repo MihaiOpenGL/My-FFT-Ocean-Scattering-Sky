@@ -10,8 +10,6 @@
 #include <vector>
 #include <map>
 
-//////////////////
-
 /*
 
  Small helper class to mange geenric types available in my XML confif file

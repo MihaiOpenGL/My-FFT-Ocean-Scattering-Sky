@@ -82,31 +82,34 @@ void FFTOceanPatchBase::Initialize ( const GlobalConfig& i_Config )
 
 	m_SpectrumType = i_Config.Scene.Ocean.Surface.OceanPatch.Spectrum.Type;
 
-	if (m_FFTSize == 1024)
+	switch(m_FFTSize)
 	{
-		m_WaveAmplitudeScale = 1e-7f;
-	}
-	else if (m_FFTSize == 512)
-	{
-		m_WaveAmplitudeScale = 1e-6f;
-	}
-	else if (m_FFTSize == 256)
-	{
-		m_WaveAmplitudeScale = 1e-6f;
-	}
-	else if (m_FFTSize == 128)
-	{
-		m_WaveAmplitudeScale = 1e-5f;
+		case 1024:
+			m_WaveAmplitudeScale = 1e-7f;
+			break;
+		case 512:
+			m_WaveAmplitudeScale = 1e-6f;
+			break;
+		case 256:
+			m_WaveAmplitudeScale = 1e-6f;
+			break;
+		case 128:
+			m_WaveAmplitudeScale = 1e-5f;
+			break;
+		default: ERR("Invalid fft size!");
 	}
 
 	/////////// NORMAL, FOLDING SETUP ///////////
-	if (i_Config.Scene.Ocean.Surface.OceanPatch.NormalGradientFolding.Type == CustomTypes::Ocean::NormalGradientFoldingType::NGF_GPU_FRAG)
+	switch (i_Config.Scene.Ocean.Surface.OceanPatch.NormalGradientFolding.Type)
 	{
-		m_pNormalGradientFolding = new FFTNormalGradientFoldingGPUFrag(i_Config);
-	}
-	else if (i_Config.Scene.Ocean.Surface.OceanPatch.NormalGradientFolding.Type == CustomTypes::Ocean::NormalGradientFoldingType::NGF_GPU_COMP)
-	{
-		m_pNormalGradientFolding = new FFTNormalGradientFoldingGPUComp(i_Config);
+		case CustomTypes::Ocean::NormalGradientFoldingType::NGF_GPU_FRAG:
+			m_pNormalGradientFolding = new FFTNormalGradientFoldingGPUFrag(i_Config);
+			break;
+		case CustomTypes::Ocean::NormalGradientFoldingType::NGF_GPU_COMP:
+			m_pNormalGradientFolding = new FFTNormalGradientFoldingGPUComp(i_Config);
+			break;
+		case CustomTypes::Ocean::NormalGradientFoldingType::NGF_COUNT:
+		default: ERR("Invalid ocean normal gradient folding type!");
 	}
 	assert(m_pNormalGradientFolding != nullptr);
 	

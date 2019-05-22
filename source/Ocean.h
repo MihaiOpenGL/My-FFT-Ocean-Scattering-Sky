@@ -187,6 +187,7 @@ private:
 	bool m_BottomUseGridCorners;
 	bool m_EnableUnderWaterGodRays;
 	bool m_EnableBottomCaustics;
+	bool m_EnableBoatFoam;
 	bool m_EnableBoatKelvinWake;
 	bool m_EnableBoatPropellerWash;
 };

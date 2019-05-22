@@ -3,18 +3,24 @@
 #include "CPUFFTW2DIFFT.h"
 #include "CommonHeaders.h"
 #include "GlobalConfig.h"
-#include <assert.h>
+#include <cassert>
 
 
 CPUFFTW2DIFFT::CPUFFTW2DIFFT ( void )
-	: m_pDY(nullptr), m_pDX(nullptr), m_pDZ(nullptr), m_pSX(nullptr), m_pSZ(nullptr),
+	:
+#ifdef USE_FFTW
+	m_pDY(nullptr), m_pDX(nullptr), m_pDZ(nullptr), m_pSX(nullptr), m_pSZ(nullptr),
+#endif //USE_FFTW
 	  m_FFTDataTexId(0)
 {
 	LOG("CPUFFTW2DIFFT successfully created!");
 }
 
 CPUFFTW2DIFFT::CPUFFTW2DIFFT ( const GlobalConfig& i_Config )
-	: m_pDY(nullptr), m_pDX(nullptr), m_pDZ(nullptr), m_pSX(nullptr), m_pSZ(nullptr),
+	:
+#ifdef USE_FFTW
+	m_pDY(nullptr), m_pDX(nullptr), m_pDZ(nullptr), m_pSX(nullptr), m_pSZ(nullptr),
+#endif //USE_FTTW
 	  m_FFTDataTexId(0)
 {
 	Initialize(i_Config);
@@ -30,6 +36,7 @@ void CPUFFTW2DIFFT::Initialize ( const GlobalConfig& i_Config )
 {
 	Base2DIFFT::Initialize(i_Config);
 
+#ifdef USE_FFTW
 	// NOTE! for FFT slopes we need 2 layers, otherwise only 1 is needed!
 	m_FFTLayerCount = (m_UseFFTSlopes ? 2 : 1);
 
@@ -87,12 +94,14 @@ void CPUFFTW2DIFFT::Initialize ( const GlobalConfig& i_Config )
 	{
 		m_FFTProcessedData.resize(m_FFTSize * m_FFTSize);
 	}
+#endif //USE_FFTW
 
 	LOG("CPUFFTW2DIFFT successfully created!");
 }
 
 void CPUFFTW2DIFFT::Destroy ( void )
 {
+#ifdef USE_FFTW
 	if (m_PDY) fftw_destroy_plan(m_PDY);
 	if (m_PDX) fftw_destroy_plan(m_PDX);
 	if (m_PDZ) fftw_destroy_plan(m_PDZ);
@@ -112,12 +121,14 @@ void CPUFFTW2DIFFT::Destroy ( void )
 		fftw_free(m_pSX); m_pSX = nullptr;
 		fftw_free(m_pSZ); m_pSZ = nullptr;
 	}
+#endif //USE_FFTW
 
 	LOG("CPUFFTW2DIFFT successfully destroyed!");
 }
 
 void CPUFFTW2DIFFT::Pre2DFFTSetup ( const std::complex<float>& i_DX, const std::complex<float>& i_DY, const std::complex<float>& i_DZ, const std::complex<float>& i_SX, const std::complex<float>& i_SZ, unsigned int i_Index )
 {
+#ifdef USE_FFTW
 	assert(i_Index < (unsigned int)(m_FFTSize * m_FFTSize));
 
 	if (m_pDY && m_pDX && m_pDZ)
@@ -143,10 +154,12 @@ void CPUFFTW2DIFFT::Pre2DFFTSetup ( const std::complex<float>& i_DX, const std::
 			m_pSZ[i_Index][1] = i_SZ.imag();
 		}
 	}
+#endif //USE_FFTW
 }
 
 void CPUFFTW2DIFFT::Perform2DIFFT ( void )
 {
+#ifdef USE_FFTW
 	// Compute 2D IFFT
 	if (m_PDY) fftw_execute(m_PDY);
 	if (m_PDX) fftw_execute(m_PDX);
@@ -157,10 +170,12 @@ void CPUFFTW2DIFFT::Perform2DIFFT ( void )
 		if (m_PSX) fftw_execute(m_PSX);
 		if (m_PSZ) fftw_execute(m_PSZ);
 	}
+#endif //USE_FFTW
 }
 
 void CPUFFTW2DIFFT::Post2DFFTSetup ( short i_Sign, unsigned int i_Index )
 {
+#ifdef USE_FFTW
 	assert(i_Index < (unsigned int)(m_FFTSize * m_FFTSize));
 
 	const short k_lambda = -1;
@@ -184,24 +199,37 @@ void CPUFFTW2DIFFT::Post2DFFTSetup ( short i_Sign, unsigned int i_Index )
 			m_FFTProcessedData[i_Index + offset].y = m_pSZ[i_Index][0] * sign_correction;
 		}
 	}
+#endif //USE_FFTW
 }
 
 void CPUFFTW2DIFFT::BindDestinationTexture ( void ) const
 {
+#ifdef USE_FFTW
 	m_TM.BindTexture(m_FFTDataTexId, true);
+#endif //USE_FFTW
 }
 
 void CPUFFTW2DIFFT::UpdateTextureData ( void )
 {
+#ifdef USE_FFTW
 	m_TM.Update2DArrayTextureData(m_FFTDataTexId, &m_FFTProcessedData[0]);
+#endif //USE_FFTW
 }
 
 unsigned int CPUFFTW2DIFFT::GetDestinationTexId ( void ) const
 {
+#ifdef USE_FFTW
 	return m_TM.GetTextureId(0);
+#else
+	return 0;
+#endif //USE_FFTW
 }
 
 unsigned short CPUFFTW2DIFFT::GetDestinationTexUnitId ( void ) const
 {
+#ifdef USE_FFTW
 	return m_TM.GetTextureUnitId(0);
+#else
+	return 0;
+#endif //USE_FFTW
 }

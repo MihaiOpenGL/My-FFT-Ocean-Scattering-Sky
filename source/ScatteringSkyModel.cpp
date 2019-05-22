@@ -87,7 +87,7 @@ void ScatteringSkyModel::SetupSkyShaders ( const GlobalConfig& i_Config, std::ma
 	wavelength4.z = glm::pow(i_Config.Scene.Sky.Model.Scattering.Atmosphere.WaveLength.z, 4.0f);
 
 	m_SM.Initialize("ScatteringSkyModel");
-	m_SM.BuildRenderingProgram("../resources/shaders/ScatteringSkyModel.vert.glsl", "../resources/shaders/ScatteringSkyModel.frag.glsl", i_Config);
+	m_SM.BuildRenderingProgram("resources/shaders/ScatteringSkyModel.vert.glsl", "resources/shaders/ScatteringSkyModel.frag.glsl", i_Config);
 
 	m_SM.UseProgram();
 
@@ -150,7 +150,7 @@ void ScatteringSkyModel::SetupSkyShaders ( const GlobalConfig& i_Config, std::ma
 void ScatteringSkyModel::SetupCloudsShaders ( const GlobalConfig& i_Config, std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& o_Attributes )
 {
 	m_CloudsSM.Initialize("ScatteringSkyModel Clouds");
-	m_CloudsSM.BuildRenderingProgram("../resources/shaders/ScatteringSkyModelClouds.vert.glsl", "../resources/shaders/ScatteringSkyModelClouds.frag.glsl", i_Config);
+	m_CloudsSM.BuildRenderingProgram("resources/shaders/ScatteringSkyModelClouds.vert.glsl", "resources/shaders/ScatteringSkyModelClouds.frag.glsl", i_Config);
 
 	m_CloudsSM.UseProgram();
 

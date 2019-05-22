@@ -91,6 +91,7 @@ private:
 
 	void SetupDepthBuffer(DEPTH_BUFFER_TYPE i_DepthBufferType, unsigned short i_Width, unsigned short i_Height);
 
+
 	//// Variables ////
 	std::string m_Name;
 

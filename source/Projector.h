@@ -9,12 +9,12 @@
 #ifndef PROJECTOR_H
 #define PROJECTOR_H
 
-#include <vector>
 #define GLM_SWIZZLE //offers the possibility to use: .xx(), xy(), xyz(), ...
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
 #include "Camera.h"
+#include <vector>
 
 class GlobalConfig;
 
@@ -69,7 +69,6 @@ private:
 	// Pointers to Camera class are not needed, because the class is small
 	Camera m_ProjectingCamera;
 	bool m_IsPlaneWithinFrustum;
-	bool m_IsFrustumVisible;
 
 	float m_MaxWaveAmplitude;
 	float m_StrengthElevation;

@@ -28,22 +28,6 @@ public:
 		UT_COUNT
 	};
 
-	enum class GEOMETRY_INPUT_TYPE
-	{
-		GIT_POINTS = 0,
-		GIT_LINES,
-		GIT_TRIANGLES,
-		GIT_COUNT
-	};
-
-	enum class GEOMETRY_OUTPUT_TYPE
-	{
-		GOT_POINTS = 0,
-		GOT_LINE_STRIP,
-		GOT_TRIANGLE_STRIP,
-		GOT_COUNT
-	};
-
 	//// Methods ////
 	ShaderManager(void);
 	ShaderManager(const std::string& i_Name);

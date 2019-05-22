@@ -179,13 +179,16 @@ std::complex<float> FFTOceanPatchCPUFFTW::HTilde0 ( const glm::vec2& i_WaveVecto
 	float specFactor = 1.0f;
 
 	//complex<float> r = GaussianRandomVariable(); // r = Xr + i * Xi
-	if (m_SpectrumType == CustomTypes::Ocean::SpectrumType::ST_PHILLIPS)
+	switch (m_SpectrumType)
 	{
-		specFactor = glm::sqrt(PhillipsSpectrum(i_WaveVector) / 2.0f);
-	}
-	else if (m_SpectrumType == CustomTypes::Ocean::SpectrumType::ST_UNIFIED)
-	{
-		specFactor = glm::sqrt(UnifiedSpectrum(i_WaveVector) / 2.0f) * glm::two_pi<float>() / m_PatchSize;
+		case CustomTypes::Ocean::SpectrumType::ST_PHILLIPS:
+			specFactor = glm::sqrt(PhillipsSpectrum(i_WaveVector) / 2.0f);
+			break;
+		case CustomTypes::Ocean::SpectrumType::ST_UNIFIED:
+			specFactor = glm::sqrt(UnifiedSpectrum(i_WaveVector) / 2.0f) * glm::two_pi<float>() / m_PatchSize;
+			break;
+		case CustomTypes::Ocean::SpectrumType::ST_COUNT:
+		default: ERR("Invalid ocean spectrum type!");
 	}
 
 	glm::vec2 res = GaussianRandomVariable() * specFactor;

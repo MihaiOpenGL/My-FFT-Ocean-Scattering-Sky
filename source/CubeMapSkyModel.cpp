@@ -50,7 +50,7 @@ void CubeMapSkyModel::Initialize ( const GlobalConfig& i_Config )
 void CubeMapSkyModel::SetupShaders ( const GlobalConfig& i_Config, std::map<MeshBufferManager::VERTEX_ATTRIBUTE_TYPE, int>& o_Attributes )
 {
 	m_SM.Initialize("CubeMapSkyModel");
-	m_SM.BuildRenderingProgram("../resources/shaders/CubeMapSkyModel.vert.glsl", "../resources/shaders/CubeMapSkyModel.frag.glsl", i_Config);
+	m_SM.BuildRenderingProgram("resources/shaders/CubeMapSkyModel.vert.glsl", "resources/shaders/CubeMapSkyModel.frag.glsl", i_Config);
 
 	m_SM.UseProgram();
 
@@ -59,7 +59,7 @@ void CubeMapSkyModel::SetupShaders ( const GlobalConfig& i_Config, std::map<Mesh
 	m_Uniforms["u_HDRExposure"] = m_SM.GetUniformLocation("u_HDRExposure");
 	m_SM.SetUniform(m_Uniforms.find("u_HDRExposure")->second, i_Config.Rendering.HDR.Exposure);
 	m_Uniforms["u_ApplyHDR"] = m_SM.GetUniformLocation("u_ApplyHDR");
-	m_SM.SetUniform(m_Uniforms.find("u_ApplyHDR")->second, 1);
+	m_SM.SetUniform(m_Uniforms.find("u_ApplyHDR")->second, true);
 
 	m_Uniforms["u_WorldToCameraMatrix"] = m_SM.GetUniformLocation("u_WorldToCameraMatrix");
 	m_Uniforms["u_WorldToClipMatrix"] = m_SM.GetUniformLocation("u_WorldToClipMatrix");
@@ -156,12 +156,12 @@ void CubeMapSkyModel::SetupTextures ( const GlobalConfig& i_Config )
 	std::vector<std::string> cubeMapFaces;
 	cubeMapFaces.resize(6);
 
-	cubeMapFaces[0] = "../resources/textures/xneg.dds";
-	cubeMapFaces[1] = "../resources/textures/xpos.dds";
-	cubeMapFaces[2] = "../resources/textures/ypos.dds";
-	cubeMapFaces[3] = "../resources/textures/yneg.dds";
-	cubeMapFaces[4] = "../resources/textures/zpos.dds";
-	cubeMapFaces[5] = "../resources/textures/zneg.dds";
+	cubeMapFaces[0] = "resources/textures/xneg.bmp";
+	cubeMapFaces[1] = "resources/textures/xpos.bmp";
+	cubeMapFaces[2] = "resources/textures/ypos.bmp";
+	cubeMapFaces[3] = "resources/textures/yneg.bmp";
+	cubeMapFaces[4] = "resources/textures/zpos.bmp";
+	cubeMapFaces[5] = "resources/textures/zneg.bmp";
 
 	m_TM.LoadCubeMapTexture(cubeMapFaces, GL_CLAMP_TO_EDGE, GL_LINEAR, true, i_Config.TexUnit.Sky.CubeMapSkyModel.CubeMap);
 }

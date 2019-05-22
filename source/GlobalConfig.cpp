@@ -5,7 +5,7 @@
 // glm::vec2, glm::vec3 come from the header
 #include "glm/trigonometric.hpp" //radians()
 #include <sstream>
-#include <assert.h>
+#include <cassert>
 
 
 GlobalConfig::GlobalConfig ( void )
@@ -52,6 +52,8 @@ bool GlobalConfig::Initialize ( const std::string& i_FileName )
 bool GlobalConfig::Setup ( void )
 {
 	std::map<std::string, XMLGenericType> keyMap;
+
+	assert(m_pConfigParser != nullptr);
 	m_pConfigParser->PopulateKeyMap(keyMap);
 
 	// Setup Config variables
@@ -71,7 +73,7 @@ bool GlobalConfig::Setup ( void )
 	Camera.InitialPosition = keyMap["GlobalConfig.Camera.InitialPosition"].ToVec3();
 	Camera.InitialPitch = keyMap["GlobalConfig.Camera.InitialPitch"].ToFloat();
 	Camera.InitialYaw = keyMap["GlobalConfig.Camera.InitialYaw"].ToFloat();
-	Camera.InitialFieldOfView = keyMap["GlobalConfig.Camera.InitialFieldOfView"].ToFloat(); // 45 degrees FOV is recommended for usual outdoor scenes
+	Camera.InitialFieldOfView = keyMap["GlobalConfig.Camera.InitialFieldOfView"].ToInt(); // 45 degrees FOV is recommended for usual outdoor scenes
 	Camera.InitialZNear = keyMap["GlobalConfig.Camera.InitialZNear"].ToFloat();
 	Camera.InitialZFar = keyMap["GlobalConfig.Camera.InitialZFar"].ToFloat();
 

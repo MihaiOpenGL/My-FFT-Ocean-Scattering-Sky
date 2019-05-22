@@ -1,8 +1,8 @@
 /* Author: BAIRAC MIHAI
 
- This manager uses GLI
- page: http://gli.g-truc.net/0.8.2/index.html
- License: http://gli.g-truc.net/copying.txt
+ This manager uses SDL2 image lib
+ page: https://www.libsdl.org/projects/SDL_image/
+ License: https://www.libsdl.org/license.php
 
 */
 
@@ -13,16 +13,13 @@
 #include <vector>
 
 class GlobalConfig;
+struct SDL_PixelFormat;
+
 
 /*
- Manager for textures: loads and creates: 2D, 2D arrays and cubemaps textures
+ Manager for textures: loads and creates: 1D, 1D arrays, 2D, 2D arrays and cubemaps textures
 
- This manager uses the GLI free and open-source library: http://gli.g-truc.net/0.8.2/index.html
-
- THIS TEXTURE MANAGER LOADS ONLY DDS IMAGES !!!
- 
- DXT texture format and Texture compression 
- https://www.opengl.org/wiki/S3_Texture_Compression
+ It uses SDL2_image lib
 */
 
 
@@ -44,19 +41,18 @@ public:
 	unsigned int Load1DArrayTexture(const std::vector<std::string>& i_ImageFileNameArray, unsigned int i_WrapType, unsigned int i_FilterType, bool i_IsGammaCorrected, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = true);
 	unsigned int Load2DTexture(const std::string& i_ImageFileName, unsigned int i_WrapType, unsigned int i_FilterType, bool i_IsGammaCorrected, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = true);
 	unsigned int Load2DArrayTexture(const std::vector<std::string>& i_ImageFileNameArray, unsigned int i_WrapType, unsigned int i_FilterType, bool i_IsGammaCorrected, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = true);
-	unsigned int LoadCubeMapTexture(const std::string& i_ImageFileName, unsigned int i_WrapType, unsigned int i_FilterType, bool i_IsGammaCorrected, short i_TexUnitId = -1, short i_MipMapCount = -1);
 	unsigned int LoadCubeMapTexture(const std::vector<std::string>& i_ImageFileArray, unsigned int i_WrapType, unsigned int i_FilterType, bool i_IsGammaCorrected, short i_TexUnitId = -1, short i_MipMapCount = -1);
+	unsigned int Load2DRawTexture(const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = false, unsigned short i_DataOffset = 0);
+	unsigned int Load3DRawTexture(const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned short i_Depth, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = false, unsigned short i_DataOffset = 0);
 
 	unsigned int Create1DTexture(unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData = nullptr, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = true);
 	unsigned int Create1DArrayTexture(unsigned short i_LayerCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData = nullptr, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = true);
 	unsigned int Create2DTexture(unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData = nullptr, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = true);
-	unsigned int Create2DRawTexture(const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = false, unsigned short i_DataOffset = 0);
 	unsigned int Create2DArrayTexture(unsigned short i_LayerCount, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData = nullptr, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = true);
-	unsigned int Create3DRawTexture(const std::string& i_ImageFileName, unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_DataType, unsigned short i_Width, unsigned short i_Height, unsigned short i_Depth, unsigned int i_WrapType, unsigned int i_FilterType, short i_TexUnitId = -1, short i_MipMapCount = -1, bool i_AnisoFiltering = false, unsigned short i_DataOffset = 0);
 	unsigned int CreateCubeMapTexture(unsigned int i_FormatInternal, unsigned int i_FormatExternal, unsigned int i_FormatType, unsigned short i_Width, unsigned short i_Height, unsigned int i_WrapType, unsigned int i_FilterType, void* i_pData = nullptr, short i_TexUnitId = -1, short i_MipMapCount = -1);
 
 	unsigned int GenAndBindTexture(unsigned int i_Target, short i_TexUnitId);
-
+	void SetupPixelFormat(const SDL_PixelFormat* i_pFormat, bool i_IsGammaCorrected, unsigned int& o_FormatExternal, unsigned int& o_FormatInternal);
 	unsigned int SetupTextureParameteres(unsigned int i_Target, unsigned int i_WrapType, unsigned int i_FilterType, short i_MipMapCount, bool i_AnisoFiltering = false);
 
 	void Update1DTextureData(unsigned int i_TexId, void* i_pNewData) const;
@@ -112,7 +108,7 @@ private:
 
 	std::vector<TextureInfo> m_TextureDataArray;
 
-	bool m_IsTexDDSSupported, m_IsTexAnisoFilterSupported;
+	bool m_IsTexAnisoFilterSupported;
 };
 
 #endif /* TEXTURE_MANAGER_H */

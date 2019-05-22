@@ -21,8 +21,8 @@ MotorBoat::MotorBoat ( void )
 	  m_BoatTurnAngle(0.0f), m_BoatAxis(0.0f, 0.0f, -1.0f),
 	  m_KelvinWakeOffset(0.0f), m_PropellerWashOffset(0.0f),
 	  m_AccelerationFactor(0.0f), m_TurnAngleFactor(0.0f),
-	  m_KelvinWakeDisplacementFactor(0.0f), m_FoamAmountFactor(0.0f),
-	  m_CrrPropellerPosIdx(0), m_EnableBoatKelvinWake(false), m_EnableBoatPropellerWash(false),
+	  m_KelvinWakeDisplacementFactor(0.0f), m_FoamAmountFactor(0.0f), m_CrrPropellerPosIdx(0), 
+	  m_EnableBoatFoam(false), m_EnableBoatKelvinWake(false), m_EnableBoatPropellerWash(false),
 	  m_IsWireframeMode(false), m_BoatArea(0.0f), m_BoatVolume(0.0f), m_BoatMass(0.0f),
 	  m_BoatDensity(0.0f), m_BoatDragCoefficient(0.0f), m_BoatYAccelerationFactor(0.0f)
 {
@@ -34,8 +34,8 @@ MotorBoat::MotorBoat (const GlobalConfig& i_Config )
 	  m_BoatTurnAngle(0.0f), m_BoatAxis(0.0f, 0.0f, -1.0f),
 	  m_KelvinWakeOffset(0.0f), m_PropellerWashOffset(0.0f),
 	  m_AccelerationFactor(0.0f), m_TurnAngleFactor(0.0f),
-	  m_KelvinWakeDisplacementFactor(0.0f), m_FoamAmountFactor(0.0f),
-	  m_CrrPropellerPosIdx(0), m_EnableBoatKelvinWake(false), m_EnableBoatPropellerWash(false),
+	  m_KelvinWakeDisplacementFactor(0.0f), m_FoamAmountFactor(0.0f), m_CrrPropellerPosIdx(0),
+	  m_EnableBoatFoam(false), m_EnableBoatKelvinWake(false), m_EnableBoatPropellerWash(false),
 	  m_IsWireframeMode(false), m_BoatArea(0.0f), m_BoatVolume(0.0f), m_BoatMass(0.0f),
 	  m_BoatDensity(0.0f), m_BoatDragCoefficient(0.0f), m_BoatYAccelerationFactor(0.0f)
 {
@@ -68,6 +68,7 @@ void MotorBoat::Initialize ( const GlobalConfig& i_Config )
 	assert(m_FoamAmountFactor > 0.0f);
 
 	m_BoatCurrentPosition = i_Config.Scene.Boat.Position;
+	m_EnableBoatFoam = i_Config.Scene.Ocean.Surface.BoatEffects.Foam.Enabled;
 	m_EnableBoatKelvinWake = i_Config.Scene.Ocean.Surface.BoatEffects.KelvinWake.Enabled;
 	m_EnableBoatPropellerWash = i_Config.Scene.Ocean.Surface.BoatEffects.PropellerWash.Enabled;
 
@@ -79,7 +80,7 @@ void MotorBoat::Initialize ( const GlobalConfig& i_Config )
 
 	/////////////////////
 	m_SM.Initialize("Motor Boat");
-	m_SM.BuildRenderingProgram("../resources/shaders/MotorBoat.vert.glsl", "../resources/shaders/MotorBoat.frag.glsl", i_Config);
+	m_SM.BuildRenderingProgram("resources/shaders/MotorBoat.vert.glsl", "resources/shaders/MotorBoat.frag.glsl", i_Config);
 
 	m_SM.UseProgram();
 
@@ -115,13 +116,13 @@ void MotorBoat::Initialize ( const GlobalConfig& i_Config )
 
 	/////
 	m_TM.Initialize("Motor Boat", i_Config);
-	m_TM.Load2DTexture("../resources/models/motor_boat/boat_d.dds", GL_REPEAT, GL_LINEAR, true, i_Config.TexUnit.MotorBoat.BoatDiffMap, 3);
-	m_TM.Load2DTexture("../resources/models/motor_boat/boat_n.dds", GL_REPEAT, GL_LINEAR, false, i_Config.TexUnit.MotorBoat.BoatNormalMap, 3);
+	m_TM.Load2DTexture("resources/models/motor_boat/boat_d.bmp", GL_REPEAT, GL_LINEAR, true, i_Config.TexUnit.MotorBoat.BoatDiffMap, 3);
+	m_TM.Load2DTexture("resources/models/motor_boat/boat_n.bmp", GL_REPEAT, GL_LINEAR, false, i_Config.TexUnit.MotorBoat.BoatNormalMap, 3);
 	/////////
 
 
 	// NOTE! The model has CCW winding - default
-	m_M.Initialize("Motor Boat", "../resources/models/motor_boat/boat.obj", false, attributes, i_Config.Scene.Boat.UseFlattenedModel, i_Config);
+	m_M.Initialize("Motor Boat", "resources/models/motor_boat/boat.obj", false, attributes, i_Config.Scene.Boat.UseFlattenedModel, i_Config);
 
 	//////////////////////////
 	m_BoatArea = m_M.GetWidth() * m_M.GetDepth() * 0.7f;
@@ -129,11 +130,11 @@ void MotorBoat::Initialize ( const GlobalConfig& i_Config )
 	m_BoatMass = m_BoatVolume * m_BoatDensity;
 
 	//////////////
-	if (m_EnableBoatKelvinWake)
+	if (m_EnableBoatFoam || m_EnableBoatKelvinWake)
 	{
 		m_BoatKelvinWakeData.BoatPosition = m_BoatCurrentPosition;
 		m_BoatKelvinWakeData.WakePosition = m_BoatCurrentPosition + m_BoatAxis * m_KelvinWakeOffset;
-		m_BoatKelvinWakeData.Amplitude = 0.0f; // zero amplitutde when the boat is still
+		m_BoatKelvinWakeData.Amplitude = 0.0f; // zero amplitude when the boat is still
 		m_BoatKelvinWakeData.FoamAmount = 0.0f; // zero foam when the boat is still
 	}
 
@@ -141,9 +142,9 @@ void MotorBoat::Initialize ( const GlobalConfig& i_Config )
 	{
 		m_BoatProperllerWashData.DistortFactor = i_Config.Scene.Ocean.Surface.BoatEffects.PropellerWash.DistortFactor;
 
-		///////////// SETUP BOAT TRAil (Propeller Wash)
+		///////////// SETUP BOAT TRAIL (Propeller Wash)
 		m_TrailSM.Initialize("Motor Boat Trail");
-		m_TrailSM.BuildRenderingProgram("../resources/shaders/MotorBoatTrail.vert.glsl", "../resources/shaders/MotorBoatTrail.frag.glsl", i_Config);
+		m_TrailSM.BuildRenderingProgram("resources/shaders/MotorBoatTrail.vert.glsl", "resources/shaders/MotorBoatTrail.frag.glsl", i_Config);
 
 		m_TrailSM.UseProgram();
 
@@ -188,7 +189,7 @@ void MotorBoat::Initialize ( const GlobalConfig& i_Config )
 		unsigned short trailMapWidth = viewport.z;
 		unsigned short trailMapHeight = viewport.w;
 
-		m_TrailFBM.CreateSimple(1, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, trailMapWidth, trailMapHeight, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Ocean.Surface.PropellerWashMap, 5, false, FrameBufferManager::DEPTH_BUFFER_TYPE::DBT_NO_DEPTH);
+		m_TrailFBM.CreateSimple(1, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, trailMapWidth, trailMapHeight, GL_CLAMP_TO_EDGE, GL_LINEAR, i_Config.TexUnit.Ocean.Surface.PropellerWashMap, 5, false);
 	}
 
 	LOG("MotorBoat successfully created!");
@@ -210,7 +211,7 @@ void MotorBoat::Update ( const Camera& i_Camera, const glm::vec3& i_SunDirection
 	m_BoatCurrentPosition += deltaPos;
 
 	//////
-	if (m_EnableBoatKelvinWake)
+	if (m_EnableBoatFoam || m_EnableBoatKelvinWake)
 	{
 		m_BoatKelvinWakeData.BoatPosition = m_BoatCurrentPosition;
 		m_BoatKelvinWakeData.WakePosition = m_BoatCurrentPosition + m_BoatAxis * m_KelvinWakeOffset;
@@ -371,6 +372,7 @@ void MotorBoat::RenderTrail ( void )
 
 void MotorBoat::RenderFlattened ( void )
 {
+	// TODO - use a simpler shader!
 	m_SM.UseProgram();
 
 	m_M.RenderFlattened();
@@ -382,7 +384,7 @@ void MotorBoat::Accelerate ( float i_DeltaTime )
 
 	m_BoatVelocity = glm::min(m_BoatVelocity, 1.0f);
 
-	if (m_EnableBoatKelvinWake)
+	if (m_EnableBoatFoam || m_EnableBoatKelvinWake)
 	{
 		m_BoatKelvinWakeData.Amplitude = glm::min(m_BoatVelocity * m_KelvinWakeDisplacementFactor, 20.0f);
 		m_BoatKelvinWakeData.FoamAmount = glm::min(m_BoatVelocity * m_FoamAmountFactor, 1.0f);
@@ -395,7 +397,7 @@ void MotorBoat::Decelerate ( float i_DeltaTime )
 
 	m_BoatVelocity = glm::max(m_BoatVelocity, 0.0f);
 
-	if (m_EnableBoatKelvinWake)
+	if (m_EnableBoatFoam || m_EnableBoatKelvinWake)
 	{
 		m_BoatKelvinWakeData.Amplitude = glm::min(m_BoatVelocity * m_KelvinWakeDisplacementFactor, 20.0f);
 		m_BoatKelvinWakeData.FoamAmount = glm::min(m_BoatVelocity * m_FoamAmountFactor, 1.0f);
