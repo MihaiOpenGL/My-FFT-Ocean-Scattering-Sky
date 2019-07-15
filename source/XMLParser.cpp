@@ -4,6 +4,8 @@
 #include "CommonHeaders.h"
 // glm::vec2, glm::vec3, come from the header
 #include "glm/gtc/constants.hpp" //pi()
+#include <stdexcept>
+
 #include "FileUtils.h"
 
 #define ELEMENT_START 0
